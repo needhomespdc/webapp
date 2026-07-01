@@ -19,7 +19,7 @@ export function useInvestmentList(page = 1, limit = 10) {
 export function useInvestmentDetail(investmentId: string | undefined) {
   const query = useQuery({
     queryKey: queryKeys.investments.detail(investmentId ?? ''),
-    queryFn: () => investmentsApi.getById(investmentId!).then((r) => r.data),
+    queryFn: () => investmentsApi.getById(investmentId!).then((data) => data),
     enabled: !!investmentId,
   });
 

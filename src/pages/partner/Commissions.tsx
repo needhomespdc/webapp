@@ -22,8 +22,8 @@
 //   return (
 //     <div className="space-y-5">
 //       <div>
-//         <h1 className="text-2xl font-bold text-white">Commissions</h1>
-//         <p className="text-white/50 text-sm mt-1">Track earnings from your referred investments.</p>
+//         <h1 className="text-2xl font-bold text-foreground">Commissions</h1>
+//         <p className="text-foreground/50 text-sm mt-1">Track earnings from your referred investments.</p>
 //       </div>
 
 //       {isLoading ? (
@@ -39,7 +39,7 @@
 //       ) : (
 //         <>
 //           {/* Desktop table */}
-//           <div className="hidden sm:block bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+//           <div className="hidden sm:block bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
 //             <Table>
 //               <TableHeader>
 //                 <TableRow>
@@ -53,7 +53,7 @@
 //               <TableBody>
 //                 {entries.map((entry) => (
 //                   <TableRow key={entry.id}>
-//                     <TableCell className="text-white font-medium">{entry.propertyTitle}</TableCell>
+//                     <TableCell className="text-foreground font-medium">{entry.propertyTitle}</TableCell>
 //                     <TableCell>{formatPercent(entry.commissionRate)}</TableCell>
 //                     <TableCell className="text-green-400 font-semibold">
 //                       {formatCurrency(entry.commissionAmount)}
@@ -69,13 +69,13 @@
 //           {/* Mobile cards */}
 //           <div className="sm:hidden space-y-3">
 //             {entries.map((entry) => (
-//               <div key={entry.id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
+//               <div key={entry.id} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
 //                 <div className="flex items-start justify-between gap-2">
-//                   <p className="text-white text-sm font-semibold flex-1 min-w-0 truncate">{entry.propertyTitle}</p>
+//                   <p className="text-foreground text-sm font-semibold flex-1 min-w-0 truncate">{entry.propertyTitle}</p>
 //                   <StatusBadge status={entry.status} />
 //                 </div>
 //                 <div className="flex items-center justify-between mt-2">
-//                   <p className="text-white/50 text-xs">{formatDate(entry.createdAt)} · {formatPercent(entry.commissionRate)}</p>
+//                   <p className="text-foreground/50 text-xs">{formatDate(entry.createdAt)} · {formatPercent(entry.commissionRate)}</p>
 //                   <p className="text-green-400 text-sm font-bold">+{formatCurrency(entry.commissionAmount)}</p>
 //                 </div>
 //               </div>
@@ -89,7 +89,7 @@
 //           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
 //             Previous
 //           </Button>
-//           <span className="text-white/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
+//           <span className="text-foreground/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
 //           <Button
 //             variant="outline"
 //             size="sm"
@@ -109,4 +109,3 @@ export default function Commissions() {
     <div>Commissions</div>
   )
 }
-

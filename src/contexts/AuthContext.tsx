@@ -42,11 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return token;
   }, [storeToken]);
 
-  // Attempt to restore the session on mount. The refresh token only lives in
-  // memory (set on login) — it does not persist across a full page reload,
-  // so this will fail fast with "No refresh token available" on a fresh load
-  // and the user lands on /login. That's expected given the backend reads
-  // the refresh token from the request body, not an httpOnly cookie.
+  // Attempt to restore the session on mount. The refresh token is persisted
+  // in localStorage (see fetchClient.ts), so a reload restores it here. If
+  // there's no persisted token, or the backend rejects it (expired/revoked),
+  // this fails fast and the user lands on /login via the route guards.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -77,13 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string, rememberMe = false) => {
+      // rememberMe is still sent to the backend (it may extend the issued
+      // refresh token's server-side expiry) but no longer gates client-side
+      // persistence — the refresh token is always kept in localStorage so a
+      // reload restores the session regardless of this flag.
       const res = await authApi.login({ email, password, rememberMe });
       const {
         accessToken: token,
         refreshToken: refreshTokenFromResponse,
         user: loggedInUser,
       } = unwrapEnvelope<{ accessToken: string; refreshToken: string; user: User }>(res);
-      setRefreshToken(refreshTokenFromResponse, rememberMe);
+      setRefreshToken(refreshTokenFromResponse);
       storeToken(token);
       setUser(loggedInUser);
     },

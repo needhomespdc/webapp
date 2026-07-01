@@ -121,16 +121,16 @@ export default function Marketplace() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white">Marketplace</h1>
-        <p className="text-white/50 text-sm mt-1">Discover premium properties and opportunities.</p>
-        <p className="text-white/50 text-sm mt-1">Invest with as little as <span className='text-accent'>₦50,000</span>.</p>
+        <h1 className="text-2xl font-bold text-foreground">Marketplace</h1>
+        <p className="text-foreground/50 text-sm mt-1">Discover premium properties and opportunities.</p>
+        <p className="text-foreground/50 text-sm mt-1">Invest with as little as <span className='text-accent'>₦50,000</span>.</p>
       </div>
 
       {/* Search + filter trigger */}
       <div className="flex flex-col gap-3">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <div className="relative flex-1">
-            <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-4 w-4" />
+            <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-4 w-4" />
             <Input
               className="pl-9"
               placeholder="Search properties, locations..."
@@ -143,7 +143,8 @@ export default function Marketplace() {
           </div>
           <Button
             type="button"
-            variant="outline"
+            variant="default"
+            size="sm"
             className="relative shrink-0"
             onClick={() => setFilterSheetOpen(true)}
           >
@@ -169,7 +170,7 @@ export default function Marketplace() {
               className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
                 modelType === t.value
                   ? 'bg-accent text-white border-accent'
-                  : 'bg-white/5 text-white/60 border-white/10 hover:text-white'
+                  : 'bg-foreground/5 text-foreground/60 border-foreground/10 hover:text-foreground'
               }`}
             >
               {t.label}
@@ -179,13 +180,13 @@ export default function Marketplace() {
 
         {/* Sort trigger */}
         <div className="flex items-center justify-between">
-          <span className="text-white/50 text-sm">{pagination ? `${pagination.total} properties` : ''}</span>
+          <span className="text-foreground/50 text-sm">{pagination ? `${pagination.total} properties` : ''}</span>
           <button
             onClick={() => setSortSheetOpen(true)}
-            className="flex items-center gap-1.5 text-white/70 text-sm hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-foreground/70 text-sm hover:text-foreground transition-colors"
           >
             <RiSortDesc className="h-4 w-4" />
-            Sort by: <span className="text-white font-medium">{SORT_LABELS[sort]}</span>
+            Sort by: <span className="text-foreground font-medium">{SORT_LABELS[sort]}</span>
           </button>
         </div>
       </div>
@@ -239,7 +240,7 @@ export default function Marketplace() {
           <Button variant="outline" size="sm" disabled={!hasPrevPage} onClick={() => setPage((p) => p - 1)}>
             Previous
           </Button>
-          <span className="text-white/60 text-sm">
+          <span className="text-foreground/60 text-sm">
             Page {pagination.page} of {pagination.totalPages}
           </span>
           <Button variant="outline" size="sm" disabled={!hasNextPage} onClick={() => setPage((p) => p + 1)}>

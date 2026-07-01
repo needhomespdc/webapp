@@ -32,7 +32,7 @@ function DialogContent({
       <DialogPrimitive.Content
         className={cn(
           'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2',
-          'rounded-2xl bg-[#111] border border-white/10 p-6 shadow-2xl',
+          'rounded-2xl bg-card border border-foreground/10 p-6 shadow-2xl',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
           'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -43,7 +43,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-white/40 hover:text-white transition-colors">
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-foreground/40 hover:text-foreground transition-colors">
           <RiCloseLine className="h-5 w-5" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -65,7 +65,7 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn('text-xl font-semibold text-white', className)}
+      className={cn('text-xl font-semibold text-foreground', className)}
       {...props}
     />
   );
@@ -74,7 +74,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
 function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
-      className={cn('text-sm text-white/60', className)}
+      className={cn('text-sm text-foreground/60', className)}
       {...props}
     />
   );

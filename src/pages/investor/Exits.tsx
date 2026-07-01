@@ -27,8 +27,8 @@ export default function Exits() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Early Exits</h1>
-        <p className="text-white/50 text-sm mt-1">Exit an investment before maturity, subject to a penalty.</p>
+        <h1 className="text-2xl font-bold text-foreground">Early Exits</h1>
+        <p className="text-foreground/50 text-sm mt-1">Exit an investment before maturity, subject to a penalty.</p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -57,29 +57,29 @@ export default function Exits() {
           ) : (
             <div className="space-y-3 mt-4">
               {exits.map((exit) => (
-                <div key={exit.id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <div key={exit.id} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-white text-sm font-semibold truncate">
+                    <p className="text-foreground text-sm font-semibold truncate">
                       {exit.investment?.property?.title ?? 'Investment'}
                     </p>
                     <StatusBadge status={exit.status} />
                   </div>
                   <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     <div>
-                      <p className="text-white/40">Principal</p>
-                      <p className="text-white">{formatCurrency(exit.principalAmount)}</p>
+                      <p className="text-foreground/40">Principal</p>
+                      <p className="text-foreground">{formatCurrency(exit.principalAmount)}</p>
                     </div>
                     <div>
-                      <p className="text-white/40">Penalty ({formatPercent(exit.penaltyPercent)})</p>
+                      <p className="text-foreground/40">Penalty ({formatPercent(exit.penaltyPercent)})</p>
                       <p className="text-red-400">-{formatCurrency(exit.penaltyAmount)}</p>
                     </div>
                     <div>
-                      <p className="text-white/40">Final Payout</p>
+                      <p className="text-foreground/40">Final Payout</p>
                       <p className="text-green-400 font-semibold">{formatCurrency(exit.finalPayout)}</p>
                     </div>
                     <div>
-                      <p className="text-white/40">Requested</p>
-                      <p className="text-white">{formatDate(exit.createdAt)}</p>
+                      <p className="text-foreground/40">Requested</p>
+                      <p className="text-foreground">{formatDate(exit.createdAt)}</p>
                     </div>
                   </div>
                   {exit.rejectionReason && (
@@ -119,10 +119,10 @@ function EligibleExitRow({ investment }: { investment: Investment }) {
   };
 
   return (
-    <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4">
+    <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-semibold truncate">{investment.property?.title ?? 'Investment'}</p>
-        <p className="text-white/50 text-xs mt-0.5">
+        <p className="text-foreground text-sm font-semibold truncate">{investment.property?.title ?? 'Investment'}</p>
+        <p className="text-foreground/50 text-xs mt-0.5">
           {investment.quantity} unit{investment.quantity !== 1 ? 's' : ''} · {formatCurrency(investment.totalAmount)}
         </p>
       </div>
@@ -136,7 +136,7 @@ function EligibleExitRow({ investment }: { investment: Investment }) {
               Exiting early may incur a penalty deducted from your principal. The exact penalty and final payout will be calculated by our team and shown before any funds are disbursed.
             </DialogDescription>
           </DialogHeader>
-          <label className="flex items-start gap-2 text-sm text-white/70 cursor-pointer">
+          <label className="flex items-start gap-2 text-sm text-foreground/70 cursor-pointer">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1" />
             I understand and accept the early exit terms.
           </label>

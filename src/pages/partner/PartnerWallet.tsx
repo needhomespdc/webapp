@@ -59,15 +59,15 @@
 //   return (
 //     <div className="space-y-6">
 //       <div>
-//         <h1 className="text-2xl font-bold text-white">Commission Wallet</h1>
-//         <p className="text-white/50 text-sm mt-1">Withdraw your referral earnings to your bank account.</p>
+//         <h1 className="text-2xl font-bold text-foreground">Commission Wallet</h1>
+//         <p className="text-foreground/50 text-sm mt-1">Withdraw your referral earnings to your bank account.</p>
 //       </div>
 
 //       <Card>
 //         <CardContent className="p-6">
-//           <p className="text-white/50 text-xs mb-1">Available Balance</p>
-//           <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-white" />
-//           <p className="text-white/40 text-xs mt-2">
+//           <p className="text-foreground/50 text-xs mb-1">Available Balance</p>
+//           <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-foreground" />
+//           <p className="text-foreground/40 text-xs mt-2">
 //             Total earned: {formatCurrency(wallet?.totalEarned ?? 0)}
 //           </p>
 //           <Button
@@ -81,7 +81,7 @@
 //       </Card>
 
 //       <div>
-//         <h2 className="text-white font-semibold text-sm mb-3">Linked Bank Accounts</h2>
+//         <h2 className="text-foreground font-semibold text-sm mb-3">Linked Bank Accounts</h2>
 //         {banksLoading ? null : !bankAccounts.length ? (
 //           <EmptyState
 //             icon={<RiBankLine />}
@@ -91,13 +91,13 @@
 //         ) : (
 //           <div className="space-y-2">
 //             {bankAccounts.map((b) => (
-//               <div key={b.id} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
+//               <div key={b.id} className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-xl p-3">
 //                 <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
 //                   <RiBankLine className="h-4 w-4" />
 //                 </div>
 //                 <div className="flex-1 min-w-0">
-//                   <p className="text-white text-sm font-medium">{b.shortName} — {b.accountNumber}</p>
-//                   <p className="text-white/40 text-xs">{b.accountHolderName}</p>
+//                   <p className="text-foreground text-sm font-medium">{b.shortName} — {b.accountNumber}</p>
+//                   <p className="text-foreground/40 text-xs">{b.accountHolderName}</p>
 //                 </div>
 //                 {b.isPrimary && <span className="text-xs text-accent font-medium">Primary</span>}
 //               </div>
@@ -120,13 +120,13 @@
 //             <div className="space-y-2">
 //               <Label>Bank Account</Label>
 //               <select
-//                 className="flex h-14 w-full rounded-xl bg-white/10 border border-white/10 px-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent"
+//                 className="flex h-14 w-full rounded-xl bg-foreground/10 border border-foreground/10 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
 //                 value={bankAccountId || primaryBank?.id || ''}
 //                 onChange={(e) => setBankAccountId(e.target.value)}
 //               >
 //                 <option value="" disabled>Select bank account</option>
 //                 {bankAccounts.map((b) => (
-//                   <option key={b.id} value={b.id} className="bg-[#111]">
+//                   <option key={b.id} value={b.id} className="bg-card">
 //                     {b.shortName} — {b.accountNumber}
 //                   </option>
 //                 ))}
@@ -155,11 +155,8 @@
 //   );
 // }
 
-
-
 export default function PartnerWallet() {
   return (
     <div>PartnerWallet</div>
   )
 }
-

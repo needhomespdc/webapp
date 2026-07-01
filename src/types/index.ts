@@ -127,12 +127,14 @@ export interface Investment {
   id: string;
   userId: string;
   propertyId: string;
+  title: string;
   property?: Property;
   modelType: InvestmentModelType;
   quantity: number;
   pricePerUnit: number;
   totalAmount: number;
   status: InvestmentStatus;
+  propertyImageUrl?: string;
   milestones?: InvestmentMilestone[];
   handoverDetails?: HandoverDetails;
   createdAt: string;

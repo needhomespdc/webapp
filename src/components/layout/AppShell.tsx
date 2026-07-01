@@ -15,7 +15,7 @@ export interface NavItem {
 
 export function AppShell({ navItems }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div className="min-h-screen bg-background flex">
       {/* Desktop fixed left sidebar. On mobile, Header renders the equivalent menu in a left-side sheet. */}
       <Sidebar navItems={navItems} />
 

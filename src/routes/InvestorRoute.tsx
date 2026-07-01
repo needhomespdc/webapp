@@ -4,12 +4,18 @@ import {
   RiDashboardFill,
   RiWalletLine,
   RiWalletFill,
+  RiLineChartLine,
+  RiLineChartFill,
+  RiShieldCheckLine,
+  RiShieldCheckFill,
+  RiSettings4Line,
+  RiSettings4Fill,
 } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { AppShell } from '@/components/layout/AppShell';
-import { HiBell, HiOutlineBell } from 'react-icons/hi2';
 import { AiFillPieChart, AiOutlinePieChart } from "react-icons/ai";
 import { HiOutlineBuildingOffice2, HiBuildingOffice2 } from "react-icons/hi2";
+import { BiSupport } from "react-icons/bi";
 
 
 const investorNavItems = [
@@ -26,6 +32,12 @@ const investorNavItems = [
     activeIcon: <HiBuildingOffice2 />,
   },
   {
+    label: 'Invest',
+    to: '/investor/invest',
+    icon: <RiLineChartLine />,
+    activeIcon: <RiLineChartFill />,
+  },
+  {
     label: 'Portfolio',
     to: '/investor/portfolio',
     icon: <AiOutlinePieChart />,
@@ -38,22 +50,38 @@ const investorNavItems = [
     activeIcon: <RiWalletFill />,
   },
   {
-    label: 'Notifications',
-    to: '/investor/notifications',
-    icon: <HiOutlineBell />,
-    activeIcon: <HiBell />,
+    label: 'KYC Verification',
+    to: '/investor/kyc',
+    icon: <RiShieldCheckLine />,
+    activeIcon: <RiShieldCheckFill />,
+  },
+  {
+    label: 'Support Center',
+    to: '/investor/support',
+    icon: <BiSupport />,
+    activeIcon: <BiSupport />,
+  },
+  {
+    label: 'Settings',
+    to: '/investor/settings',
+    icon: <RiSettings4Line />,
+    activeIcon: <RiSettings4Fill />,
   },
 ];
 
 export function InvestorRoute() {
-  const { user, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   if (user?.role === 'partner') {

@@ -18,8 +18,8 @@ function DropdownMenuSubTrigger({
   return (
     <DropdownMenuPrimitive.SubTrigger
       className={cn(
-        'flex cursor-default gap-2 select-none items-center rounded-lg px-3 py-2 text-sm text-white/80 outline-none',
-        'focus:bg-white/10 data-[state=open]:bg-white/10',
+        'flex cursor-default gap-2 select-none items-center rounded-lg px-3 py-2 text-sm text-foreground/80 outline-none',
+        'focus:bg-foreground/10 data-[state=open]:bg-foreground/10',
         inset && 'pl-8',
         className
       )}
@@ -35,7 +35,7 @@ function DropdownMenuSubContent({ className, ...props }: React.ComponentProps<ty
   return (
     <DropdownMenuPrimitive.SubContent
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-xl bg-[#1a1a1a] border border-white/10 p-1 shadow-2xl',
+        'z-50 min-w-[8rem] overflow-hidden rounded-xl bg-card border border-foreground/10 p-1 shadow-2xl',
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         className
       )}
@@ -54,7 +54,7 @@ function DropdownMenuContent({
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          'z-50 min-w-[10rem] overflow-hidden rounded-xl bg-[#1a1a1a] border border-white/10 p-1 shadow-2xl',
+          'z-50 min-w-[10rem] overflow-hidden rounded-xl bg-card border border-foreground/10 p-1 shadow-2xl',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
           'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -74,8 +74,8 @@ function DropdownMenuItem({
   return (
     <DropdownMenuPrimitive.Item
       className={cn(
-        'relative flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/80 outline-none transition-colors',
-        'focus:bg-white/10 focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground/80 outline-none transition-colors',
+        'focus:bg-foreground/10 focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         inset && 'pl-8',
         className
       )}
@@ -93,8 +93,8 @@ function DropdownMenuCheckboxItem({
   return (
     <DropdownMenuPrimitive.CheckboxItem
       className={cn(
-        'relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-3 text-sm text-white/80 outline-none transition-colors',
-        'focus:bg-white/10 focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-3 text-sm text-foreground/80 outline-none transition-colors',
+        'focus:bg-foreground/10 focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className
       )}
       checked={checked}
@@ -117,7 +117,7 @@ function DropdownMenuLabel({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & { inset?: boolean }) {
   return (
     <DropdownMenuPrimitive.Label
-      className={cn('px-3 py-2 text-xs font-semibold text-white/40 uppercase tracking-wider', inset && 'pl-8', className)}
+      className={cn('px-3 py-2 text-xs font-semibold text-foreground/40 uppercase tracking-wider', inset && 'pl-8', className)}
       {...props}
     />
   );
@@ -126,7 +126,7 @@ function DropdownMenuLabel({
 function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   return (
     <DropdownMenuPrimitive.Separator
-      className={cn('my-1 h-px bg-white/10', className)}
+      className={cn('my-1 h-px bg-foreground/10', className)}
       {...props}
     />
   );

@@ -34,8 +34,8 @@
 //   return (
 //     <div className="space-y-6">
 //       <div>
-//         <h1 className="text-2xl font-bold text-white">Portfolio</h1>
-//         <p className="text-white/50 text-sm mt-1">Track your investments and earnings.</p>
+//         <h1 className="text-2xl font-bold text-foreground">Portfolio</h1>
+//         <p className="text-foreground/50 text-sm mt-1">Track your investments and earnings.</p>
 //       </div>
 
 //       {/* Summary */}
@@ -44,21 +44,21 @@
 //           [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)
 //         ) : (
 //           <>
-//             <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-//               <p className="text-white/50 text-xs mb-1">Total Invested</p>
-//               <CurrencyDisplay amount={performanceData?.totalInvested ?? 0} size="lg" className="text-white" />
+//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+//               <p className="text-foreground/50 text-xs mb-1">Total Invested</p>
+//               <CurrencyDisplay amount={performanceData?.totalInvested ?? 0} size="lg" className="text-foreground" />
 //             </div>
-//             <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-//               <p className="text-white/50 text-xs mb-1">Total Returns</p>
+//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+//               <p className="text-foreground/50 text-xs mb-1">Total Returns</p>
 //               <CurrencyDisplay amount={performanceData?.totalReturns ?? 0} size="lg" className="text-green-400" />
 //             </div>
-//             <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-//               <p className="text-white/50 text-xs mb-1">Net Worth</p>
-//               <CurrencyDisplay amount={performanceData?.netWorth ?? 0} size="lg" className="text-white" />
+//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+//               <p className="text-foreground/50 text-xs mb-1">Net Worth</p>
+//               <CurrencyDisplay amount={performanceData?.netWorth ?? 0} size="lg" className="text-foreground" />
 //             </div>
-//             <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-//               <p className="text-white/50 text-xs mb-1">Active</p>
-//               <p className="text-2xl font-bold text-white">{performanceData?.activeCount ?? 0}</p>
+//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+//               <p className="text-foreground/50 text-xs mb-1">Active</p>
+//               <p className="text-2xl font-bold text-foreground">{performanceData?.activeCount ?? 0}</p>
 //             </div>
 //           </>
 //         )}
@@ -94,24 +94,24 @@
 //                 <Link
 //                   key={inv.id}
 //                   to={`/investor/portfolio/${inv.id}`}
-//                   className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all"
+//                   className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl p-4 hover:border-foreground/20 transition-all"
 //                 >
 //                   <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
 //                     <RiBriefcaseLine className="text-accent h-6 w-6" />
 //                   </div>
 //                   <div className="flex-1 min-w-0">
-//                     <p className="text-white font-semibold text-sm truncate">
+//                     <p className="text-foreground font-semibold text-sm truncate">
 //                       {inv.property?.title ?? 'Property'}
 //                     </p>
-//                     <p className="text-white/50 text-xs mt-0.5">
+//                     <p className="text-foreground/50 text-xs mt-0.5">
 //                       {inv.quantity} unit{inv.quantity !== 1 ? 's' : ''} · {formatDate(inv.createdAt)}
 //                     </p>
 //                     <StatusBadge status={inv.status} />
 //                   </div>
 //                   <div className="text-right shrink-0">
-//                     <p className="text-white text-sm font-bold">{formatCurrency(inv.totalAmount)}</p>
-//                     <p className="text-white/40 text-xs mt-0.5">{formatCurrency(inv.pricePerUnit)}/unit</p>
-//                     <RiArrowRightLine className="h-4 w-4 text-white/30 mt-1 ml-auto" />
+//                     <p className="text-foreground text-sm font-bold">{formatCurrency(inv.totalAmount)}</p>
+//                     <p className="text-foreground/40 text-xs mt-0.5">{formatCurrency(inv.pricePerUnit)}/unit</p>
+//                     <RiArrowRightLine className="h-4 w-4 text-foreground/30 mt-1 ml-auto" />
 //                   </div>
 //                 </Link>
 //               ))}
@@ -126,7 +126,7 @@
 //           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
 //             Previous
 //           </Button>
-//           <span className="text-white/60 text-sm">
+//           <span className="text-foreground/60 text-sm">
 //             {pagination.page} / {pagination.totalPages}
 //           </span>
 //           <Button
@@ -143,11 +143,8 @@
 //   );
 // }
 
-
-
 export default function Portfolio() {
   return (
     <div>Portfolio</div>
   )
 }
-

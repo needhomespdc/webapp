@@ -58,12 +58,12 @@ export default function Login() {
   return (
     <AuthLayout>
       <div className="flex flex-col flex-1 px-6 pt-6 pb-8 md:max-w-md md:mx-auto md:w-full md:pt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
+        <p className="text-foreground/60 text-sm mb-6">
           Login to your account and continue your real estate investment journey.
         </p>
 
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
+        <div className="bg-foreground/5 backdrop-blur-sm border border-foreground/10 rounded-2xl p-5">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -74,7 +74,7 @@ export default function Login() {
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                        <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                         <Input
                           className="pl-10"
                           type="email"
@@ -104,7 +104,7 @@ export default function Login() {
                     </div>
                     <FormControl>
                       <div className="relative">
-                        <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                        <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                         <Input
                           className="pl-10 pr-10"
                           type={showPw ? 'text' : 'password'}
@@ -115,7 +115,7 @@ export default function Login() {
                         <button
                           type="button"
                           onClick={() => setShowPw((p) => !p)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors"
                         >
                           {showPw ? (
                             <RiEyeOffLine className="h-5 w-5" />
@@ -140,7 +140,7 @@ export default function Login() {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="text-white/70 cursor-pointer text-sm">
+                    <FormLabel className="text-foreground/70 cursor-pointer text-sm">
                       Remember me
                     </FormLabel>
                   </FormItem>
@@ -153,7 +153,7 @@ export default function Login() {
           </Form>
         </div>
 
-        <p className="text-center text-sm text-white/60 mt-6">
+        <p className="text-center text-sm text-foreground/60 mt-6">
           Don&apos;t have an account?{' '}
           <Link to="/register" className="text-accent font-semibold hover:underline">
             Sign Up

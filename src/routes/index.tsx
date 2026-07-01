@@ -14,6 +14,7 @@ const ResetPassword = lazy(() => import('@/pages/auth/ResetPassword'));
 
 // Investor pages
 const InvestorDashboard = lazy(() => import('@/pages/investor/InvestorDashboard'));
+const Invest = lazy(() => import('@/pages/investor/Invest'));
 const Marketplace = lazy(() => import('@/pages/investor/Marketplace'));
 const PropertyDetail = lazy(() => import('@/pages/investor/PropertyDetail'));
 const Portfolio = lazy(() => import('@/pages/investor/Portfolio'));
@@ -34,10 +35,12 @@ const PartnerWallet = lazy(() => import('@/pages/partner/PartnerWallet'));
 const Notifications = lazy(() => import('@/pages/shared/Notifications'));
 const Support = lazy(() => import('@/pages/shared/Support'));
 const Profile = lazy(() => import('@/pages/shared/Profile'));
+const Settings = lazy(() => import('@/pages/shared/Settings'));
+
 
 function PageLoader() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
     </div>
   );
@@ -68,6 +71,7 @@ export const router = createBrowserRouter([
     element: <InvestorRoute />,
     children: [
       { path: '/investor/dashboard', element: withSuspense(InvestorDashboard) },
+      { path: '/investor/invest', element: withSuspense(Invest) },
       { path: '/investor/marketplace', element: withSuspense(Marketplace) },
       { path: '/investor/marketplace/:slug', element: withSuspense(PropertyDetail) },
       { path: '/investor/portfolio', element: withSuspense(Portfolio) },
@@ -79,6 +83,7 @@ export const router = createBrowserRouter([
       { path: '/investor/favorites', element: withSuspense(Favorites) },
       { path: '/investor/notifications', element: withSuspense(Notifications) },
       { path: '/investor/support', element: withSuspense(Support) },
+      { path: '/investor/settings', element: withSuspense(Settings) },
       { path: '/investor/profile', element: withSuspense(Profile) },
     ],
   },
@@ -93,6 +98,7 @@ export const router = createBrowserRouter([
       { path: '/partner/wallet', element: withSuspense(PartnerWallet) },
       { path: '/partner/notifications', element: withSuspense(Notifications) },
       { path: '/partner/support', element: withSuspense(Support) },
+      { path: '/partner/settings', element: withSuspense(Settings) },
       { path: '/partner/profile', element: withSuspense(Profile) },
     ],
   },

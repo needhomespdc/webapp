@@ -4,16 +4,18 @@ import {
   RiBriefcaseLine,
   RiArrowRightLine,
   RiAlertLine,
+  RiLineChartLine,
 } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { usePortfolioPerformance, useInvestmentList } from '@/hooks/useInvestment';
 import { useWallet, useWalletTransactions } from '@/hooks/useWallet';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getGreeting } from '@/utils/helpers';
 
 export default function InvestorDashboard() {
   const { user } = useAuth();
@@ -29,15 +31,17 @@ export default function InvestorDashboard() {
       : (user?.firstName ?? 'Investor');
 
   const kycApproved = user?.kycStatus === 'approved';
+  const hasBothRecent = !!investmentsData?.length && !!txData?.length;
 
+  console.log("INVESTMENTS" ,investmentsData)
   return (
     <div className="space-y-6">
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl font-bold text-white">
-          Good day, {displayName} 👋
+        <h1 className="text-2xl font-bold text-foreground">
+          {getGreeting()}, {displayName} 👋
         </h1>
-        <p className="text-white/50 text-sm mt-1">Here's your investment overview.</p>
+        <p className="text-foreground/50 text-sm mt-1">Here's your investment overview.</p>
       </div>
 
       {/* KYC banner */}
@@ -63,39 +67,65 @@ export default function InvestorDashboard() {
         </div>
       )}
 
+      {/* Invest CTA banner */}
+      <Link
+        to="/investor/invest"
+        className="group relative block rounded-2xl overflow-hidden min-h-[160px] sm:min-h-[180px]"
+      >
+        <img
+          src="/resources/woman-with-card.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-linear-to-r from-primary/95 via-primary/80 to-primary/30" />
+        <div className="relative z-10 flex flex-col justify-center w-full h-full p-6 sm:p-8">
+          <h2 className="text-white text-xl sm:text-2xl font-bold leading-tight">
+            Grow your wealth through real estate
+          </h2>
+          <p className="text-white/70 text-sm mt-2">
+            Explore fractional ownership, land banking, and more — start with as little as
+            ₦50,000.
+          </p>
+          <span className="inline-flex items-center gap-2 bg-accent text-white text-sm font-bold px-5 py-2.5 rounded-xl mt-4 w-fit hover:bg-[#d45a1e] transition-colors">
+            <RiLineChartLine className="h-4 w-4" />
+            Invest Now
+          </span>
+        </div>
+      </Link>
+
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-white/50 text-xs mb-1">Wallet Balance</p>
+            <p className="text-foreground/50 text-xs mb-1">Wallet Balance</p>
             {walletLoading ? (
               <Skeleton className="h-7 w-28 mt-1" />
             ) : (
               <CurrencyDisplay
                 amount={walletData?.balance ?? 0}
                 size="lg"
-                className="text-white"
+                className="text-foreground"
               />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-white/50 text-xs mb-1">Total Invested</p>
+            <p className="text-foreground/50 text-xs mb-1">Total Invested</p>
             {perfLoading ? (
               <Skeleton className="h-7 w-28 mt-1" />
             ) : (
               <CurrencyDisplay
                 amount={performanceData?.totalInvested ?? 0}
                 size="lg"
-                className="text-white"
+                className="text-foreground"
               />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-white/50 text-xs mb-1">Total Returns</p>
+            <p className="text-foreground/50 text-xs mb-1">Total Returns</p>
             {perfLoading ? (
               <Skeleton className="h-7 w-28 mt-1" />
             ) : (
@@ -109,11 +139,11 @@ export default function InvestorDashboard() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-white/50 text-xs mb-1">Active Investments</p>
+            <p className="text-foreground/50 text-xs mb-1">Active Investments</p>
             {perfLoading ? (
               <Skeleton className="h-7 w-16 mt-1" />
             ) : (
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-foreground">
                 {performanceData?.activeCount ?? 0}
               </p>
             )}
@@ -130,8 +160,8 @@ export default function InvestorDashboard() {
                 <RiStore2LineIcon />
               </div>
               <div>
-                <p className="text-white text-sm font-semibold">Explore</p>
-                <p className="text-white/50 text-xs">Browse properties</p>
+                <p className="text-foreground text-sm font-semibold">Explore</p>
+                <p className="text-foreground/50 text-xs">Browse properties</p>
               </div>
             </CardContent>
           </Card>
@@ -143,15 +173,16 @@ export default function InvestorDashboard() {
                 <RiWalletIcon />
               </div>
               <div>
-                <p className="text-white text-sm font-semibold">Fund Wallet</p>
-                <p className="text-white/50 text-xs">Top up balance</p>
+                <p className="text-foreground text-sm font-semibold">Fund Wallet</p>
+                <p className="text-foreground/50 text-xs">Top up balance</p>
               </div>
             </CardContent>
           </Card>
         </Link>
       </div>
 
-      {/* Recent investments */}
+      {/* Recent investments + transactions — side-by-side once both have data */}
+      <div className={cn(hasBothRecent && 'grid grid-cols-1 lg:grid-cols-2 gap-6')}>
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -168,10 +199,10 @@ export default function InvestorDashboard() {
             </div>
           ) : !investmentsData?.length ? (
             <div className="text-center py-8">
-              <RiBriefcaseLine className="h-10 w-10 text-white/20 mx-auto mb-2" />
-              <p className="text-white/50 text-sm">No investments yet.</p>
+              <RiBriefcaseLine className="h-10 w-10 text-foreground/20 mx-auto mb-2" />
+              <p className="text-foreground/50 text-sm">No investments yet.</p>
               <Link to="/investor/marketplace">
-                <Button variant="outline" size="sm" className="mt-3">
+                <Button variant="default" size="sm" className="mt-3">
                   Browse Marketplace
                 </Button>
               </Link>
@@ -182,21 +213,25 @@ export default function InvestorDashboard() {
                 <Link
                   key={inv.id}
                   to={`/investor/portfolio/${inv.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                    <RiBriefcaseLine className="text-accent h-5 w-5" />
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center rounded-[4px] overflow-hidden">
+                    {inv?.propertyImageUrl ? (
+                      <img src={inv?.propertyImageUrl} alt={inv?.title} className='w-10 h-10' />
+                    ) : (
+                      <RiBriefcaseLine className="text-accent h-5 w-5" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">
-                      {inv.property?.title ?? 'Property'}
+                    <p className="text-foreground text-sm font-medium truncate">
+                      {inv.title ?? 'Property'}
                     </p>
-                    <p className="text-white/50 text-xs">
+                    <p className="text-foreground/50 text-xs">
                       {inv.quantity} unit{inv.quantity !== 1 ? 's' : ''} · {formatDate(inv.createdAt)}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-white text-sm font-semibold">
+                    <p className="text-foreground text-sm font-semibold">
                       {formatCurrency(inv.totalAmount)}
                     </p>
                     <StatusBadge status={inv.status} />
@@ -230,8 +265,8 @@ export default function InvestorDashboard() {
                   <RiArrowRightUpLine className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium capitalize truncate">{tx.type}</p>
-                  <p className="text-white/50 text-xs">{formatDate(tx.createdAt)}</p>
+                  <p className="text-foreground text-sm font-medium capitalize truncate">{tx.type}</p>
+                  <p className="text-foreground/50 text-xs">{formatDate(tx.createdAt)}</p>
                 </div>
                 <span className={`text-sm font-semibold ${
                   tx.type === 'deposit' || tx.type === 'commission'
@@ -246,6 +281,7 @@ export default function InvestorDashboard() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

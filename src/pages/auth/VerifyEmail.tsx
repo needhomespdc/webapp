@@ -98,14 +98,14 @@ export default function VerifyEmail() {
   return (
     <AuthLayout>
       <div className="flex flex-col flex-1 px-6 pt-6 pb-8 md:max-w-md md:mx-auto md:w-full md:pt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Verify Email</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Verify Email</h1>
+        <p className="text-foreground/60 text-sm mb-6">
           We sent a 6-digit code to{' '}
-          <span className="text-white font-medium">{email || 'your email'}</span>. Enter it below to
+          <span className="text-foreground font-medium">{email || 'your email'}</span>. Enter it below to
           activate your account.
         </p>
 
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 space-y-6">
+        <div className="bg-foreground/5 backdrop-blur-sm border border-foreground/10 rounded-2xl p-5 space-y-6">
           {/* OTP inputs */}
           <div className="flex justify-center gap-3">
             {otp.map((digit, i) => (
@@ -120,8 +120,8 @@ export default function VerifyEmail() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onPaste={handlePaste}
                 className={cn(
-                  'w-12 h-14 rounded-xl text-center text-xl font-bold text-white bg-white/10 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent caret-accent',
-                  digit ? 'border-accent/60' : 'border-white/10'
+                  'w-12 h-14 rounded-xl text-center text-xl font-bold text-foreground bg-foreground/10 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent caret-accent',
+                  digit ? 'border-accent/60' : 'border-foreground/10'
                 )}
               />
             ))}
@@ -136,7 +136,7 @@ export default function VerifyEmail() {
             {isLoading ? 'Verifying...' : 'Verify Email'}
           </Button>
 
-          <p className="text-center text-sm text-white/50">
+          <p className="text-center text-sm text-foreground/50">
             Didn&apos;t receive the code?{' '}
             <button
               type="button"
@@ -149,7 +149,7 @@ export default function VerifyEmail() {
           </p>
         </div>
 
-        <p className="text-center text-sm text-white/60 mt-6">
+        <p className="text-center text-sm text-foreground/60 mt-6">
           <Link to="/login" className="text-accent font-semibold hover:underline">
             Back to Login
           </Link>

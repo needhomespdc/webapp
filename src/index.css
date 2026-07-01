@@ -1,9 +1,33 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #0B1F3A;
   --color-accent: #E8692A;
   --font-family-sans: "Inter", system-ui, sans-serif;
+}
+
+/* Theme-aware surface tokens — flip between :root (light) and .dark (dark).
+   `foreground` doubles as the base for translucent overlays (bg-foreground/5,
+   border-foreground/10, etc.) so existing white-on-dark "glass" surfaces
+   automatically invert into ink-on-light surfaces in light mode. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+}
+
+:root {
+  --background: #F7F8FA;
+  --foreground: #0B1F3A;
+  --card: #FFFFFF;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #FFFFFF;
+  --card: #131313;
 }
 
 * {
@@ -14,16 +38,19 @@ body {
   font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Override autofill background in dark inputs.
+/* Override autofill background to match the current theme's input surface.
    background-color has no effect on :-webkit-autofill in Chrome/Edge — the
    opaque inset box-shadow is what actually overrides the native yellow tint. */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #262626 inset !important;
-  -webkit-text-fill-color: #ffffff !important;
-  caret-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--card) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
