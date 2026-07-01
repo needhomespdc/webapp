@@ -45,5 +45,6 @@ coverage/
 .cache/
 *.local
 
-# AI context
+# OTHER CONTEXT
 CLAUDE.md
+Needhomes-API-Doc.json

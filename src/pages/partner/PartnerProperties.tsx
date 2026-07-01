@@ -15,8 +15,8 @@ export default function PartnerProperties() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white">Promotable Properties</h1>
-        <p className="text-white/50 text-sm mt-1">Generate referral links and earn commission on conversions.</p>
+        <h1 className="text-2xl font-bold text-foreground">Promotable Properties</h1>
+        <p className="text-foreground/50 text-sm mt-1">Generate referral links and earn commission on conversions.</p>
       </div>
 
       {isLoading ? (
@@ -38,7 +38,7 @@ export default function PartnerProperties() {
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
             Previous
           </Button>
-          <span className="text-white/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
+          <span className="text-foreground/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
           <Button
             variant="outline"
             size="sm"
@@ -65,21 +65,21 @@ function PropertyPromoCard({ property }: { property: Property }) {
   };
 
   return (
-    <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
-      <div className="h-36 bg-white/5 overflow-hidden">
+    <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden">
+      <div className="h-36 bg-foreground/5 overflow-hidden">
         {property.primaryImageUrl ? (
           <img src={property.primaryImageUrl} alt={property.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-white/20 text-3xl">🏠</div>
+          <div className="w-full h-full flex items-center justify-center text-foreground/20 text-3xl">🏠</div>
         )}
       </div>
       <div className="p-4 space-y-2">
-        <h3 className="text-white text-sm font-semibold line-clamp-1">{property.title}</h3>
-        <div className="flex items-center gap-1 text-white/50 text-xs">
+        <h3 className="text-foreground text-sm font-semibold line-clamp-1">{property.title}</h3>
+        <div className="flex items-center gap-1 text-foreground/50 text-xs">
           <RiMapPinLine className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{property.location}</span>
         </div>
-        <p className="text-white text-sm font-bold">
+        <p className="text-foreground text-sm font-bold">
           {formatCurrency(property.totalPrice ?? property.minInvestment)}
           {property.totalPrice == null ? ' min.' : ''}
         </p>

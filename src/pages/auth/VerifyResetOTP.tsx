@@ -93,13 +93,13 @@ export default function VerifyResetOTP() {
   return (
     <AuthLayout>
       <div className="flex flex-col flex-1 px-6 pt-6 pb-8 md:max-w-md md:mx-auto md:w-full md:pt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Enter Reset Code</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Enter Reset Code</h1>
+        <p className="text-foreground/60 text-sm mb-6">
           We sent a 6-digit reset code to{' '}
-          <span className="text-white font-medium">{email}</span>. Enter it below.
+          <span className="text-foreground font-medium">{email}</span>. Enter it below.
         </p>
 
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 space-y-6">
+        <div className="bg-foreground/5 backdrop-blur-sm border border-foreground/10 rounded-2xl p-5 space-y-6">
           <div className="flex justify-center gap-3">
             {otp.map((digit, i) => (
               <input
@@ -113,8 +113,8 @@ export default function VerifyResetOTP() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onPaste={handlePaste}
                 className={cn(
-                  'w-12 h-14 rounded-xl text-center text-xl font-bold text-white bg-white/10 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent caret-accent',
-                  digit ? 'border-accent/60' : 'border-white/10'
+                  'w-12 h-14 rounded-xl text-center text-xl font-bold text-foreground bg-foreground/10 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent caret-accent',
+                  digit ? 'border-accent/60' : 'border-foreground/10'
                 )}
               />
             ))}
@@ -129,7 +129,7 @@ export default function VerifyResetOTP() {
             {isLoading ? 'Verifying...' : 'Verify Code'}
           </Button>
 
-          <p className="text-center text-sm text-white/50">
+          <p className="text-center text-sm text-foreground/50">
             Didn&apos;t receive the code?{' '}
             <button
               type="button"
@@ -142,7 +142,7 @@ export default function VerifyResetOTP() {
           </p>
         </div>
 
-        <p className="text-center text-sm text-white/60 mt-6">
+        <p className="text-center text-sm text-foreground/60 mt-6">
           <Link to="/forgot-password" className="text-accent font-semibold hover:underline">
             Back
           </Link>

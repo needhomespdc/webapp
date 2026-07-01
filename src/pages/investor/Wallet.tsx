@@ -52,17 +52,17 @@
 //   return (
 //     <div className="space-y-6">
 //       <div>
-//         <h1 className="text-2xl font-bold text-white">Wallet</h1>
-//         <p className="text-white/50 text-sm mt-1">Manage your funds and transactions.</p>
+//         <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
+//         <p className="text-foreground/50 text-sm mt-1">Manage your funds and transactions.</p>
 //       </div>
 
 //       <Card>
 //         <CardContent className="p-6">
-//           <p className="text-white/50 text-xs mb-1">Available Balance</p>
+//           <p className="text-foreground/50 text-xs mb-1">Available Balance</p>
 //           {walletLoading ? (
 //             <Skeleton className="h-9 w-40" />
 //           ) : (
-//             <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-white" />
+//             <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-foreground" />
 //           )}
 //           <div className="flex gap-3 mt-4">
 //             <Button className="flex-1" onClick={() => setTopUpOpen(true)}>
@@ -89,7 +89,7 @@
 //       {/* Bank accounts */}
 //       <div>
 //         <div className="flex items-center justify-between mb-3">
-//           <h2 className="text-white font-semibold text-sm">Bank Accounts</h2>
+//           <h2 className="text-foreground font-semibold text-sm">Bank Accounts</h2>
 //           <Button variant="outline" size="sm" onClick={() => setAddBankOpen(true)}>
 //             <RiAddLine className="h-4 w-4" />
 //             Add
@@ -110,7 +110,7 @@
 
 //       {/* Transactions */}
 //       <div>
-//         <h2 className="text-white font-semibold text-sm mb-3">Recent Transactions</h2>
+//         <h2 className="text-foreground font-semibold text-sm mb-3">Recent Transactions</h2>
 //         {txLoading ? (
 //           <div className="space-y-3">
 //             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
@@ -120,7 +120,7 @@
 //         ) : (
 //           <div className="space-y-2">
 //             {transactions.map((tx) => (
-//               <div key={tx.id} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
+//               <div key={tx.id} className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-xl p-3">
 //                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
 //                   tx.type === 'deposit' || tx.type === 'commission' || tx.type === 'refund'
 //                     ? 'bg-green-600/15 text-green-400'
@@ -129,8 +129,8 @@
 //                   <RiWallet3Line className="h-4 w-4" />
 //                 </div>
 //                 <div className="flex-1 min-w-0">
-//                   <p className="text-white text-sm font-medium capitalize truncate">{tx.type}</p>
-//                   <p className="text-white/40 text-xs">{formatDate(tx.createdAt)}</p>
+//                   <p className="text-foreground text-sm font-medium capitalize truncate">{tx.type}</p>
+//                   <p className="text-foreground/40 text-xs">{formatDate(tx.createdAt)}</p>
 //                 </div>
 //                 <div className="text-right shrink-0">
 //                   <p className={`text-sm font-semibold ${
@@ -173,18 +173,18 @@
 //   const removeMutation = useRemoveBankAccount();
 
 //   return (
-//     <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
+//     <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-xl p-3">
 //       <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
 //         <RiBankLine className="h-4 w-4" />
 //       </div>
 //       <div className="flex-1 min-w-0">
-//         <p className="text-white text-sm font-medium">{shortName} — {accountNumber}</p>
-//         <p className="text-white/40 text-xs">{accountHolderName}</p>
+//         <p className="text-foreground text-sm font-medium">{shortName} — {accountNumber}</p>
+//         <p className="text-foreground/40 text-xs">{accountHolderName}</p>
 //       </div>
 //       {isPrimary && <span className="text-xs text-accent font-medium shrink-0">Primary</span>}
 //       <button
 //         onClick={() => removeMutation.mutate(bankAccountId, { onError: () => toast.error('Failed to remove bank account') })}
-//         className="p-1.5 text-white/40 hover:text-red-400 transition-colors shrink-0"
+//         className="p-1.5 text-foreground/40 hover:text-red-400 transition-colors shrink-0"
 //       >
 //         <RiDeleteBinLine className="h-4 w-4" />
 //       </button>
@@ -294,13 +294,13 @@
 //           <div className="space-y-2">
 //             <Label>Bank Account</Label>
 //             <select
-//               className="flex h-14 w-full rounded-xl bg-white/10 border border-white/10 px-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent"
+//               className="flex h-14 w-full rounded-xl bg-foreground/10 border border-foreground/10 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
 //               value={bankAccountId}
 //               onChange={(e) => setBankAccountId(e.target.value)}
 //             >
 //               <option value="" disabled>Select bank account</option>
 //               {bankAccounts.map((b) => (
-//                 <option key={b.id} value={b.id} className="bg-[#111]">
+//                 <option key={b.id} value={b.id} className="bg-card">
 //                   {b.shortName} — {b.accountNumber}
 //                 </option>
 //               ))}
@@ -442,8 +442,6 @@
 //     </Dialog>
 //   );
 // }
-
-
 
 export default function Wallet() {
   return (

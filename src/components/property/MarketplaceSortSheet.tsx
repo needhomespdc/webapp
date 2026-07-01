@@ -40,7 +40,7 @@ export function MarketplaceSortSheet({ open, onOpenChange, value, onChange }: Ma
                 }}
                 className={cn(
                   'w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium transition-all',
-                  selected ? 'bg-accent/15 text-accent' : 'bg-white/5 text-white/80 hover:bg-white/10'
+                  selected ? 'bg-accent/15 text-accent' : 'bg-foreground/5 text-foreground/80 hover:bg-foreground/10'
                 )}
               >
                 {opt.label}

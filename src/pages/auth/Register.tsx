@@ -114,12 +114,12 @@ function PasswordRequirements({ password }: { password: string }) {
           <div
             className={cn(
               'flex h-4 w-4 items-center justify-center rounded-full text-[10px]',
-              c.met ? 'bg-green-500 text-white' : 'bg-white/20 text-white/40'
+              c.met ? 'bg-green-500 text-white' : 'bg-foreground/20 text-foreground/40'
             )}
           >
             {c.met ? '✓' : ''}
           </div>
-          <span className={cn('text-xs', c.met ? 'text-green-400' : 'text-white/50')}>
+          <span className={cn('text-xs', c.met ? 'text-green-400' : 'text-foreground/50')}>
             {c.label}
           </span>
         </div>
@@ -132,17 +132,17 @@ function PasswordRequirements({ password }: { password: string }) {
 
 function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="flex h-14 w-full rounded-xl bg-white/10 border border-white/10 overflow-hidden focus-within:ring-2 focus-within:ring-accent focus-within:border-transparent transition-all duration-200">
-      <div className="flex items-center gap-1.5 px-3 border-r border-white/10 shrink-0">
+    <div className="flex h-14 w-full rounded-xl bg-foreground/10 border border-foreground/10 overflow-hidden focus-within:ring-2 focus-within:ring-accent focus-within:border-transparent transition-all duration-200">
+      <div className="flex items-center gap-1.5 px-3 border-r border-foreground/10 shrink-0">
         <span className="text-base">🇳🇬</span>
-        <span className="text-sm text-white/70">+234</span>
+        <span className="text-sm text-foreground/70">+234</span>
       </div>
       <input
         type="tel"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="8012345678"
-        className="flex-1 bg-transparent px-3 text-sm text-white placeholder:text-white/40 focus:outline-none"
+        className="flex-1 bg-transparent px-3 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none"
       />
     </div>
   );
@@ -207,7 +207,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>First Name</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10" placeholder="John" {...field} />
                 </div>
               </FormControl>
@@ -223,7 +223,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Last Name</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10" placeholder="Doe" {...field} />
                 </div>
               </FormControl>
@@ -239,7 +239,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10" type="email" placeholder="john@example.com" {...field} />
                 </div>
               </FormControl>
@@ -255,7 +255,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiPhoneLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5 z-10" />
+                  <RiPhoneLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5 z-10" />
                   <PhoneInput value={field.value} onChange={field.onChange} />
                 </div>
               </FormControl>
@@ -271,7 +271,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input
                     className="pl-10 pr-10"
                     type={showPw ? 'text' : 'password'}
@@ -281,7 +281,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                   <button
                     type="button"
                     onClick={() => setShowPw((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors"
                   >
                     {showPw ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                   </button>
@@ -300,7 +300,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input
                     className="pl-10 pr-10"
                     type={showConfirm ? 'text' : 'password'}
@@ -310,7 +310,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                   <button
                     type="button"
                     onClick={() => setShowConfirm((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors"
                   >
                     {showConfirm ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                   </button>
@@ -340,7 +340,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                 <FormControl>
                   <SelectTrigger>
                     <div className="flex items-center gap-2">
-                      <RiMegaphoneLine className="h-4 w-4 text-white/40" />
+                      <RiMegaphoneLine className="h-4 w-4 text-foreground/40" />
                       <SelectValue placeholder="Select an option" />
                     </div>
                   </SelectTrigger>
@@ -413,7 +413,7 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Company Name</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiBuilding2Line className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiBuilding2Line className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10" placeholder="Acme Corp Ltd." {...field} />
                 </div>
               </FormControl>
@@ -429,7 +429,7 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10" type="email" placeholder="corp@company.com" {...field} />
                 </div>
               </FormControl>
@@ -458,9 +458,9 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10 pr-10" type={showPw ? 'text' : 'password'} placeholder="••••••••" {...field} />
-                  <button type="button" onClick={() => setShowPw((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
+                  <button type="button" onClick={() => setShowPw((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors">
                     {showPw ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                   </button>
                 </div>
@@ -478,9 +478,9 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                  <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                   <Input className="pl-10 pr-10" type={showConfirm ? 'text' : 'password'} placeholder="••••••••" {...field} />
-                  <button type="button" onClick={() => setShowConfirm((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
+                  <button type="button" onClick={() => setShowConfirm((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors">
                     {showConfirm ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                   </button>
                 </div>
@@ -554,7 +554,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormLabel>First Name</FormLabel>
             <FormControl>
               <div className="relative">
-                <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                 <Input className="pl-10" placeholder="John" {...field} />
               </div>
             </FormControl>
@@ -566,7 +566,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormLabel>Last Name</FormLabel>
             <FormControl>
               <div className="relative">
-                <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                <RiUser3Line className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                 <Input className="pl-10" placeholder="Doe" {...field} />
               </div>
             </FormControl>
@@ -578,7 +578,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormLabel>Email</FormLabel>
             <FormControl>
               <div className="relative">
-                <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                 <Input className="pl-10" type="email" placeholder="partner@example.com" {...field} />
               </div>
             </FormControl>
@@ -599,9 +599,9 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormLabel>Password</FormLabel>
             <FormControl>
               <div className="relative">
-                <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                 <Input className="pl-10 pr-10" type={showPw ? 'text' : 'password'} placeholder="••••••••" {...field} />
-                <button type="button" onClick={() => setShowPw((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
+                <button type="button" onClick={() => setShowPw((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors">
                   {showPw ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                 </button>
               </div>
@@ -615,9 +615,9 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormLabel>Confirm Password</FormLabel>
             <FormControl>
               <div className="relative">
-                <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                 <Input className="pl-10 pr-10" type={showConfirm ? 'text' : 'password'} placeholder="••••••••" {...field} />
-                <button type="button" onClick={() => setShowConfirm((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
+                <button type="button" onClick={() => setShowConfirm((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors">
                   {showConfirm ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                 </button>
               </div>
@@ -642,7 +642,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
               <FormControl>
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
-                    <RiMegaphoneLine className="h-4 w-4 text-white/40" />
+                    <RiMegaphoneLine className="h-4 w-4 text-foreground/40" />
                     <SelectValue placeholder="Select an option" />
                   </div>
                 </SelectTrigger>
@@ -681,15 +681,15 @@ export default function Register() {
   return (
     <AuthLayout>
       <div className="flex flex-col flex-1 px-6 pt-6 pb-8 md:max-w-md md:mx-auto md:w-full md:pt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
+        <p className="text-foreground/60 text-sm mb-6">
           Join Needhomes and start your real estate investment journey.
         </p>
 
         {/* Form card */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 space-y-5">
+        <div className="bg-foreground/5 backdrop-blur-sm border border-foreground/10 rounded-2xl p-5 space-y-5">
           {/* Role tabs */}
-          <div className="flex bg-white/10 rounded-xl p-1">
+          <div className="flex bg-foreground/10 rounded-xl p-1">
             <button
               type="button"
               onClick={() => setActiveTab('investor')}
@@ -697,7 +697,7 @@ export default function Register() {
                 'flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
                 activeTab === 'investor'
                   ? 'bg-accent text-white shadow-lg'
-                  : 'text-white/60 hover:text-white'
+                  : 'text-foreground/60 hover:text-foreground'
               )}
             >
               Investor
@@ -709,7 +709,7 @@ export default function Register() {
                 'flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
                 activeTab === 'partner'
                   ? 'bg-accent text-white shadow-lg'
-                  : 'text-white/60 hover:text-white'
+                  : 'text-foreground/60 hover:text-foreground'
               )}
             >
               Partner
@@ -719,14 +719,14 @@ export default function Register() {
           {/* Investor type selector */}
           {activeTab === 'investor' && (
             <div>
-              <p className="text-white/80 text-sm font-medium mb-2">What type of investor are you?</p>
+              <p className="text-foreground/80 text-sm font-medium mb-2">What type of investor are you?</p>
               <Select
                 value={investorType}
                 onValueChange={(v) => setInvestorType(v as InvestorType)}
               >
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
-                    <RiUser3Line className="h-4 w-4 text-white/40" />
+                    <RiUser3Line className="h-4 w-4 text-foreground/40" />
                     <SelectValue />
                   </div>
                 </SelectTrigger>
@@ -751,14 +751,14 @@ export default function Register() {
         </div>
 
         {/* Terms */}
-        <p className="text-center text-xs text-white/40 mt-4 leading-relaxed">
+        <p className="text-center text-xs text-foreground/40 mt-4 leading-relaxed">
           By creating an account, you agree to Needhomes{' '}
           <Link to="/privacy-policy" className="text-accent hover:underline">Privacy Policy</Link>,{' '}
           <Link to="/terms" className="text-accent hover:underline">Terms and Conditions</Link>
         </p>
 
         {/* Login link */}
-        <p className="text-center text-sm text-white/60 mt-4">
+        <p className="text-center text-sm text-foreground/60 mt-4">
           Already have an account?{' '}
           <Link to="/login" className="text-accent font-semibold hover:underline">
             Log in

@@ -25,8 +25,8 @@ export default function KYCPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Identity Verification</h1>
-        <p className="text-white/50 text-sm mt-1">Complete KYC to unlock investments and withdrawals.</p>
+        <h1 className="text-2xl font-bold text-foreground">Identity Verification</h1>
+        <p className="text-foreground/50 text-sm mt-1">Complete KYC to unlock investments and withdrawals.</p>
       </div>
 
       <Card>
@@ -35,7 +35,7 @@ export default function KYCPage() {
             <RiShieldCheckLine className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <p className="text-white font-semibold text-sm">Verification Status</p>
+            <p className="text-foreground font-semibold text-sm">Verification Status</p>
             {status?.rejectionReason && (
               <p className="text-red-400 text-xs mt-1">{status.rejectionReason}</p>
             )}
@@ -48,8 +48,8 @@ export default function KYCPage() {
         <Card>
           <CardContent className="p-6 text-center">
             <RiShieldCheckLine className="h-10 w-10 text-green-400 mx-auto mb-2" />
-            <p className="text-white font-semibold">You're verified!</p>
-            <p className="text-white/50 text-sm mt-1">You have full access to invest and withdraw.</p>
+            <p className="text-foreground font-semibold">You're verified!</p>
+            <p className="text-foreground/50 text-sm mt-1">You have full access to invest and withdraw.</p>
           </CardContent>
         </Card>
       )}
@@ -57,8 +57,8 @@ export default function KYCPage() {
       {kycStatus === 'pending' && (
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-white font-semibold">Your verification is under review</p>
-            <p className="text-white/50 text-sm mt-1">This usually takes 1-2 business days.</p>
+            <p className="text-foreground font-semibold">Your verification is under review</p>
+            <p className="text-foreground/50 text-sm mt-1">This usually takes 1-2 business days.</p>
           </CardContent>
         </Card>
       )}
@@ -96,8 +96,8 @@ function IndividualKYCFlow() {
     <Card>
       <CardContent className="p-6 text-center">
         <RiShieldCheckLine className="h-10 w-10 text-accent mx-auto mb-3" />
-        <p className="text-white font-semibold mb-1">Verify your identity</p>
-        <p className="text-white/50 text-sm mb-4">
+        <p className="text-foreground font-semibold mb-1">Verify your identity</p>
+        <p className="text-foreground/50 text-sm mb-4">
           You'll need a valid government ID and a few minutes to complete this.
         </p>
         <Button onClick={handleStart} disabled={createSessionMutation.isPending}>
@@ -157,7 +157,7 @@ function CorporateKYCFlow() {
     return (
       <Card>
         <CardContent className="p-6 space-y-4">
-          <p className="text-white font-semibold text-sm">Step 1: Verify Account Manager</p>
+          <p className="text-foreground font-semibold text-sm">Step 1: Verify Account Manager</p>
           <div className="space-y-2">
             <Label>National Identification Number (NIN)</Label>
             <Input value={nin} onChange={(e) => setNin(e.target.value.replace(/\D/g, ''))} maxLength={11} placeholder="Enter 11-digit NIN" />
@@ -181,18 +181,18 @@ function CorporateKYCFlow() {
   return (
     <Card>
       <CardContent className="p-6 space-y-4">
-        <p className="text-white font-semibold text-sm">Step 2: Submit CAC Document</p>
+        <p className="text-foreground font-semibold text-sm">Step 2: Submit CAC Document</p>
         <div className="space-y-2">
           <Label>CAC Registration Number</Label>
           <Input value={cacNumber} onChange={(e) => setCacNumber(e.target.value)} placeholder="RC123456" />
         </div>
         <div className="space-y-2">
           <Label>CAC Certificate</Label>
-          <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-white/20 rounded-xl p-6 cursor-pointer hover:border-accent/40 transition-colors">
-            <RiUploadCloud2Line className="h-8 w-8 text-white/40" />
-            <span className="text-white/50 text-sm text-center">
+          <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-foreground/20 rounded-xl p-6 cursor-pointer hover:border-accent/40 transition-colors">
+            <RiUploadCloud2Line className="h-8 w-8 text-foreground/40" />
+            <span className="text-foreground/50 text-sm text-center">
               {cacFile ? (
-                <span className="flex items-center gap-1 text-white"><RiFileTextLine className="h-4 w-4" />{cacFile.name}</span>
+                <span className="flex items-center gap-1 text-foreground"><RiFileTextLine className="h-4 w-4" />{cacFile.name}</span>
               ) : (
                 'Click to upload PDF or image'
               )}

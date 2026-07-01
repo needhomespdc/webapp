@@ -60,8 +60,8 @@
 //     <div className="space-y-5">
 //       <div className="flex items-center justify-between">
 //         <div>
-//           <h1 className="text-2xl font-bold text-white">Support</h1>
-//           <p className="text-white/50 text-sm mt-1">Get help with your account or investments.</p>
+//           <h1 className="text-2xl font-bold text-foreground">Support</h1>
+//           <p className="text-foreground/50 text-sm mt-1">Get help with your account or investments.</p>
 //         </div>
 //         <Button size="sm" onClick={() => setNewOpen(true)}>
 //           <RiAddLine className="h-4 w-4" />
@@ -86,14 +86,14 @@
 //             <button
 //               key={t.id}
 //               onClick={() => setActiveTicketId(t.id)}
-//               className="w-full text-left flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all"
+//               className="w-full text-left flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-2xl p-4 hover:border-foreground/20 transition-all"
 //             >
 //               <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
 //                 <RiCustomerService2Line className="text-accent h-5 w-5" />
 //               </div>
 //               <div className="flex-1 min-w-0">
-//                 <p className="text-white text-sm font-semibold truncate">{t.subject}</p>
-//                 <p className="text-white/40 text-xs mt-0.5">{formatDate(t.createdAt)}</p>
+//                 <p className="text-foreground text-sm font-semibold truncate">{t.subject}</p>
+//                 <p className="text-foreground/40 text-xs mt-0.5">{formatDate(t.createdAt)}</p>
 //               </div>
 //               <StatusBadge status={t.status} />
 //             </button>
@@ -116,7 +116,7 @@
 //             <div className="space-y-2">
 //               <Label>Message</Label>
 //               <textarea
-//                 className="flex w-full min-h-28 rounded-xl bg-white/10 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+//                 className="flex w-full min-h-28 rounded-xl bg-foreground/10 border border-foreground/10 px-4 py-3 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
 //                 placeholder="Describe your issue in detail..."
 //                 value={message}
 //                 onChange={(e) => setMessage(e.target.value)}
@@ -159,7 +159,7 @@
 //     <Dialog open={!!ticketId} onOpenChange={(open) => !open && onClose()}>
 //       <DialogContent className="max-w-xl">
 //         {isLoading || !ticket ? (
-//           <div className="py-8 text-center text-white/50 text-sm">Loading...</div>
+//           <div className="py-8 text-center text-foreground/50 text-sm">Loading...</div>
 //         ) : (
 //           <>
 //             <DialogHeader>
@@ -173,10 +173,10 @@
 //               {ticket.messages.map((m) => (
 //                 <div
 //                   key={m.id}
-//                   className={cn('max-w-[85%] rounded-2xl p-3', m.sender === 'user' ? 'bg-accent/15 ml-auto' : 'bg-white/10')}
+//                   className={cn('max-w-[85%] rounded-2xl p-3', m.sender === 'user' ? 'bg-accent/15 ml-auto' : 'bg-foreground/10')}
 //                 >
-//                   <p className="text-white text-sm">{m.message}</p>
-//                   <p className="text-white/40 text-xs mt-1">{formatDate(m.createdAt)}</p>
+//                   <p className="text-foreground text-sm">{m.message}</p>
+//                   <p className="text-foreground/40 text-xs mt-1">{formatDate(m.createdAt)}</p>
 //                 </div>
 //               ))}
 //             </div>
@@ -208,7 +208,6 @@
 //     </Dialog>
 //   );
 // }
-
 
 export default function Support() {
   return (

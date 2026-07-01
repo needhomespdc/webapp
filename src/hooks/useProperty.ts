@@ -21,7 +21,7 @@ export function usePropertyList(filters: PropertyFilters = {}) {
 export function usePropertyBySlug(slug: string | undefined) {
   const query = useQuery({
     queryKey: queryKeys.properties.bySlug(slug ?? ''),
-    queryFn: () => propertiesApi.getBySlug(slug!).then((r) => r.data),
+    queryFn: () => propertiesApi.getBySlug(slug!).then((data) => data),
     enabled: !!slug,
     staleTime: 5 * 60_000,
   });

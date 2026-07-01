@@ -16,8 +16,8 @@ export default function Favorites() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white">Favorites</h1>
-        <p className="text-white/50 text-sm mt-1">Properties you've saved for later.</p>
+        <h1 className="text-2xl font-bold text-foreground">Favorites</h1>
+        <p className="text-foreground/50 text-sm mt-1">Properties you've saved for later.</p>
       </div>
 
       {isLoading ? (
@@ -58,7 +58,7 @@ export default function Favorites() {
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
             Previous
           </Button>
-          <span className="text-white/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
+          <span className="text-foreground/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
           <Button
             variant="outline"
             size="sm"

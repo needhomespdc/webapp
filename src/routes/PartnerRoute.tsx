@@ -6,11 +6,13 @@ import {
   RiMoneyDollarCircleFill,
   RiWalletLine,
   RiWalletFill,
+  RiSettings4Line,
+  RiSettings4Fill,
 } from 'react-icons/ri';
-import { HiBell, HiOutlineBell } from 'react-icons/hi2';
 import { useAuth } from '@/hooks/useAuth';
 import { AppShell } from '@/components/layout/AppShell';
 import { HiOutlineBuildingOffice2, HiBuildingOffice2 } from "react-icons/hi2";
+import { BiSupport } from 'react-icons/bi';
 
 const partnerNavItems = [
   {
@@ -38,22 +40,32 @@ const partnerNavItems = [
     activeIcon: <RiWalletFill />,
   },
   {
-    label: 'Notifications',
-    to: '/partner/notifications',
-    icon: <HiOutlineBell />,
-    activeIcon: <HiBell />,
+      label: 'Support Center',
+      to: '/investor/support',
+      icon: <BiSupport />,
+      activeIcon: <BiSupport />,
+    },
+  {
+    label: 'Settings',
+    to: '/partner/settings',
+    icon: <RiSettings4Line />,
+    activeIcon: <RiSettings4Fill />,
   },
 ];
 
 export function PartnerRoute() {
-  const { user, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   if (user?.role === 'investor') {

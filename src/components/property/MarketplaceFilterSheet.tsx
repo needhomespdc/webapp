@@ -65,7 +65,7 @@ function Chip({
         'px-4 py-2 rounded-full text-sm font-medium border transition-all',
         selected
           ? 'bg-accent text-white border-accent'
-          : 'bg-white/5 text-white/70 border-white/10 hover:border-white/20'
+          : 'bg-foreground/5 text-foreground/70 border-foreground/10 hover:border-foreground/20'
       )}
     >
       {children}
@@ -113,7 +113,7 @@ export function MarketplaceFilterSheet({ open, onOpenChange, value, onApply }: M
 
         <div className="flex-1 overflow-y-auto space-y-6 mt-2 pb-4">
           <div>
-            <h3 className="text-white font-semibold text-sm mb-3">Property type</h3>
+            <h3 className="text-foreground font-semibold text-sm mb-3">Property type</h3>
             <div className="flex flex-wrap gap-2">
               {PROPERTY_KINDS.map((k) => (
                 <Chip
@@ -128,7 +128,7 @@ export function MarketplaceFilterSheet({ open, onOpenChange, value, onApply }: M
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-sm mb-3">Return type</h3>
+            <h3 className="text-foreground font-semibold text-sm mb-3">Return type</h3>
             <div className="flex flex-wrap gap-2">
               {RETURN_TYPES.map((r) => (
                 <Chip
@@ -143,7 +143,7 @@ export function MarketplaceFilterSheet({ open, onOpenChange, value, onApply }: M
           </div>
 
           <div>
-            <h3 className="text-white font-semibold text-sm mb-3">Investment amount</h3>
+            <h3 className="text-foreground font-semibold text-sm mb-3">Investment amount</h3>
             <div className="flex flex-wrap gap-2">
               {AMOUNT_RANGES.map((a) => (
                 <Chip

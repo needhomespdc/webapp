@@ -23,7 +23,7 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
 }
 
 const sheetVariants = cva(
-  'fixed z-50 gap-4 bg-[#111] border-white/10 p-6 shadow-2xl transition ease-in-out',
+  'fixed z-50 gap-4 bg-card border-foreground/10 p-6 shadow-2xl transition ease-in-out',
   {
     variants: {
       side: {
@@ -46,7 +46,7 @@ function SheetContent({ side = 'right', className, children, ...props }: SheetCo
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content className={cn(sheetVariants({ side }), className)} {...props}>
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-white/40 hover:text-white transition-colors">
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-foreground/40 hover:text-foreground transition-colors">
           <RiCloseLine className="h-5 w-5" />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>
@@ -65,11 +65,11 @@ function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
-  return <SheetPrimitive.Title className={cn('text-xl font-semibold text-white', className)} {...props} />;
+  return <SheetPrimitive.Title className={cn('text-xl font-semibold text-foreground', className)} {...props} />;
 }
 
 function SheetDescription({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Description>) {
-  return <SheetPrimitive.Description className={cn('text-sm text-white/60', className)} {...props} />;
+  return <SheetPrimitive.Description className={cn('text-sm text-foreground/60', className)} {...props} />;
 }
 
 export {

@@ -28,21 +28,21 @@ export default function PartnerDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Welcome, {user?.firstName} 👋</h1>
-        <p className="text-white/50 text-sm mt-1">Track your referrals and commission earnings.</p>
+        <h1 className="text-2xl font-bold text-foreground">Welcome, {user?.firstName} 👋</h1>
+        <p className="text-foreground/50 text-sm mt-1">Track your referrals and commission earnings.</p>
       </div>
 
       {/* Commission wallet */}
       <Card>
         <CardContent className="p-5">
-          <p className="text-white/50 text-xs mb-1">Commission Wallet Balance</p>
+          <p className="text-foreground/50 text-xs mb-1">Commission Wallet Balance</p>
           {walletLoading ? (
             <Skeleton className="h-9 w-40" />
           ) : (
-            <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-white" />
+            <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-foreground" />
           )}
           <div className="flex items-center justify-between mt-3">
-            <p className="text-white/40 text-xs">
+            <p className="text-foreground/40 text-xs">
               Total earned: {formatCurrency(wallet?.totalEarned ?? 0)}
             </p>
             <Link to="/partner/wallet">
@@ -61,7 +61,7 @@ export default function PartnerDashboard() {
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
               period === p.value
                 ? 'bg-accent text-white border-accent'
-                : 'bg-white/5 text-white/60 border-white/10 hover:text-white'
+                : 'bg-foreground/5 text-foreground/60 border-foreground/10 hover:text-foreground'
             }`}
           >
             {p.label}
@@ -76,11 +76,11 @@ export default function PartnerDashboard() {
             <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent mb-2">
               <RiCursorLine className="h-4 w-4" />
             </div>
-            <p className="text-white/50 text-xs mb-1">Total Clicks</p>
+            <p className="text-foreground/50 text-xs mb-1">Total Clicks</p>
             {analyticsLoading ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <p className="text-2xl font-bold text-white">{analytics?.totalClicks ?? 0}</p>
+              <p className="text-2xl font-bold text-foreground">{analytics?.totalClicks ?? 0}</p>
             )}
           </CardContent>
         </Card>
@@ -89,11 +89,11 @@ export default function PartnerDashboard() {
             <div className="w-9 h-9 rounded-xl bg-green-600/15 flex items-center justify-center text-green-400 mb-2">
               <RiUserAddLine className="h-4 w-4" />
             </div>
-            <p className="text-white/50 text-xs mb-1">Conversions</p>
+            <p className="text-foreground/50 text-xs mb-1">Conversions</p>
             {analyticsLoading ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <p className="text-2xl font-bold text-white">{analytics?.totalConversions ?? 0}</p>
+              <p className="text-2xl font-bold text-foreground">{analytics?.totalConversions ?? 0}</p>
             )}
           </CardContent>
         </Card>
@@ -105,8 +105,8 @@ export default function PartnerDashboard() {
             <RiMoneyDollarCircleLine className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-white/50 text-xs">Lifetime Earnings</p>
-            <CurrencyDisplay amount={analytics?.totalLifetimeEarnings ?? 0} size="lg" className="text-white" />
+            <p className="text-foreground/50 text-xs">Lifetime Earnings</p>
+            <CurrencyDisplay amount={analytics?.totalLifetimeEarnings ?? 0} size="lg" className="text-foreground" />
           </div>
         </CardContent>
       </Card>
@@ -127,17 +127,17 @@ export default function PartnerDashboard() {
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
             </div>
           ) : !entries.length ? (
-            <p className="text-white/50 text-sm text-center py-6">No commissions yet. Start sharing referral links!</p>
+            <p className="text-foreground/50 text-sm text-center py-6">No commissions yet. Start sharing referral links!</p>
           ) : (
             <div className="space-y-3">
               {entries.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-colors">
                   <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                     <RiMoneyDollarCircleLine className="text-accent h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{entry.propertyTitle}</p>
-                    <p className="text-white/50 text-xs">{formatDate(entry.createdAt)}</p>
+                    <p className="text-foreground text-sm font-medium truncate">{entry.propertyTitle}</p>
+                    <p className="text-foreground/50 text-xs">{formatDate(entry.createdAt)}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-green-400 text-sm font-semibold">+{formatCurrency(entry.commissionAmount)}</p>

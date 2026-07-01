@@ -8,7 +8,7 @@ interface SumsubWidgetProps {
 
 export function SumsubWidget({ accessToken, onComplete }: SumsubWidgetProps) {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white/5 border border-white/10 min-h-[500px]">
+    <div className="rounded-2xl overflow-hidden bg-foreground/5 border border-foreground/10 min-h-[500px]">
       <SumsubWebSdk
         accessToken={accessToken}
         expirationHandler={async () => {

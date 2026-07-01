@@ -52,12 +52,12 @@ export default function ForgotPassword() {
   return (
     <AuthLayout>
       <div className="flex flex-col flex-1 px-6 pt-6 pb-8 md:max-w-md md:mx-auto md:w-full md:pt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Forgot Password</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Forgot Password</h1>
+        <p className="text-foreground/60 text-sm mb-6">
           Enter the email linked to your NeedHomes account.
         </p>
 
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
+        <div className="bg-foreground/5 backdrop-blur-sm border border-foreground/10 rounded-2xl p-5">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -68,7 +68,7 @@ export default function ForgotPassword() {
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                        <RiMailLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                         <Input
                           className="pl-10"
                           type="email"

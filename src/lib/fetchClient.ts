@@ -10,9 +10,8 @@ function readPersistedRefreshToken(): string | null {
 }
 
 let accessToken: string | null = null;
-// Seed from localStorage so a page reload can restore a "remembered" session.
+// Seed from localStorage so a page reload can restore the session.
 let refreshTokenValue: string | null = readPersistedRefreshToken();
-let refreshTokenIsPersisted = refreshTokenValue !== null;
 let refreshPromise: Promise<string> | null = null;
 let onUnauthorized: (() => void) | null = null;
 
@@ -31,16 +30,15 @@ export function getAccessToken(): string | null {
  * The token itself comes back in the login response body, so the client must
  * hold onto it and send it explicitly on every refresh.
  *
- * Pass `persist: true` (set by AuthContext when "Remember Me" was checked at
- * login) to also write it to localStorage so the session survives a reload.
- * Otherwise it's memory-only and a reload requires a fresh login.
+ * Always persisted to localStorage so a reload restores the session — the
+ * "Remember Me" checkbox is sent to the backend (it may affect server-side
+ * refresh-token expiry) but no longer gates client-side persistence.
  */
-export function setRefreshToken(token: string | null, persist = false) {
+export function setRefreshToken(token: string | null) {
   refreshTokenValue = token;
-  refreshTokenIsPersisted = persist && token !== null;
   try {
-    if (refreshTokenIsPersisted) {
-      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token!);
+    if (token) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token);
     } else {
       localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
     }
@@ -135,8 +133,7 @@ export async function refreshAccessToken(): Promise<string> {
       const token = data?.data?.accessToken ?? data?.accessToken ?? '';
       const rotatedRefreshToken = data?.data?.refreshToken ?? data?.refreshToken;
       accessToken = token;
-      // Preserve whatever persistence choice was made at login when rotating.
-      if (rotatedRefreshToken) setRefreshToken(rotatedRefreshToken, refreshTokenIsPersisted);
+      if (rotatedRefreshToken) setRefreshToken(rotatedRefreshToken);
       return token;
     })().finally(() => {
       refreshPromise = null;

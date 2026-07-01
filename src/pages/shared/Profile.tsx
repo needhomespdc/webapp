@@ -74,11 +74,11 @@
 //     onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to change password'),
 //   });
 
-//   const biometricMutation = useMutation({
-//     mutationFn: authApi.setBiometric,
-//     onSuccess: () => toast.success('Biometric login preference updated'),
-//     onError: () => toast.error('Failed to update biometric setting'),
-//   });
+//   // const biometricMutation = useMutation({
+//   //   mutationFn: authApi.setBiometric,
+//   //   onSuccess: () => toast.success('Biometric login preference updated'),
+//   //   onError: () => toast.error('Failed to update biometric setting'),
+//   // });
 
 //   const deactivateMutation = useMutation({
 //     mutationFn: authApi.deactivateAccount,
@@ -112,8 +112,8 @@
 //   return (
 //     <div className="space-y-6">
 //       <div>
-//         <h1 className="text-2xl font-bold text-white">Profile</h1>
-//         <p className="text-white/50 text-sm mt-1">Manage your account and security settings.</p>
+//         <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+//         <p className="text-foreground/50 text-sm mt-1">Manage your account and security settings.</p>
 //       </div>
 
 //       {/* Profile card */}
@@ -123,12 +123,12 @@
 //             {displayName.charAt(0).toUpperCase() || 'U'}
 //           </div>
 //           <div className="flex-1 min-w-0">
-//             <p className="text-white font-semibold truncate">{displayName || 'User'}</p>
-//             <p className="text-white/50 text-sm truncate">{user.email}</p>
-//             <p className="text-white/50 text-sm">{user.phone}</p>
+//             <p className="text-foreground font-semibold truncate">{displayName || 'User'}</p>
+//             <p className="text-foreground/50 text-sm truncate">{user.email}</p>
+//             <p className="text-foreground/50 text-sm">{user.phone}</p>
 //             <div className="flex items-center gap-2 mt-2">
 //               {user.role === 'investor' && <StatusBadge status={user.kycStatus} />}
-//               <span className="text-xs text-white/40 capitalize">{user.role}</span>
+//               <span className="text-xs text-foreground/40 capitalize">{user.role}</span>
 //             </div>
 //           </div>
 //           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
@@ -148,33 +148,23 @@
 //         <CardContent className="pt-0 space-y-1">
 //           <button
 //             onClick={() => setPwOpen(true)}
-//             className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/5 transition-colors text-left"
+//             className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-foreground/5 transition-colors text-left"
 //           >
-//             <RiLockPasswordLine className="text-white/50 h-5 w-5" />
+//             <RiLockPasswordLine className="text-foreground/50 h-5 w-5" />
 //             <div className="flex-1">
-//               <p className="text-white text-sm font-medium">Change Password</p>
-//               <p className="text-white/40 text-xs">Update your account password</p>
+//               <p className="text-foreground text-sm font-medium">Change Password</p>
+//               <p className="text-foreground/40 text-xs">Update your account password</p>
 //             </div>
 //           </button>
-//           <div className="flex items-center gap-3 w-full p-3 rounded-xl">
-//             <RiFingerprintLine className="text-white/50 h-5 w-5" />
+//           {/* <div className="flex items-center gap-3 w-full p-3 rounded-xl">
+//             <RiShieldCheckLine className="text-foreground/50 h-5 w-5" />
 //             <div className="flex-1">
-//               <p className="text-white text-sm font-medium">Biometric Login</p>
-//               <p className="text-white/40 text-xs">Use Face ID / fingerprint to sign in</p>
-//             </div>
-//             <Switch
-//               onCheckedChange={(checked) => biometricMutation.mutate({ enabled: checked })}
-//             />
-//           </div>
-//           <div className="flex items-center gap-3 w-full p-3 rounded-xl">
-//             <RiShieldCheckLine className="text-white/50 h-5 w-5" />
-//             <div className="flex-1">
-//               <p className="text-white text-sm font-medium">Security Questions</p>
-//               <p className="text-white/40 text-xs">
+//               <p className="text-foreground text-sm font-medium">Security Questions</p>
+//               <p className="text-foreground/40 text-xs">
 //                 {securityStatus?.isSet ? 'Configured' : 'Not set up yet'}
 //               </p>
 //             </div>
-//           </div>
+//           </div> */}
 //         </CardContent>
 //       </Card>
 
@@ -194,7 +184,7 @@
 //           </Button>
 //           <Button
 //             variant="ghost"
-//             className="w-full justify-start text-white/60"
+//             className="w-full justify-start text-foreground/60"
 //             onClick={async () => { await logout(); navigate('/login'); }}
 //           >
 //             <RiLogoutBoxLine className="h-4 w-4" />
@@ -240,10 +230,10 @@
 //             </div>
 //           </div>
 //           <DialogFooter>
-//             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+//             <Button variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
 //             <Button
 //               onClick={() => updateProfileMutation.mutate({ firstName, lastName, phone })}
-//               disabled={updateProfileMutation.isPending}
+//               disabled={updateProfileMutation.isPending} size="sm"
 //             >
 //               {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
 //             </Button>
@@ -331,8 +321,6 @@
 //     </div>
 //   );
 // }
-
-
 
 export default function Profile() {
   return (

@@ -51,10 +51,10 @@ function PasswordRequirements({ password }: { password: string }) {
     <div className="space-y-1 mt-2">
       {checks.map((c) => (
         <div key={c.label} className="flex items-center gap-2">
-          <div className={cn('flex h-4 w-4 items-center justify-center rounded-full text-[10px]', c.met ? 'bg-green-500 text-white' : 'bg-white/20 text-white/40')}>
+          <div className={cn('flex h-4 w-4 items-center justify-center rounded-full text-[10px]', c.met ? 'bg-green-500 text-white' : 'bg-foreground/20 text-foreground/40')}>
             {c.met ? '✓' : ''}
           </div>
-          <span className={cn('text-xs', c.met ? 'text-green-400' : 'text-white/50')}>{c.label}</span>
+          <span className={cn('text-xs', c.met ? 'text-green-400' : 'text-foreground/50')}>{c.label}</span>
         </div>
       ))}
     </div>
@@ -106,12 +106,12 @@ export default function ResetPassword() {
   return (
     <AuthLayout>
       <div className="flex flex-col flex-1 px-6 pt-6 pb-8 md:max-w-md md:mx-auto md:w-full md:pt-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Reset Password</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Reset Password</h1>
+        <p className="text-foreground/60 text-sm mb-6">
           Create a new password for your NeedHomes account.
         </p>
 
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
+        <div className="bg-foreground/5 backdrop-blur-sm border border-foreground/10 rounded-2xl p-5">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -122,7 +122,7 @@ export default function ResetPassword() {
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                        <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                         <Input
                           className="pl-10 pr-10"
                           type={showPw ? 'text' : 'password'}
@@ -133,7 +133,7 @@ export default function ResetPassword() {
                         <button
                           type="button"
                           onClick={() => setShowPw((p) => !p)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors"
                         >
                           {showPw ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                         </button>
@@ -152,7 +152,7 @@ export default function ResetPassword() {
                     <FormLabel>Confirm New Password</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+                        <RiLockLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5" />
                         <Input
                           className="pl-10 pr-10"
                           type={showConfirm ? 'text' : 'password'}
@@ -163,7 +163,7 @@ export default function ResetPassword() {
                         <button
                           type="button"
                           onClick={() => setShowConfirm((p) => !p)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors"
                         >
                           {showConfirm ? <RiEyeOffLine className="h-5 w-5" /> : <RiEyeLine className="h-5 w-5" />}
                         </button>
@@ -190,7 +190,7 @@ export default function ResetPassword() {
           </Form>
         </div>
 
-        <p className="text-center text-sm text-white/60 mt-6">
+        <p className="text-center text-sm text-foreground/60 mt-6">
           <Link to="/login" className="text-accent font-semibold hover:underline">
             Back to Login
           </Link>

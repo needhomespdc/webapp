@@ -10,7 +10,8 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property, isFavorited, onToggleFavorite }: PropertyCardProps) {
-  const hasStatBoxes = property.listingStats.length >= 2;
+  const listingStats = property.listingStats ?? [];
+  const hasStatBoxes = listingStats.length >= 2;
   const progress =
     property.progressPercent ??
     (property.inventoryTotal > 0
@@ -18,9 +19,9 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
       : null);
 
   return (
-    <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden hover:border-white/20 transition-all">
+    <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden hover:border-foreground/20 transition-all">
       {/* Image */}
-      <Link to={`/investor/marketplace/${property.slug}`} className="block relative h-44 bg-white/5 overflow-hidden">
+      <Link to={`/investor/marketplace/${property.slug}`} className="block relative h-44 bg-foreground/5 overflow-hidden">
         {property.primaryImageUrl ? (
           <img
             src={property.primaryImageUrl}
@@ -28,7 +29,7 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-white/20 text-4xl">🏠</div>
+          <div className="w-full h-full flex items-center justify-center text-foreground/20 text-4xl">🏠</div>
         )}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
           <span className="bg-black/60 backdrop-blur text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
@@ -47,13 +48,13 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <Link to={`/investor/marketplace/${property.slug}`} className="flex-1 min-w-0">
-            <h3 className="text-white text-sm font-semibold leading-snug line-clamp-2 hover:text-accent transition-colors">
+            <h3 className="text-foreground text-sm font-semibold leading-snug line-clamp-2 hover:text-accent transition-colors">
               {property.title}
             </h3>
           </Link>
           <button
             onClick={onToggleFavorite}
-            className="shrink-0 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white/70 hover:text-red-400 transition-colors"
+            className="shrink-0 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-foreground/70 hover:text-red-400 transition-colors"
           >
             {isFavorited ? (
               <RiHeartFill className="h-4 w-4 text-red-400" />
@@ -63,7 +64,7 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
           </button>
         </div>
 
-        <div className="flex items-center gap-1 mt-1.5 text-white/50 text-xs">
+        <div className="flex items-center gap-1 mt-1.5 text-foreground/50 text-xs">
           <RiMapPinLine className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{property.location}</span>
         </div>
@@ -71,33 +72,33 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
         {/* Stats — rendered generically from whatever the backend computed for this type */}
         {hasStatBoxes ? (
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {property.listingStats.slice(0, 2).map((stat, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-center">
-                <p className="text-white text-sm font-bold">{stat.value}</p>
-                <p className="text-white/40 text-[10px] capitalize">{stat.label}</p>
+            {listingStats.slice(0, 2).map((stat, i) => (
+              <div key={i} className="bg-foreground/5 border border-foreground/10 rounded-lg px-2.5 py-1.5 text-center">
+                <p className="text-foreground text-sm font-bold">{stat.value}</p>
+                <p className="text-foreground/40 text-[10px] capitalize">{stat.label}</p>
               </div>
             ))}
           </div>
         ) : property.totalPrice != null ? (
-          <p className="text-white text-sm font-bold mt-3">
-            <span className="text-white/40 font-normal text-xs">Price </span>
+          <p className="text-foreground text-sm font-bold mt-3">
+            <span className="text-foreground/40 font-normal text-xs">Price </span>
             {formatCurrency(property.totalPrice)}
           </p>
-        ) : property.listingStats[0] ? (
-          <p className="text-white text-sm font-bold mt-3">
-            <span className="text-white/40 font-normal text-xs capitalize">{property.listingStats[0].label} </span>
-            {property.listingStats[0].value}
+        ) : listingStats[0] ? (
+          <p className="text-foreground text-sm font-bold mt-3">
+            <span className="text-foreground/40 font-normal text-xs capitalize">{listingStats[0].label} </span>
+            {listingStats[0].value}
           </p>
         ) : null}
 
         {hasStatBoxes && property.totalPrice == null && (
-          <p className="text-white/50 text-xs mt-2">
-            Min. Investment <span className="text-white font-semibold">{formatCurrency(property.minInvestment)}</span>
+          <p className="text-foreground/50 text-xs mt-2">
+            Min. Investment <span className="text-foreground font-semibold">{formatCurrency(property.minInvestment)}</span>
           </p>
         )}
 
         {hasStatBoxes && progress != null && (
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
+          <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden mt-2">
             <div className="h-full bg-accent rounded-full" style={{ width: `${progress}%` }} />
           </div>
         )}
