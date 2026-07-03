@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/useToast';
+import { getApiErrorMessage } from '@/lib/fetchClient';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import {
   MarketplaceFilterSheet,
@@ -97,7 +98,7 @@ export default function Marketplace() {
   const { favoriteIds } = useFavoriteIds();
   const toggleFavMutation = useToggleFavorite();
 
-  const favSet = new Set(favoriteIds);
+  // const favSet = new Set(favoriteIds);
   const activeAmountRange = AMOUNT_RANGES.find((r) => r.value === filters.amountRange);
 
   // Client-side safety net: re-applies propertyKind/returnType/amount in case the
@@ -222,11 +223,11 @@ export default function Marketplace() {
             <PropertyCard
               key={property.id}
               property={property}
-              isFavorited={favSet.has(property.id)}
+              isFavorited={favoriteIds.includes(property.id)}
               onToggleFavorite={() =>
                 toggleFavMutation.mutate(
-                  { propertyId: property.id, isFavorited: favSet.has(property.id) },
-                  { onError: () => toast.error('Failed to update favorites') }
+                  { propertyId: property.id, isFavorited: favoriteIds.includes(property.id) },
+                  { onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to update favorites')) }
                 )
               }
             />

@@ -5,7 +5,8 @@ export const favoritesApi = {
   list: (page = 1, limit = 10): Promise<PaginatedResponse<Property>> =>
     api.get<PaginatedResponse<Property>>(`/favorites?page=${page}&limit=${limit}`),
 
-  getIds: (): Promise<ApiResponse<string[]>> => api.get<ApiResponse<string[]>>('/favorites/ids'),
+  getIds: (): Promise<{ propertyIds: string[] }> =>
+    api.get<{ propertyIds: string[] }>('/favorites/ids'),
 
   add: (propertyId: string): Promise<ApiResponse<null>> =>
     api.post<ApiResponse<null>>(`/favorites/${propertyId}`),

@@ -18,7 +18,7 @@ export function CurrencyDisplay({
     sm: 'text-sm',
     md: 'text-base',
     lg: 'text-xl font-semibold',
-    xl: 'text-3xl font-bold',
+    xl: 'text-2xl font-bold',
   };
 
   return (

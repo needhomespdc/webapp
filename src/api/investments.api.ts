@@ -11,8 +11,8 @@ export const investmentsApi = {
   list: (page = 1, limit = 10): Promise<PaginatedResponse<Investment>> =>
     api.get<PaginatedResponse<Investment>>(`/investments/me?page=${page}&limit=${limit}`),
 
-  getPerformance: (period = '1y'): Promise<ApiResponse<PortfolioPerformance>> =>
-    api.get<ApiResponse<PortfolioPerformance>>(`/investments/me/performance?period=${period}`),
+  getPerformance: (period = 'past_6_months'): Promise<PortfolioPerformance> =>
+    api.get<PortfolioPerformance>(`/investments/me/performance?period=${period}`),
 
   getById: (investmentId: string): Promise<ApiResponse<Investment>> =>
     api.get<ApiResponse<Investment>>(`/investments/${investmentId}`),

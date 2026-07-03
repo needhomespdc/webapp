@@ -23,7 +23,7 @@ import { HiArrowTrendingDown, HiArrowTrendingUp } from 'react-icons/hi2';
 export default function InvestorDashboard() {
   const { user } = useAuth();
 
-  const { performance: performanceData, isLoading: perfLoading } = usePortfolioPerformance('1y');
+  const { performance: performanceData, isLoading: perfLoading } = usePortfolioPerformance('past_6_months');
   const { wallet: walletData, isLoading: walletLoading } = useWallet();
   const { investments: investmentsData, isLoading: invLoading } = useInvestmentList(1, 5);
   const { transactions: txData } = useWalletTransactions(1, 5);

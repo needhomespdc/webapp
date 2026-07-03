@@ -3,6 +3,25 @@ import { RiHeartLine, RiHeartFill, RiMapPinLine, RiArrowRightLine } from 'react-
 import { formatCurrency } from '@/lib/utils';
 import type { Property } from '@/types';
 
+const MODEL_COLORS: Record<string, string> = {
+  fractional: 'bg-violet-500',
+  outright: 'bg-amber-500',
+  land_banking: 'bg-orange-500',
+  save_to_own: 'bg-blue-500',
+  co_development: 'bg-emerald-500',
+};
+
+function modelBadgeColor(label: string, type?: string): string {
+  if (type && MODEL_COLORS[type]) return MODEL_COLORS[type];
+  const lower = label?.toLowerCase() ?? '';
+  if (lower.includes('fraction')) return MODEL_COLORS.fractional;
+  if (lower.includes('outright')) return MODEL_COLORS.outright;
+  if (lower.includes('land')) return MODEL_COLORS.land_banking;
+  if (lower.includes('save')) return MODEL_COLORS.save_to_own;
+  if (lower.includes('co')) return MODEL_COLORS.co_development;
+  return 'bg-black/50 backdrop-blur';
+}
+
 interface PropertyCardProps {
   property: Property;
   isFavorited: boolean;
@@ -32,14 +51,14 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
           <div className="w-full h-full flex items-center justify-center text-foreground/20 text-4xl">🏠</div>
         )}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
-          <span className="bg-black/50 backdrop-blur text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
-            {property.investmentModelTypeLabel == "Co-development" ? "Co-Dev" : property.investmentModelTypeLabel}
+          <span className={`${modelBadgeColor(property.investmentModelTypeLabel, property.investmentModelType)} text-white text-[10px] font-semibold px-2 py-1 rounded-xl`}>
+            {property.investmentModelTypeLabel === 'Co-development' ? 'Co-Dev' : property.investmentModelTypeLabel}
           </span>
           {property.isNewListing && (
-            <span className="bg-accent text-white text-[10px] font-semibold px-2 py-1 rounded-lg">New</span>
+            <span className="bg-white text-accent text-[10px] font-semibold px-2 py-1 rounded-xl">New</span>
           )}
           {property.isHotSelling && (
-            <span className="bg-red-500 text-white text-[10px] font-semibold px-2 py-1 rounded-lg">Hot</span>
+            <span className="bg-red-500 text-white text-[10px] font-semibold px-2 py-1 rounded-xl">🔥 Hot</span>
           )}
         </div>
       </Link>
@@ -54,10 +73,10 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
           </Link>
           <button
             onClick={onToggleFavorite}
-            className="shrink-0 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-foreground/70 hover:text-red-400 transition-colors"
+            className="shrink-0 w-8 h-8 rounded-full bg-foreground/8 flex items-center justify-center text-foreground/40 hover:text-accent transition-colors"
           >
             {isFavorited ? (
-              <RiHeartFill className="h-4 w-4 text-red-400" />
+              <RiHeartFill className="h-4 w-4 text-accent" />
             ) : (
               <RiHeartLine className="h-4 w-4" />
             )}
