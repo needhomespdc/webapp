@@ -1,8 +1,9 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { RootRedirect } from './RootRedirect';
 import { InvestorRoute } from './InvestorRoute';
 import { PartnerRoute } from './PartnerRoute';
+import { RouteErrorPage } from '@/components/shared/ErrorBoundary';
 
 // Auth pages
 const Login = lazy(() => import('@/pages/auth/Login'));
@@ -55,54 +56,59 @@ function withSuspense(Component: React.ComponentType) {
 }
 
 export const router = createBrowserRouter([
-  // Root redirect — sends authenticated users to their dashboard, others to /login
-  { path: '/', element: <RootRedirect /> },
-
-  // Auth routes
-  { path: '/login', element: withSuspense(Login) },
-  { path: '/register', element: withSuspense(Register) },
-  { path: '/verify-email', element: withSuspense(VerifyEmail) },
-  { path: '/forgot-password', element: withSuspense(ForgotPassword) },
-  { path: '/verify-reset-otp', element: withSuspense(VerifyResetOTP) },
-  { path: '/reset-password', element: withSuspense(ResetPassword) },
-
-  // Investor routes
   {
-    element: <InvestorRoute />,
+    // Root wrapper — provides our custom error UI for every route
+    errorElement: <RouteErrorPage />,
     children: [
-      { path: '/investor/dashboard', element: withSuspense(InvestorDashboard) },
-      { path: '/investor/invest', element: withSuspense(Invest) },
-      { path: '/investor/marketplace', element: withSuspense(Marketplace) },
-      { path: '/investor/marketplace/:slug', element: withSuspense(PropertyDetail) },
-      { path: '/investor/portfolio', element: withSuspense(Portfolio) },
-      { path: '/investor/portfolio/:investmentId', element: withSuspense(InvestmentDetail) },
-      { path: '/investor/wallet', element: withSuspense(InvestorWallet) },
-      { path: '/investor/kyc', element: withSuspense(KYCPage) },
-      { path: '/investor/exits', element: withSuspense(Exits) },
-      { path: '/investor/resales', element: withSuspense(Resales) },
-      { path: '/investor/favorites', element: withSuspense(Favorites) },
-      { path: '/investor/notifications', element: withSuspense(Notifications) },
-      { path: '/investor/support', element: withSuspense(Support) },
-      { path: '/investor/settings', element: withSuspense(Settings) },
-      { path: '/investor/profile', element: withSuspense(Profile) },
+      { path: '/', element: <RootRedirect /> },
+
+      // Auth routes
+      { path: '/login', element: withSuspense(Login) },
+      { path: '/register', element: withSuspense(Register) },
+      { path: '/verify-email', element: withSuspense(VerifyEmail) },
+      { path: '/forgot-password', element: withSuspense(ForgotPassword) },
+      { path: '/verify-reset-otp', element: withSuspense(VerifyResetOTP) },
+      { path: '/reset-password', element: withSuspense(ResetPassword) },
+
+      // Investor routes
+      {
+        element: <InvestorRoute />,
+        children: [
+          { path: '/investor/dashboard', element: withSuspense(InvestorDashboard) },
+          { path: '/investor/invest', element: withSuspense(Invest) },
+          { path: '/investor/marketplace', element: withSuspense(Marketplace) },
+          { path: '/investor/marketplace/:slug', element: withSuspense(PropertyDetail) },
+          { path: '/investor/portfolio', element: withSuspense(Portfolio) },
+          { path: '/investor/portfolio/:investmentId', element: withSuspense(InvestmentDetail) },
+          { path: '/investor/wallet', element: withSuspense(InvestorWallet) },
+          { path: '/investor/kyc', element: withSuspense(KYCPage) },
+          { path: '/investor/exits', element: withSuspense(Exits) },
+          { path: '/investor/resales', element: withSuspense(Resales) },
+          { path: '/investor/favorites', element: withSuspense(Favorites) },
+          { path: '/investor/notifications', element: withSuspense(Notifications) },
+          { path: '/investor/support', element: withSuspense(Support) },
+          { path: '/investor/settings', element: withSuspense(Settings) },
+          { path: '/investor/profile', element: withSuspense(Profile) },
+        ],
+      },
+
+      // Partner routes
+      {
+        element: <PartnerRoute />,
+        children: [
+          { path: '/partner/dashboard', element: withSuspense(PartnerDashboard) },
+          { path: '/partner/properties', element: withSuspense(PartnerProperties) },
+          { path: '/partner/commissions', element: withSuspense(Commissions) },
+          { path: '/partner/wallet', element: withSuspense(PartnerWallet) },
+          { path: '/partner/notifications', element: withSuspense(Notifications) },
+          { path: '/partner/support', element: withSuspense(Support) },
+          { path: '/partner/settings', element: withSuspense(Settings) },
+          { path: '/partner/profile', element: withSuspense(Profile) },
+        ],
+      },
+
+      // Catch-all → 404
+      { path: '*', element: withSuspense(lazy(() => import('@/pages/NotFound'))) },
     ],
   },
-
-  // Partner routes
-  {
-    element: <PartnerRoute />,
-    children: [
-      { path: '/partner/dashboard', element: withSuspense(PartnerDashboard) },
-      { path: '/partner/properties', element: withSuspense(PartnerProperties) },
-      { path: '/partner/commissions', element: withSuspense(Commissions) },
-      { path: '/partner/wallet', element: withSuspense(PartnerWallet) },
-      { path: '/partner/notifications', element: withSuspense(Notifications) },
-      { path: '/partner/support', element: withSuspense(Support) },
-      { path: '/partner/settings', element: withSuspense(Settings) },
-      { path: '/partner/profile', element: withSuspense(Profile) },
-    ],
-  },
-
-  // Catch-all
-  { path: '*', element: <Navigate to="/" replace /> },
 ]);

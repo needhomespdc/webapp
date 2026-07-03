@@ -38,7 +38,7 @@ const investorNavItems = [
     activeIcon: <RiLineChartFill />,
   },
   {
-    label: 'Portfolio',
+    label: 'My Portfolio',
     to: '/investor/portfolio',
     icon: <AiOutlinePieChart />,
     activeIcon: <AiFillPieChart />,

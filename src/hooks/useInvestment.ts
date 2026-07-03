@@ -26,10 +26,10 @@ export function useInvestmentDetail(investmentId: string | undefined) {
   return { investment: query.data, isLoading: query.isLoading, error: query.error };
 }
 
-export function usePortfolioPerformance(period = '1y') {
+export function usePortfolioPerformance(period = 'past_6_months') {
   const query = useQuery({
     queryKey: queryKeys.investments.performance(period),
-    queryFn: () => investmentsApi.getPerformance(period).then((r) => r.data),
+    queryFn: () => investmentsApi.getPerformance(period),
   });
 
   return { performance: query.data, isLoading: query.isLoading, error: query.error };

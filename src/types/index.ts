@@ -82,36 +82,93 @@ export interface Property {
   inventoryTotal: number;
   inventoryAvailable: number;
   primaryImageUrl: string | null;
-  // Confirmed present on list items only; detail-view (GET by id/slug) shape
-  // for these is not yet confirmed against a live response — best effort.
   images?: PropertyImage[];
   documents?: PropertyDocument[];
   milestones?: Milestone[];
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Detail-view only fields
+  highlights?: PropertyHighlight[];
+  howItWorksTitle?: string | null;
+  howItWorksSteps?: PropertyHowItWorksStep[];
+  managementFees?: PropertyManagementFees | null;
+  buildingPermitNumber?: string | null;
+  investmentModelConfig?: PropertyInvestmentModelConfig | null;
+  keyFacts?: unknown[];
+  planTitle?: string | null;
+  planMetrics?: unknown[];
+  trustItems?: unknown[];
+  developmentStage?: string | null;
+  developmentStageLabel?: string | null;
+  projectStartDate?: string | null;
+  projectEndDate?: string | null;
 }
 
 export interface PropertyImage {
   id: string;
   url: string;
+  secureUrl?: string;
   publicId: string;
   isPrimary: boolean;
+  altText?: string | null;
+  sortOrder?: number;
+  originalFilename?: string;
 }
 
 export interface PropertyDocument {
   id: string;
   url: string;
-  name: string;
+  secureUrl?: string;
+  name?: string;
+  fileName?: string;
+  category?: string;
+  originalFilename?: string;
+  sortOrder?: number;
 }
 
 export interface Milestone {
   id: string;
+  stepNumber?: number;
   title: string;
+  subtitle?: string;
   description?: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'upcoming' | 'pending' | 'in_progress' | 'completed';
+  fundingShareLabel?: string;
+  targetDate?: string;
+  isCurrentStage?: boolean;
+  sortOrder?: number;
   completedAt?: string;
-  order: number;
+  order?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PropertyHighlight {
+  label: string;
+  iconKey: string;
+}
+
+export interface PropertyHowItWorksStep {
+  title: string;
+  subtitle: string;
+}
+
+export interface PropertyManagementFeeItem {
+  label: string;
+  amount: number;
+}
+
+export interface PropertyManagementFees {
+  items: PropertyManagementFeeItem[];
+  total: number;
+}
+
+export interface PropertyInvestmentModelConfig {
+  id: string;
+  type: string;
+  typeLabel: string;
+  config: Record<string, unknown>;
 }
 
 // ─── Investment ────────────────────────────────────────────────────────────────

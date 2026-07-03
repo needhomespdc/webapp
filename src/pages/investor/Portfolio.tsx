@@ -1,150 +1,446 @@
-// import { useState } from 'react';
-// import { Link } from 'react-router-dom';
-// import { RiBriefcaseLine, RiArrowRightLine } from 'react-icons/ri';
-// import { usePortfolioPerformance, useInvestmentList } from '@/hooks/useInvestment';
-// import { formatCurrency, formatDate } from '@/lib/utils';
-// import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
-// import { StatusBadge } from '@/components/shared/StatusBadge';
-// import { EmptyState } from '@/components/shared/EmptyState';
-// import { Skeleton } from '@/components/ui/skeleton';
-// import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-// import { Button } from '@/components/ui/button';
-// import type { InvestmentStatus } from '@/types';
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  RiBriefcaseLine,
+  // RiArrowRightLine,
+  // RiDownloadLine,
+  RiEyeLine,
+  RiEyeOffLine,
+  RiMapPinLine,
+  RiSortDesc,
+  RiTimeLine,
+  RiCheckLine,
+  // RiUserAddLine,
+  RiArrowDownSLine,
+} from 'react-icons/ri';
+import { usePortfolioPerformance, useInvestmentList } from '@/hooks/useInvestment';
+// import { useAuth } from '@/hooks/useAuth';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+// import { useToast } from '@/hooks/useToast';
+import { formatCurrency, cn } from '@/lib/utils';
+import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import type { Investment, InvestmentStatus } from '@/types';
 
-// const STATUS_TABS: { value: string; label: string }[] = [
-//   { value: 'all', label: 'All' },
-//   { value: 'active', label: 'Active' },
-//   { value: 'completed', label: 'Completed' },
-//   { value: 'exited', label: 'Exited' },
-//   { value: 'resales', label: 'Resales' },
-// ];
+// ─── Constants ─────────────────────────────────────────────────────────────────
 
-// export default function Portfolio() {
-//   const [page, setPage] = useState(1);
-//   const [tab, setTab] = useState('all');
+const PERIOD_OPTIONS = [
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'this_week' },
+  { label: 'This month', value: 'this_month' },
+  { label: 'Past 6 months', value: 'past_6_months' },
+  { label: 'This year', value: 'all_time' },
+] as const;
 
-//   const { performance: performanceData, isLoading: perfLoading } = usePortfolioPerformance('1y');
-//   const { investments: allInvestments, pagination, isLoading } = useInvestmentList(page, 10);
+const SORT_OPTIONS = [
+  { label: 'Recent', value: 'recent' },
+  { label: 'Value: High to Low', value: 'value_desc' },
+  { label: 'Value: Low to High', value: 'value_asc' },
+  { label: 'Returns: High to Low', value: 'returns_desc' },
+] as const;
 
-//   const filtered =
-//     tab === 'all'
-//       ? allInvestments
-//       : allInvestments.filter((inv) => inv.status === (tab as InvestmentStatus));
+const STATUS_TABS = [
+  { value: 'all', label: 'All' },
+  { value: 'active', label: 'Active' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'exited', label: 'Exited' },
+  { value: 'pending_resale', label: 'Resales' },
+] as const;
 
-//   return (
-//     <div className="space-y-6">
-//       <div>
-//         <h1 className="text-2xl font-bold text-foreground">Portfolio</h1>
-//         <p className="text-foreground/50 text-sm mt-1">Track your investments and earnings.</p>
-//       </div>
+type PeriodValue = (typeof PERIOD_OPTIONS)[number]['value'];
+type SortValue = (typeof SORT_OPTIONS)[number]['value'];
+type TabValue = (typeof STATUS_TABS)[number]['value'];
 
-//       {/* Summary */}
-//       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-//         {perfLoading ? (
-//           [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)
-//         ) : (
-//           <>
-//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-//               <p className="text-foreground/50 text-xs mb-1">Total Invested</p>
-//               <CurrencyDisplay amount={performanceData?.totalInvested ?? 0} size="lg" className="text-foreground" />
-//             </div>
-//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-//               <p className="text-foreground/50 text-xs mb-1">Total Returns</p>
-//               <CurrencyDisplay amount={performanceData?.totalReturns ?? 0} size="lg" className="text-green-400" />
-//             </div>
-//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-//               <p className="text-foreground/50 text-xs mb-1">Net Worth</p>
-//               <CurrencyDisplay amount={performanceData?.netWorth ?? 0} size="lg" className="text-foreground" />
-//             </div>
-//             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-//               <p className="text-foreground/50 text-xs mb-1">Active</p>
-//               <p className="text-2xl font-bold text-foreground">{performanceData?.activeCount ?? 0}</p>
-//             </div>
-//           </>
-//         )}
-//       </div>
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
-//       {/* Investments list */}
-//       <Tabs value={tab} onValueChange={setTab}>
-//         <TabsList>
-//           {STATUS_TABS.map((t) => (
-//             <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
-//           ))}
-//         </TabsList>
+function sortInvestments(list: Investment[], sort: SortValue): Investment[] {
+  const copy = [...list];
+  switch (sort) {
+    case 'value_desc': return copy.sort((a, b) => b.currentValue - a.currentValue);
+    case 'value_asc': return copy.sort((a, b) => a.currentValue - b.currentValue);
+    case 'returns_desc': return copy.sort((a, b) => b.totalReturns - a.totalReturns);
+    default: return copy.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+}
 
-//         <TabsContent value={tab}>
-//           {isLoading ? (
-//             <div className="space-y-3 mt-4">
-//               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-//             </div>
-//           ) : !filtered.length ? (
-//             <EmptyState
-//               icon={<RiBriefcaseLine />}
-//               title="No investments yet"
-//               description="Start investing in real estate to see your portfolio here."
-//               action={
-//                 <Link to="/investor/marketplace">
-//                   <Button variant="outline" size="sm">Browse Marketplace</Button>
-//                 </Link>
-//               }
-//             />
-//           ) : (
-//             <div className="space-y-3 mt-4">
-//               {filtered.map((inv) => (
-//                 <Link
-//                   key={inv.id}
-//                   to={`/investor/portfolio/${inv.id}`}
-//                   className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl p-4 hover:border-foreground/20 transition-all"
-//                 >
-//                   <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-//                     <RiBriefcaseLine className="text-accent h-6 w-6" />
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <p className="text-foreground font-semibold text-sm truncate">
-//                       {inv.property?.title ?? 'Property'}
-//                     </p>
-//                     <p className="text-foreground/50 text-xs mt-0.5">
-//                       {inv.quantity} unit{inv.quantity !== 1 ? 's' : ''} · {formatDate(inv.createdAt)}
-//                     </p>
-//                     <StatusBadge status={inv.status} />
-//                   </div>
-//                   <div className="text-right shrink-0">
-//                     <p className="text-foreground text-sm font-bold">{formatCurrency(inv.totalAmount)}</p>
-//                     <p className="text-foreground/40 text-xs mt-0.5">{formatCurrency(inv.pricePerUnit)}/unit</p>
-//                     <RiArrowRightLine className="h-4 w-4 text-foreground/30 mt-1 ml-auto" />
-//                   </div>
-//                 </Link>
-//               ))}
-//             </div>
-//           )}
-//         </TabsContent>
-//       </Tabs>
+// ─── Investment card (same layout as dashboard) ────────────────────────────────
 
-//       {/* Pagination */}
-//       {pagination && pagination.totalPages > 1 && (
-//         <div className="flex items-center justify-center gap-3">
-//           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-//             Previous
-//           </Button>
-//           <span className="text-foreground/60 text-sm">
-//             {pagination.page} / {pagination.totalPages}
-//           </span>
-//           <Button
-//             variant="outline"
-//             size="sm"
-//             disabled={page >= pagination.totalPages}
-//             onClick={() => setPage((p) => p + 1)}
-//           >
-//             Next
-//           </Button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
+function InvestmentCard({ inv }: { inv: Investment }) {
+  return (
+    <Link
+      to={`/investor/portfolio/${inv.id}`}
+      className="flex items-center gap-3 p-3 rounded-2xl border border-foreground/10 hover:border-foreground/20 bg-card transition-all"
+    >
+      {/* Thumbnail */}
+      <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden shrink-0">
+        {inv.propertyImageUrl ? (
+          <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-accent/10 flex items-center justify-center">
+            <RiBriefcaseLine className="text-accent h-6 w-6" />
+          </div>
+        )}
+        <span className="absolute top-1.5 left-1.5 bg-black/55 backdrop-blur text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight">
+          {inv.typeLabel === 'Co-development' ? 'Co-Dev' : inv.typeLabel}
+        </span>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-1 flex-wrap">
+          <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+          <div className="flex items-center gap-1">
+            <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
+            <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center mt-2 pt-2 border-t border-foreground/5">
+          <div className="flex-1 min-w-0">
+            <p className="text-foreground/40 text-[10px]">Units Owned</p>
+            <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
+          </div>
+          <div className="w-px h-6 bg-foreground/10 mx-2" />
+          <div className="flex-1 min-w-0">
+            <p className="text-foreground/40 text-[10px]">Current Value</p>
+            <p className="text-foreground text-xs font-bold mt-0.5">{formatCurrency(inv.currentValue)}</p>
+          </div>
+          {inv.projectMilestoneLabel && (
+            <>
+              <div className="hidden sm:block w-px h-6 bg-foreground/10 mx-2" />
+              <div className="hidden sm:flex flex-1 min-w-0 flex-col">
+                <p className="text-foreground/40 text-[10px]">Project Milestone</p>
+                <p className="text-foreground text-xs font-bold mt-0.5 truncate">{inv.projectMilestoneLabel}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Portfolio() {
+  // const { user } = useAuth();
+  // const { toast } = useToast();
+  const isMobile = useMediaQuery('(max-width: 639px)');
+
+  const [page, setPage] = useState(1);
+  const [tab, setTab] = useState<TabValue>('all');
+  const [period, setPeriod] = useState<PeriodValue>('past_6_months');
+  const [sort, setSort] = useState<SortValue>('recent');
+  const [showValue, setShowValue] = useState(true);
+  const [periodOpen, setPeriodOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const { performance: perf, isLoading: perfLoading } = usePortfolioPerformance(period);
+  const { investments: allInvestments, pagination, isLoading } = useInvestmentList(page, 10);
+
+  const filtered = useMemo(() => {
+    const byStatus =
+      tab === 'all'
+        ? allInvestments
+        : allInvestments.filter((inv) => inv.status === (tab as InvestmentStatus));
+    return sortInvestments(byStatus, sort);
+  }, [allInvestments, tab, sort]);
+
+  const currentPeriodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? 'This month';
+  const currentSortLabel = SORT_OPTIONS.find((s) => s.value === sort)?.label ?? 'Recent';
+
+  // const copyReferral = () => {
+  //   if (!user?.referralCode) return;
+  //   const link = `${window.location.origin}/register?ref=${user.referralCode}`;
+  //   navigator.clipboard.writeText(link);
+  //   toast({ title: 'Referral link copied!' });
+  // };
+
   return (
-    <div>Portfolio</div>
-  )
+    <div className="space-y-5 pb-4">
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">My Portfolio</h1>
+          <p className="text-foreground/50 text-sm mt-0.5">Track your investments and earnings</p>
+        </div>
+        {/* <button
+          onClick={() =>
+            toast({ title: 'Coming soon', description: 'Portfolio report download will be available soon.' })
+          }
+          className="w-10 h-10 rounded-xl border border-foreground/10 bg-card flex items-center justify-center text-foreground/50 hover:text-foreground transition-colors"
+        >
+          <RiDownloadLine className="h-5 w-5" />
+        </button> */}
+      </div>
+
+      {/* Hero — Total Portfolio Value */}
+      <div className="relative rounded-2xl overflow-hidden bg-primary p-5 min-h-[170px] flex flex-col justify-between">
+        {/* Decorative rings */}
+        <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/5 pointer-events-none" />
+        <div className="absolute -bottom-8 right-4 w-28 h-28 rounded-full bg-white/5 pointer-events-none" />
+        {/* Building SVG decoration */}
+        <div className="absolute top-3 right-4 opacity-[0.07] pointer-events-none select-none">
+          <svg viewBox="0 0 80 80" fill="white" className="h-28 w-28">
+            <rect x="5" y="30" width="30" height="45" rx="2" />
+            <rect x="45" y="20" width="30" height="55" rx="2" />
+            <rect x="12" y="38" width="8" height="8" rx="1" opacity="0.6" />
+            <rect x="12" y="52" width="8" height="8" rx="1" opacity="0.6" />
+            <rect x="52" y="28" width="8" height="8" rx="1" opacity="0.6" />
+            <rect x="52" y="42" width="8" height="8" rx="1" opacity="0.6" />
+            <rect x="52" y="56" width="8" height="8" rx="1" opacity="0.6" />
+            <rect x="0" y="73" width="80" height="4" rx="1" />
+          </svg>
+        </div>
+
+        {/* Label + toggle */}
+        <div className="flex items-center gap-2">
+          <p className="text-white/60 text-sm">Total Portfolio Value</p>
+          <button
+            onClick={() => setShowValue((v) => !v)}
+            className="text-white/40 hover:text-white/70 transition-colors"
+          >
+            {showValue ? <RiEyeLine className="h-4 w-4" /> : <RiEyeOffLine className="h-4 w-4" />}
+          </button>
+        </div>
+
+        {/* Big value */}
+        <div className="mt-1">
+          {perfLoading ? (
+            <Skeleton className="h-9 w-40 bg-white/10" />
+          ) : showValue ? (
+            <CurrencyDisplay amount={perf?.totalPortfolioValue ?? 0} size="xl" className="text-white" />
+          ) : (
+            <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
+          )}
+        </div>
+
+        {/* Mini stats row */}
+        <div className="flex items-center mt-4 pt-4 border-t border-white/10">
+          {(
+            [
+              { label: 'Total Invested', amount: perf?.totalInvested ?? 0, currency: true },
+              { label: 'Total Returns', amount: perf?.returnsEarned ?? 0, currency: true },
+              { label: 'Active', amount: perf?.activeInvestments ?? 0, currency: false },
+            ] as const
+          ).map((stat, i) => (
+            <div key={stat.label} className={cn('flex-1 text-center', i !== 0 && 'border-l border-white/10')}>
+              <p className="text-white/50 text-[10px]">{stat.label}</p>
+              {perfLoading ? (
+                <Skeleton className="h-3.5 w-10 mx-auto mt-1.5 bg-white/10" />
+              ) : (
+                <p className="text-white text-xs font-bold mt-0.5">
+                  {stat.currency ? formatCurrency(stat.amount as number) : (stat.amount as number)}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Portfolio Performance */}
+      <div className="rounded-2xl border border-foreground/10 bg-card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-foreground text-sm font-semibold">Portfolio Performance</p>
+          <button
+            onClick={() => setPeriodOpen(true)}
+            className="flex items-center gap-1.5 text-accent text-sm font-medium hover:opacity-80 transition-opacity"
+          >
+            <RiTimeLine className="h-3.5 w-3.5" />
+            {currentPeriodLabel}
+            <RiArrowDownSLine className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {perfLoading ? (
+          <div className="space-y-3">
+            <div className="flex gap-4">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 flex-1" />)}
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-start divide-x divide-foreground/10">
+              <div className="flex-1 pr-4">
+                <p className="text-green-400 text-lg font-bold">
+                  +{(perf?.totalReturnsPercent ?? 0).toFixed(1)}%
+                </p>
+                <p className="text-foreground/50 text-[11px] mt-0.5">Total Returns</p>
+              </div>
+              <div className="flex-1 px-4">
+                <CurrencyDisplay amount={perf?.returnsEarned ?? 0} size="lg" className="text-foreground" />
+                <p className="text-foreground/50 text-[11px] mt-0.5">Returns Earned</p>
+              </div>
+              <div className="flex-1 pl-4">
+                <p className="text-green-400 text-lg font-bold">
+                  {(perf?.portfolioOccupancyPercent ?? 0).toFixed(0)}%
+                </p>
+                <p className="text-foreground/50 text-[11px] mt-0.5">Portfolio Occupancy</p>
+              </div>
+            </div>
+
+            <div className="mt-4 h-2 rounded-full bg-foreground/8 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-accent transition-all duration-700"
+                style={{ width: `${Math.min(perf?.portfolioOccupancyPercent ?? 0, 100)}%` }}
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* My Investments list */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-foreground font-semibold">My Investments</p>
+          <button
+            onClick={() => setSortOpen(true)}
+            className="flex items-center gap-1.5 text-foreground/60 text-sm hover:text-foreground transition-colors"
+          >
+            <RiSortDesc className="h-4 w-4" />
+            Sort by:&nbsp;<span className="text-accent font-medium">{currentSortLabel}</span>
+            <RiArrowDownSLine className="h-3.5 w-3.5 text-accent" />
+          </button>
+        </div>
+
+        {/* Status filter tabs */}
+        <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 no-scrollbar mb-4 [-webkit-overflow-scrolling:touch]">
+          {STATUS_TABS.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setTab(t.value)}
+              className={cn(
+                'shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+                tab === t.value
+                  ? 'bg-accent/15 border-accent/40 text-accent'
+                  : 'bg-transparent border-foreground/10 text-foreground/60 hover:border-foreground/20'
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Investment cards */}
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[100px] w-full rounded-2xl" />)}
+          </div>
+        ) : !filtered.length ? (
+          <EmptyState
+            icon={<RiBriefcaseLine />}
+            title="No investments yet"
+            description="Start investing in real estate to see your portfolio here."
+            action={
+              <Link to="/investor/marketplace">
+                <Button variant="default" size="sm">Browse Marketplace</Button>
+              </Link>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((inv) => <InvestmentCard key={inv.id} inv={inv} />)}
+          </div>
+        )}
+
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-5">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              Previous
+            </Button>
+            <span className="text-foreground/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Referral invite banner */}
+      {/* <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 p-4">
+        <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+          <RiUserAddLine className="h-5 w-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-semibold">Earn more with your investments</p>
+          <p className="text-white/70 text-xs mt-0.5">Invite friends and earn up to ₦50,000</p>
+        </div>
+        <button
+          onClick={copyReferral}
+          className="shrink-0 flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-2 rounded-xl transition-colors"
+        >
+          Invite Now
+          <RiArrowRightLine className="h-4 w-4" />
+        </button>
+      </div> */}
+
+      {/* Period filter sheet */}
+      <Sheet open={periodOpen} onOpenChange={setPeriodOpen}>
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className="pb-8">
+          <SheetHeader>
+            <SheetTitle>Filter by period</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2 mt-2">
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { setPeriod(opt.value); setPeriodOpen(false); }}
+                className={cn(
+                  'w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium transition-colors',
+                  period === opt.value
+                    ? 'bg-accent/15 text-accent border border-accent/30'
+                    : 'bg-foreground/5 text-foreground hover:bg-foreground/10'
+                )}
+              >
+                {opt.label}
+                {period === opt.value && <RiCheckLine className="h-4 w-4" />}
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Sort sheet */}
+      <Sheet open={sortOpen} onOpenChange={setSortOpen}>
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className="pb-8">
+          <SheetHeader>
+            <SheetTitle>Sort investments</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2 mt-2">
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { setSort(opt.value); setSortOpen(false); }}
+                className={cn(
+                  'w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium transition-colors',
+                  sort === opt.value
+                    ? 'bg-accent/15 text-accent border border-accent/30'
+                    : 'bg-foreground/5 text-foreground hover:bg-foreground/10'
+                )}
+              >
+                {opt.label}
+                {sort === opt.value && <RiCheckLine className="h-4 w-4" />}
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
 }

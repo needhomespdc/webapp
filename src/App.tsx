@@ -6,6 +6,7 @@ import { WalletProvider } from '@/contexts/WalletContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { Toaster } from '@/components/ui/toaster';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { OfflineBanner } from '@/components/shared/OfflineBanner';
 import { queryClient } from '@/lib/queryClient';
 import { router } from '@/routes';
 
@@ -16,6 +17,7 @@ export default function App() {
         <AuthProvider>
           <WalletProvider>
             <NotificationProvider>
+              <OfflineBanner />
               <ErrorBoundary>
                 <RouterProvider router={router} />
               </ErrorBoundary>
