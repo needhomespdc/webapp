@@ -1,21 +1,24 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  RiArrowRightUpLine,
   RiBriefcaseLine,
   RiArrowRightLine,
   RiAlertLine,
   RiLineChartLine,
+  RiMapPinLine,
+  RiEyeLine,
+  RiEyeOffLine,
 } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { usePortfolioPerformance, useInvestmentList } from '@/hooks/useInvestment';
 import { useWallet, useWalletTransactions } from '@/hooks/useWallet';
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatRelativeDate } from '@/lib/utils';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
-import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getGreeting } from '@/utils/helpers';
+import { HiArrowTrendingDown, HiArrowTrendingUp } from 'react-icons/hi2';
 
 export default function InvestorDashboard() {
   const { user } = useAuth();
@@ -30,10 +33,12 @@ export default function InvestorDashboard() {
       ? (user.companyName ?? 'Investor')
       : (user?.firstName ?? 'Investor');
 
+  const [showValues, setShowValues] = useState({ walletBalance: true, portfolioValue: true, activeInvestments: true, totalReturns: true });
+  const toggleValue = (key: keyof typeof showValues) => setShowValues((v) => ({ ...v, [key]: !v[key] }));
+
   const kycApproved = user?.kycStatus === 'approved';
   const hasBothRecent = !!investmentsData?.length && !!txData?.length;
 
-  console.log("INVESTMENTS" ,investmentsData)
   return (
     <div className="space-y-6">
       {/* Greeting */}
@@ -95,59 +100,116 @@ export default function InvestorDashboard() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-foreground/50 text-xs mb-1">Wallet Balance</p>
+        <Card className="relative overflow-hidden">
+          <CardContent className="p-4 pb-7 relative z-10">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-foreground/50 text-xs">Wallet Balance</p>
+              <button onClick={() => toggleValue('walletBalance')} className="text-foreground/30 hover:text-foreground/60 transition-colors">
+                {showValues.walletBalance ? <RiEyeLine className="h-3.5 w-3.5" /> : <RiEyeOffLine className="h-3.5 w-3.5" />}
+              </button>
+            </div>
             {walletLoading ? (
-              <Skeleton className="h-7 w-28 mt-1" />
+              <Skeleton className="h-7 w-28" />
+            ) : showValues.walletBalance ? (
+              <CurrencyDisplay amount={walletData?.availableBalance ?? 0} size="lg" className="text-foreground" />
             ) : (
-              <CurrencyDisplay
-                amount={walletData?.balance ?? 0}
-                size="lg"
-                className="text-foreground"
-              />
+              <p className="text-xl font-bold text-foreground/30 tracking-widest">••••••</p>
             )}
           </CardContent>
+          <svg viewBox="0 0 120 40" preserveAspectRatio="none" className="absolute bottom-0 right-0 w-3/4 h-10 pointer-events-none">
+            <defs>
+              <linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: '#F97316', stopOpacity: 0.45 }} />
+                <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
+              </linearGradient>
+            </defs>
+            <path d="M 0,36 L 10,32 L 14,37 L 20,26 L 24,18 L 28,28 L 36,22 L 42,30 L 50,20 L 56,24 L 64,16 L 70,22 L 80,17 L 90,24 L 100,14 L 112,20 L 120,16 L 120,40 L 0,40 Z" fill="url(#cg1)" />
+            <path d="M 0,36 L 10,32 L 14,37 L 20,26 L 24,18 L 28,28 L 36,22 L 42,30 L 50,20 L 56,24 L 64,16 L 70,22 L 80,17 L 90,24 L 100,14 L 112,20 L 120,16" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+          </svg>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-foreground/50 text-xs mb-1">Total Invested</p>
+
+        <Card className="relative overflow-hidden">
+          <CardContent className="p-4 pb-7 relative z-10">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-foreground/50 text-xs">Portfolio Value</p>
+              <button onClick={() => toggleValue('portfolioValue')} className="text-foreground/30 hover:text-foreground/60 transition-colors">
+                {showValues.portfolioValue ? <RiEyeLine className="h-3.5 w-3.5" /> : <RiEyeOffLine className="h-3.5 w-3.5" />}
+              </button>
+            </div>
             {perfLoading ? (
-              <Skeleton className="h-7 w-28 mt-1" />
+              <Skeleton className="h-7 w-28" />
+            ) : showValues.portfolioValue ? (
+              <CurrencyDisplay amount={performanceData?.totalPortfolioValue ?? 0} size="lg" className="text-foreground" />
             ) : (
-              <CurrencyDisplay
-                amount={performanceData?.totalInvested ?? 0}
-                size="lg"
-                className="text-foreground"
-              />
+              <p className="text-xl font-bold text-foreground/30 tracking-widest">••••••</p>
             )}
           </CardContent>
+          <svg viewBox="0 0 120 40" preserveAspectRatio="none" className="absolute bottom-0 right-0 w-3/4 h-10 pointer-events-none">
+            <defs>
+              <linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: '#F97316', stopOpacity: 0.45 }} />
+                <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
+              </linearGradient>
+            </defs>
+            <path d="M 0,38 L 8,30 L 12,36 L 18,22 L 22,15 L 26,26 L 32,30 L 38,20 L 44,28 L 50,17 L 54,13 L 58,24 L 66,28 L 74,18 L 82,24 L 92,14 L 104,22 L 120,13 L 120,40 L 0,40 Z" fill="url(#cg2)" />
+            <path d="M 0,38 L 8,30 L 12,36 L 18,22 L 22,15 L 26,26 L 32,30 L 38,20 L 44,28 L 50,17 L 54,13 L 58,24 L 66,28 L 74,18 L 82,24 L 92,14 L 104,22 L 120,13" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+          </svg>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-foreground/50 text-xs mb-1">Total Returns</p>
+
+        <Card className="relative overflow-hidden">
+          <CardContent className="p-4 pb-7 relative z-10">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-foreground/50 text-xs">Active Investments</p>
+              <button onClick={() => toggleValue('activeInvestments')} className="text-foreground/30 hover:text-foreground/60 transition-colors">
+                {showValues.activeInvestments ? <RiEyeLine className="h-3.5 w-3.5" /> : <RiEyeOffLine className="h-3.5 w-3.5" />}
+              </button>
+            </div>
             {perfLoading ? (
-              <Skeleton className="h-7 w-28 mt-1" />
+              <Skeleton className="h-7 w-16" />
+            ) : showValues.activeInvestments ? (
+              <p className="text-2xl font-bold text-foreground">{performanceData?.activeInvestments ?? 0}</p>
             ) : (
-              <CurrencyDisplay
-                amount={performanceData?.totalReturns ?? 0}
-                size="lg"
-                className="text-green-400"
-              />
+              <p className="text-xl font-bold text-foreground/30 tracking-widest">••</p>
             )}
           </CardContent>
+          <svg viewBox="0 0 120 40" preserveAspectRatio="none" className="absolute bottom-0 right-0 w-3/4 h-10 pointer-events-none">
+            <defs>
+              <linearGradient id="cg3" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: '#F97316', stopOpacity: 0.45 }} />
+                <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
+              </linearGradient>
+            </defs>
+            <path d="M 0,36 L 12,30 L 18,34 L 26,26 L 34,30 L 40,21 L 46,16 L 50,26 L 58,20 L 66,28 L 74,18 L 80,24 L 88,15 L 94,22 L 104,17 L 112,22 L 120,15 L 120,40 L 0,40 Z" fill="url(#cg3)" />
+            <path d="M 0,36 L 12,30 L 18,34 L 26,26 L 34,30 L 40,21 L 46,16 L 50,26 L 58,20 L 66,28 L 74,18 L 80,24 L 88,15 L 94,22 L 104,17 L 112,22 L 120,15" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+          </svg>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-foreground/50 text-xs mb-1">Active Investments</p>
+
+        <Card className="relative overflow-hidden">
+          <CardContent className="p-4 pb-7 relative z-10">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-foreground/50 text-xs">Total Returns</p>
+              <button onClick={() => toggleValue('totalReturns')} className="text-foreground/30 hover:text-foreground/60 transition-colors">
+                {showValues.totalReturns ? <RiEyeLine className="h-3.5 w-3.5" /> : <RiEyeOffLine className="h-3.5 w-3.5" />}
+              </button>
+            </div>
             {perfLoading ? (
-              <Skeleton className="h-7 w-16 mt-1" />
+              <Skeleton className="h-7 w-28" />
+            ) : showValues.totalReturns ? (
+              <CurrencyDisplay amount={performanceData?.returnsEarned ?? 0} size="lg" className="text-foreground" />
             ) : (
-              <p className="text-2xl font-bold text-foreground">
-                {performanceData?.activeCount ?? 0}
-              </p>
+              <p className="text-xl font-bold text-foreground/30 tracking-widest">••••••</p>
             )}
           </CardContent>
+          <svg viewBox="0 0 120 40" preserveAspectRatio="none" className="absolute bottom-0 right-0 w-3/4 h-10 pointer-events-none">
+            <defs>
+              <linearGradient id="cg4" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: '#F97316', stopOpacity: 0.45 }} />
+                <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
+              </linearGradient>
+            </defs>
+            <path d="M 0,38 L 6,30 L 10,38 L 16,23 L 20,14 L 24,28 L 30,21 L 34,34 L 40,18 L 44,12 L 48,26 L 56,18 L 62,30 L 68,16 L 74,24 L 82,13 L 92,21 L 104,15 L 112,21 L 120,12 L 120,40 L 0,40 Z" fill="url(#cg4)" />
+            <path d="M 0,38 L 6,30 L 10,38 L 16,23 L 20,14 L 24,28 L 30,21 L 34,34 L 40,18 L 44,12 L 48,26 L 56,18 L 62,30 L 68,16 L 74,24 L 82,13 L 92,21 L 104,15 L 112,21 L 120,12" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+          </svg>
         </Card>
       </div>
 
@@ -213,28 +275,54 @@ export default function InvestorDashboard() {
                 <Link
                   key={inv.id}
                   to={`/investor/portfolio/${inv.id}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-colors"
+                  className="flex items-center gap-3 py-2"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center rounded-[4px] overflow-hidden">
-                    {inv?.propertyImageUrl ? (
-                      <img src={inv?.propertyImageUrl} alt={inv?.title} className='w-10 h-10' />
+                  {/* Image with model-type badge */}
+                  <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden shrink-0">
+                    {inv.propertyImageUrl ? (
+                      <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
                     ) : (
-                      <RiBriefcaseLine className="text-accent h-5 w-5" />
+                      <div className="w-full h-full bg-accent/10 flex items-center justify-center">
+                        <RiBriefcaseLine className="text-accent h-6 w-6" />
+                      </div>
                     )}
+                    <span className="absolute top-1.5 left-1.5 bg-black/50 backdrop-blur text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight">
+                      {inv?.typeLabel == "Co-development" ? "Co-Dev" : inv?.typeLabel}
+                    </span>
                   </div>
+
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-foreground text-sm font-medium truncate">
-                      {inv.title ?? 'Property'}
-                    </p>
-                    <p className="text-foreground/50 text-xs">
-                      {inv.quantity} unit{inv.quantity !== 1 ? 's' : ''} · {formatDate(inv.createdAt)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-foreground text-sm font-semibold">
-                      {formatCurrency(inv.totalAmount)}
-                    </p>
-                    <StatusBadge status={inv.status} />
+                    <div className="flex items-start justify-between gap-0.5 flex-wrap">
+                      <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <RiMapPinLine className="text-foreground/40 h-3 w-3" />
+                        <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-0 mt-0.5 sm:mt-2 pt-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-foreground/40 text-[10px]">Units Owned</p>
+                        <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
+                      </div>
+                      <div className="w-px h-6 bg-foreground/10 mx-2" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-foreground/40 text-[10px]">Current Value</p>
+                        <p className="text-foreground text-xs font-bold mt-0.5">{formatCurrency(inv.currentValue)}</p>
+                      </div>
+
+                      {inv.projectMilestoneLabel && (
+                        <>
+                          <div className="hidden sm:block w-px h-6 bg-foreground/10 mx-2" />
+                          <div className="hidden sm:block flex-1 min-w-0">
+                            <p className="text-foreground/40 text-[10px]">Project Milestone</p>
+                            <p className="text-foreground text-xs font-bold mt-0.5 truncate">{inv.projectMilestoneLabel}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -255,27 +343,34 @@ export default function InvestorDashboard() {
             </div>
           </CardHeader>
           <CardContent className="pt-0 space-y-3">
-            {txData.map((tx) => (
-              <div key={tx.id} className="flex items-center gap-3 px-3 py-2 rounded-xl">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  tx.type === 'deposit' || tx.type === 'commission'
-                    ? 'bg-green-600/15 text-green-400'
-                    : 'bg-red-500/15 text-red-400'
+            {txData?.map((tx) => (
+              <div key={tx.id} className="flex items-center gap-3 py-2 rounded-xl">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
                 }`}>
-                  <RiArrowRightUpLine className="h-4 w-4" />
+                  {tx.isCredit ? (
+                    <HiArrowTrendingDown className="h-4 w-4" />
+                  ) : (
+                    <HiArrowTrendingUp className="h-4 w-4" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-foreground text-sm font-medium capitalize truncate">{tx.type}</p>
-                  <p className="text-foreground/50 text-xs">{formatDate(tx.createdAt)}</p>
+                  <p className="text-foreground text-sm font-medium truncate">{tx.title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <p className="text-foreground/50 text-xs truncate">{tx.subtitle}</p>
+                    <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
+                    }`}>
+                      {tx.isCredit ? 'Money In' : 'Money Out'}
+                    </span>
+                  </div>
                 </div>
-                <span className={`text-sm font-semibold ${
-                  tx.type === 'deposit' || tx.type === 'commission'
-                    ? 'text-green-400'
-                    : 'text-red-400'
-                }`}>
-                  {tx.type === 'deposit' || tx.type === 'commission' ? '+' : '-'}
-                  {formatCurrency(tx.amount)}
-                </span>
+                <div className="text-right shrink-0">
+                  <p className={`text-sm font-semibold ${tx.isCredit ? 'text-green-400' : 'text-foreground'}`}>
+                    {tx.isCredit ? '+' : '-'}{formatCurrency(tx.amount)}
+                  </p>
+                  <p className="text-foreground/50 text-xs mt-0.5">{formatRelativeDate(tx.createdAt)}</p>
+                </div>
               </div>
             ))}
           </CardContent>

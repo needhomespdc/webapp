@@ -7,9 +7,9 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex h-screen overflow-hidden">
       {/* Image panel — hidden below lg, fixed full-height on desktop */}
-      <div className="hidden lg:block relative lg:w-[42%] xl:w-[38%] shrink-0">
+      <div className="hidden lg:block relative lg:w-[42%] xl:w-[38%] h-screen shrink-0">
         <img
           src="/resources/woman-with-card.jpg"
           alt="Invest with NeedHomes"
@@ -31,8 +31,21 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </div>
 
       {/* Form panel */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        <div className="flex items-center justify-between p-6 lg:p-8 lg:pb-0">
+      <div className="relative flex-1 flex flex-col min-h-screen overflow-auto">
+        {/* Subtle grid-line pattern — adapts to light/dark via CSS var */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(color-mix(in oklch, var(--foreground) 7%, transparent) 1px, transparent 1px),
+              linear-gradient(90deg, color-mix(in oklch, var(--foreground) 7%, transparent) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px',
+          }}
+        />
+
+        <div className="relative flex items-center justify-between p-6 lg:p-8 lg:pb-0">
           <div className="lg:hidden">
             <img src="/logo/logo-hero-white.png" alt="NeedHomes Logo" className="h-9 hidden dark:block" />
             <img src="/logo/needhomes-logo.png" alt="NeedHomes Logo" className="h-9 dark:hidden" />
@@ -42,7 +55,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col">{children}</div>
+        <div className="relative flex-1 flex flex-col">{children}</div>
       </div>
     </div>
   );

@@ -42,8 +42,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(values.email, values.password, values.rememberMe);
-      // AuthContext sets user; redirect based on role happens in route guards
-      // Fallback navigate to root — ProtectedRoute will redirect correctly
+      toast.success('Welcome back!');
       navigate('/');
     } catch (err: unknown) {
       const message =

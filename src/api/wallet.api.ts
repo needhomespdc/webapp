@@ -2,7 +2,7 @@ import { api } from '@/lib/fetchClient';
 import type { Wallet, Transaction, BankAccount, PaginatedResponse, ApiResponse } from '@/types';
 
 export const walletApi = {
-  getWallet: (): Promise<ApiResponse<Wallet>> => api.get<ApiResponse<Wallet>>('/wallet/me'),
+  getWallet: (): Promise<Wallet> => api.get<Wallet>('/wallet/me'),
 
   getTransactions: (page = 1, limit = 10): Promise<PaginatedResponse<Transaction>> =>
     api.get<PaginatedResponse<Transaction>>(`/wallet/transactions?page=${page}&limit=${limit}`),

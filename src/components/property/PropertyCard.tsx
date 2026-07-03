@@ -32,8 +32,8 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
           <div className="w-full h-full flex items-center justify-center text-foreground/20 text-4xl">🏠</div>
         )}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
-          <span className="bg-black/60 backdrop-blur text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
-            {property.investmentModelTypeLabel}
+          <span className="bg-black/50 backdrop-blur text-white text-[10px] font-semibold px-2 py-1 rounded-lg">
+            {property.investmentModelTypeLabel == "Co-development" ? "Co-Dev" : property.investmentModelTypeLabel}
           </span>
           {property.isNewListing && (
             <span className="bg-accent text-white text-[10px] font-semibold px-2 py-1 rounded-lg">New</span>
