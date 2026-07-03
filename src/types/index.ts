@@ -115,6 +115,7 @@ export interface Milestone {
 }
 
 // ─── Investment ────────────────────────────────────────────────────────────────
+// Shape confirmed from a live /investments/me list response.
 
 export type InvestmentStatus =
   | 'active'
@@ -125,20 +126,31 @@ export type InvestmentStatus =
 
 export interface Investment {
   id: string;
-  userId: string;
-  propertyId: string;
+  reference: string;
   title: string;
-  property?: Property;
-  modelType: InvestmentModelType;
-  quantity: number;
-  pricePerUnit: number;
-  totalAmount: number;
+  location: string;
+  type: InvestmentModelType;
+  typeLabel: string;
   status: InvestmentStatus;
-  propertyImageUrl?: string;
+  statusLabel: string;
+  unitsOwnedLabel: string;
+  currentValue: number;
+  totalReturns: number;
+  totalInvested: number;
+  totalCommitment: number;
+  progressPercent: number;
+  progressLabel: string;
+  projectMilestoneLabel: string | null;
+  reservationPeriodLabel: string | null;
+  startedAt: string;
+  maturityDate: string | null;
+  reservationEndsAt: string | null;
+  fractionalSummary: Record<string, unknown> | null;
+  propertyImageUrl: string | null;
+  // Detail-view only fields (not present on list items)
   milestones?: InvestmentMilestone[];
   handoverDetails?: HandoverDetails;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface InvestmentMilestone {
@@ -153,12 +165,18 @@ export interface HandoverDetails {
   notes?: string;
 }
 
+// Shape confirmed from a live /investments/me/performance response.
 export interface PortfolioPerformance {
+  period: string;
+  periodLabel: string;
+  totalReturnsPercent: number;
+  returnsEarned: number;
+  portfolioOccupancyPercent: number;
+  occupancyProgress: number;
   totalInvested: number;
-  totalReturns: number;
-  netWorth: number;
-  activeCount: number;
-  performanceByPeriod: { date: string; value: number }[];
+  totalPortfolioValue: number;
+  activeInvestments: number;
+  totalInvestments: number;
 }
 
 // ─── Wallet & Transactions ─────────────────────────────────────────────────────
@@ -173,27 +191,50 @@ export type TransactionType =
 
 export type TransactionStatus = 'pending' | 'successful' | 'failed' | 'processing';
 
+export interface WalletFeeSettings {
+  walletTopUpFeeRate: number;
+  walletWithdrawalFeeCap: number;
+  walletWithdrawalFeeFlat: number;
+  walletWithdrawalFeePercent: number;
+}
+
+// Shape confirmed from a live /wallet/me response.
 export interface Wallet {
   id: string;
-  userId: string;
-  balance: number;
   currency: string;
-  isPinSet: boolean;
+  availableBalance: number;
+  pendingBalance: number;
+  totalBalance: number;
+  hasTransactionPin: boolean;
+  feeSettings: WalletFeeSettings;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransactionDetailField {
+  label: string;
+  value: string;
+  highlightValue?: boolean;
 }
 
 export interface Transaction {
   id: string;
-  walletId: string;
-  type: TransactionType;
-  amount: number;
-  fee?: number;
   reference: string;
-  paymentMethod?: string;
+  title: string;
+  subtitle: string;
+  type: TransactionType;
+  typeLabel: string;
   status: TransactionStatus;
-  description?: string;
-  metadata?: Record<string, unknown>;
+  statusLabel: string;
+  isCredit: boolean;
+  amount: number;
+  feeAmount: number;
+  balanceAfter: number;
+  occurredAt: string;
   createdAt: string;
+  metadata?: Record<string, unknown>;
+  // Only present on detail view
+  detailFields?: TransactionDetailField[];
 }
 
 export interface BankAccount {

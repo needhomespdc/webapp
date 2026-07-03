@@ -27,7 +27,7 @@ export function usePropertyBySlug(slug: string | undefined) {
   });
 
   return {
-    property: query.data,
+    property: query.data?.data,
     isLoading: query.isLoading,
     error: query.error,
   };

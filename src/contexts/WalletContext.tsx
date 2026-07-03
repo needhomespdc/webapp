@@ -18,7 +18,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ['wallet', 'me'],
-    queryFn: () => walletApi.getWallet().then((r) => r.data),
+    queryFn: () => walletApi.getWallet(),
     enabled: isAuthenticated && user?.role === 'investor',
     staleTime: 60_000,
     refetchInterval: 60_000,

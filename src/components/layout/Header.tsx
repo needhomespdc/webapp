@@ -129,7 +129,7 @@ export function Header({ navItems }: HeaderProps) {
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetContent side="left" className="w-72 flex flex-col">
             <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle>{}</SheetTitle>
             </SheetHeader>
 
             <nav className="flex-1 mt-2 space-y-1 overflow-y-auto">
@@ -160,22 +160,6 @@ export function Header({ navItems }: HeaderProps) {
             </nav>
 
             <div className="border-t border-foreground/5 pt-2 space-y-1">
-              <NavLink
-                to={profilePath}
-                onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all',
-                    isActive ? 'bg-accent/15 text-accent' : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
-                  )
-                }
-              >
-                <RiUserLine className="h-5 w-5 shrink-0" />
-                <div className="text-left min-w-0">
-                  <p className="text-sm font-medium truncate">{displayName || 'Profile'}</p>
-                  <p className="text-xs text-foreground/40 truncate">{user?.email}</p>
-                </div>
-              </NavLink>
               <button
                 onClick={() => {
                   setMenuOpen(false);

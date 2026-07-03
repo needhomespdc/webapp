@@ -64,6 +64,7 @@ export default function VerifyResetOTP() {
     try {
       const res = await authApi.verifyResetOTP({ email, otp: code });
       const { resetToken } = unwrapEnvelope<{ resetToken: string }>(res);
+      toast.success('Code verified! Set your new password.');
       navigate('/reset-password', { state: { resetToken, email } });
     } catch (err: unknown) {
       const message =

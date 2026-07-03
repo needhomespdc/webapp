@@ -185,6 +185,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
         confirmPassword: values.confirmPassword,
         referralSource: values.referralSource,
       });
+      toast.success('Account created! Please verify your email.');
       onSuccess(values.email);
     } catch (err: unknown) {
       const message =
@@ -391,6 +392,7 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
         password: values.password,
         confirmPassword: values.confirmPassword,
       });
+      toast.success('Account created! Please verify your email.');
       onSuccess(values.email);
     } catch (err: unknown) {
       const message =
@@ -535,6 +537,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
         confirmPassword: values.confirmPassword,
         referralSource: values.referralSource,
       });
+      toast.success('Partner account created! Please verify your email.');
       onSuccess(values.email);
     } catch (err: unknown) {
       const message =

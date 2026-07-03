@@ -60,7 +60,7 @@ export default function Exits() {
                 <div key={exit.id} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-foreground text-sm font-semibold truncate">
-                      {exit.investment?.property?.title ?? 'Investment'}
+                      {exit.investment?.title ?? 'Investment'}
                     </p>
                     <StatusBadge status={exit.status} />
                   </div>
@@ -121,9 +121,9 @@ function EligibleExitRow({ investment }: { investment: Investment }) {
   return (
     <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex-1 min-w-0">
-        <p className="text-foreground text-sm font-semibold truncate">{investment.property?.title ?? 'Investment'}</p>
+        <p className="text-foreground text-sm font-semibold truncate">{investment.title}</p>
         <p className="text-foreground/50 text-xs mt-0.5">
-          {investment.quantity} unit{investment.quantity !== 1 ? 's' : ''} · {formatCurrency(investment.totalAmount)}
+          {investment.unitsOwnedLabel} · {formatCurrency(investment.totalInvested)}
         </p>
       </div>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Exit</Button>
