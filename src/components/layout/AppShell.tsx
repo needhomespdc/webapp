@@ -22,7 +22,7 @@ export function AppShell({ navItems }: AppShellProps) {
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
         <Header navItems={navItems} />
-        <main className="flex-1 overflow-y-auto pb-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-6">
           <div className="max-w-5xl mx-auto px-4 py-6">
             <Outlet />
           </div>

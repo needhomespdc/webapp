@@ -214,10 +214,10 @@ export default function InvestorDashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Link to="/investor/marketplace">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
-            <CardContent className="p-4 flex items-center gap-3">
+            <CardContent className="p-2.5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
                 <RiStore2LineIcon />
               </div>
@@ -230,7 +230,7 @@ export default function InvestorDashboard() {
         </Link>
         <Link to="/investor/wallet">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
-            <CardContent className="p-4 flex items-center gap-3">
+            <CardContent className="p-2.5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
                 <RiWalletIcon />
               </div>
