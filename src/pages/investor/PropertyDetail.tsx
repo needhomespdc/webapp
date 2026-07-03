@@ -28,21 +28,21 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { usePropertyBySlug } from '@/hooks/useProperty';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
-import { useCheckoutInvestment } from '@/hooks/useInvestment';
+// import { useCheckoutInvestment } from '@/hooks/useInvestment';
 import { Loader } from '@/components/shared/Loader';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogDescription,
+//   DialogFooter,
+// } from '@/components/ui/dialog';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/useToast';
-import { ApiError } from '@/lib/fetchClient';
+// import { ApiError } from '@/lib/fetchClient';
 import type { Property, Milestone } from '@/types';
 
 // ─── Icon map for property highlights ─────────────────────────────────────────
@@ -373,9 +373,9 @@ export default function PropertyDetail() {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [investOpen, setInvestOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [pin, setPin] = useState('');
+  // const [investOpen, setInvestOpen] = useState(false);
+  // const [quantity, setQuantity] = useState(1);
+  // const [pin, setPin] = useState('');
   const [descExpanded, setDescExpanded] = useState(false);
 
   const { property, isLoading } = usePropertyBySlug(slug);
@@ -396,7 +396,7 @@ export default function PropertyDetail() {
   }, [searchParams, property]);
 
   const toggleFavMutation = useToggleFavorite();
-  const investMutation = useCheckoutInvestment();
+  // const investMutation = useCheckoutInvestment();
 
   const handleShare = () => {
     const url = window.location.href;
@@ -407,21 +407,21 @@ export default function PropertyDetail() {
     }
   };
 
-  const handleInvest = () => {
-    investMutation.mutate(
-      { propertyId: property!.id, quantity, transactionPin: pin },
-      {
-        onSuccess: () => {
-          toast.success('Investment successful!');
-          setInvestOpen(false);
-          navigate('/investor/portfolio');
-        },
-        onError: (err: unknown) => {
-          toast.error(err instanceof ApiError ? err.message : 'Investment failed. Please try again.');
-        },
-      }
-    );
-  };
+  // const handleInvest = () => {
+  //   investMutation.mutate(
+  //     { propertyId: property!.id, quantity, transactionPin: pin },
+  //     {
+  //       onSuccess: () => {
+  //         toast.success('Investment successful!');
+  //         setInvestOpen(false);
+  //         navigate('/investor/portfolio');
+  //       },
+  //       onError: (err: unknown) => {
+  //         toast.error(err instanceof ApiError ? err.message : 'Investment failed. Please try again.');
+  //       },
+  //     }
+  //   );
+  // };
 
   if (isLoading) return <Loader fullPage />;
   if (!property) return null;
@@ -713,7 +713,7 @@ export default function PropertyDetail() {
             </Button>
           ) : (
             <Button
-              onClick={() => setInvestOpen(true)}
+              // onClick={() => setInvestOpen(true)}
               className={cn('rounded-full px-6 shrink-0', ctaConfig.btnClass)}
             >
               {ctaConfig.btnText}
@@ -732,8 +732,8 @@ export default function PropertyDetail() {
         />
       )}
 
-      {/* ── Invest dialog ───────────────────────────────────────────────────── */}
-      <Dialog open={investOpen} onOpenChange={setInvestOpen}>
+      {/* ── Invest dialog (commented out) ────────────────────────────────────── */}
+      {/* <Dialog open={investOpen} onOpenChange={setInvestOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{ctaConfig.btnText} — {property.title}</DialogTitle>
@@ -786,7 +786,7 @@ export default function PropertyDetail() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 }
