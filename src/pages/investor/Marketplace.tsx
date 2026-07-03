@@ -119,7 +119,7 @@ export default function Marketplace() {
   const hasNextPage = pagination ? page < pagination.totalPages : false;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 w-full min-w-0">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Marketplace</h1>
         <p className="text-foreground/50 text-sm mt-1">Discover premium properties and opportunities.</p>
@@ -127,7 +127,7 @@ export default function Marketplace() {
       </div>
 
       {/* Search + filter trigger */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 min-w-0 w-full">
         <div className="flex gap-2 items-center">
           <div className="relative flex-1">
             <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-4 w-4" />
@@ -159,7 +159,7 @@ export default function Marketplace() {
         </div>
 
         {/* Investment model tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar w-78 min-[385px]:w-85 min-[420px]:w-93 min-[450px]:w-full">
           {MODEL_TABS.map((t) => (
             <button
               key={t.value}

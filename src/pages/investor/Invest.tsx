@@ -24,14 +24,14 @@ interface InvestmentPath {
 
 const PATHS: InvestmentPath[] = [
   {
-    type: 'outright',
-    title: 'Outright Purchase',
-    description: 'Buy complete properties outright and enjoy full ownership benefits.',
-    tags: ['Full Ownership', 'Full Control'],
-    icon: <RiBuilding2Line className="h-6 w-6" />,
-    iconBg: 'bg-amber-500/15',
-    iconColor: 'text-amber-400',
-    tagColor: 'text-amber-400',
+    type: 'co_development',
+    title: 'Co-Development',
+    description: 'Partner with us to develop properties and share in the returns.',
+    tags: ['Partner', 'Build', 'Earn'],
+    icon: <RiToolsLine className="h-6 w-6" />,
+    iconBg: 'bg-green-500/15',
+    iconColor: 'text-green-400',
+    tagColor: 'text-green-400',
   },
   {
     type: 'fractional',
@@ -43,16 +43,6 @@ const PATHS: InvestmentPath[] = [
     iconColor: 'text-purple-400',
     tagColor: 'text-purple-400',
     popular: true,
-  },
-  {
-    type: 'co_development',
-    title: 'Co-Development',
-    description: 'Partner with us to develop properties and share in the returns.',
-    tags: ['Partner', 'Build', 'Earn'],
-    icon: <RiToolsLine className="h-6 w-6" />,
-    iconBg: 'bg-green-500/15',
-    iconColor: 'text-green-400',
-    tagColor: 'text-green-400',
   },
   {
     type: 'land_banking',
@@ -73,6 +63,16 @@ const PATHS: InvestmentPath[] = [
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
     tagColor: 'text-blue-400',
+  },
+  {
+    type: 'outright',
+    title: 'Outright Purchase',
+    description: 'Buy complete properties outright and enjoy full ownership benefits.',
+    tags: ['Full Ownership', 'Full Control'],
+    icon: <RiBuilding2Line className="h-6 w-6" />,
+    iconBg: 'bg-amber-500/15',
+    iconColor: 'text-amber-400',
+    tagColor: 'text-amber-400',
   },
 ];
 
