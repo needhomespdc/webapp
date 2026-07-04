@@ -1,5 +1,5 @@
 import { api } from '@/lib/fetchClient';
-import type { Wallet, Transaction, BankAccount, PaginatedResponse, ApiResponse } from '@/types';
+import type { Wallet, Transaction, BankAccount, Bank, ResolvedBankAccount, PaginatedResponse, ApiResponse } from '@/types';
 
 export const walletApi = {
   getWallet: (): Promise<Wallet> => api.get<Wallet>('/wallet/me'),
@@ -13,10 +13,10 @@ export const walletApi = {
   getTransactionReceipt: (transactionId: string): Promise<Blob> =>
     api.getBlob(`/wallet/transactions/${transactionId}/receipt`),
 
-  getBanks: (): Promise<ApiResponse<{ bankCode: string; name: string }[]>> =>
+  getBanks: (): Promise<Bank[]> =>
     api.get('/wallet/banks'),
 
-  resolveBank: (bankCode: string, accountNumber: string): Promise<ApiResponse<{ accountName: string }>> =>
+  resolveBank: (bankCode: string, accountNumber: string): Promise<ResolvedBankAccount> =>
     api.get(`/wallet/banks/resolve?bankCode=${bankCode}&accountNumber=${accountNumber}`),
 
   topUp: (payload: {
@@ -34,8 +34,8 @@ export const walletApi = {
     transactionPin: string;
   }): Promise<ApiResponse<Transaction>> => api.post('/wallet/withdraw', payload),
 
-  getBankAccounts: (): Promise<ApiResponse<BankAccount[]>> =>
-    api.get<ApiResponse<BankAccount[]>>('/wallet/bank-accounts'),
+  getBankAccounts: (): Promise<BankAccount[]> =>
+    api.get<BankAccount[]>('/wallet/bank-accounts'),
 
   addBankAccount: (payload: {
     shortName: string;
@@ -49,7 +49,7 @@ export const walletApi = {
   removeBankAccount: (bankAccountId: string): Promise<ApiResponse<null>> =>
     api.delete(`/wallet/bank-accounts/${bankAccountId}`),
 
-  getPinStatus: (): Promise<ApiResponse<{ isPinSet: boolean }>> =>
+  getPinStatus: (): Promise<import('@/types').TransactionPinStatus> =>
     api.get('/wallet/transaction-pin/status'),
 
   setPin: (payload: { pin: string }): Promise<ApiResponse<null>> =>

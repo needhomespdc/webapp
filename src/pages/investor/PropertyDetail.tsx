@@ -130,7 +130,7 @@ function CoDevSection({ property, config }: { property: Property; config: Record
           <h2 className="text-foreground font-semibold text-sm mb-0.5">Development Milestones</h2>
           <p className="text-foreground/40 text-xs mb-4">Your contribution is released per milestone as construction progresses.</p>
           <div className="space-y-4">
-            {milestones.map((ms) => (
+            {milestones?.filter((ms) => ms.isCurrentStage).map((ms) => (
               <div key={ms.id} className="flex items-start gap-3">
                 <div className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold',
@@ -456,7 +456,7 @@ export default function PropertyDetail() {
       {/* ── Image gallery ──────────────────────────────────────────────────── */}
       {images.length > 0 ? (
         <div>
-          <div className="relative h-72 sm:h-96 overflow-hidden sm:rounded-2xl bg-foreground/5">
+          <div className="relative h-72 overflow-hidden sm:rounded-2xl bg-foreground/5">
             <img
               src={currentImageUrl}
               alt={property.title}

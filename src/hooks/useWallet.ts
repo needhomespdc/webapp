@@ -25,7 +25,7 @@ export function useWalletTransactions(page = 1, limit = 10) {
 export function useBankAccounts() {
   const query = useQuery({
     queryKey: queryKeys.wallet.bankAccounts,
-    queryFn: () => walletApi.getBankAccounts().then((r) => r.data),
+    queryFn: () => walletApi.getBankAccounts().then((data) => data),
   });
 
   return { bankAccounts: query.data ?? [], isLoading: query.isLoading };
@@ -77,8 +77,8 @@ export function useSetTransactionPin() {
 export function useTransactionPinStatus() {
   const query = useQuery({
     queryKey: queryKeys.wallet.pinStatus,
-    queryFn: () => walletApi.getPinStatus().then((r) => r.data),
+    queryFn: () => walletApi.getPinStatus(),
   });
 
-  return { isPinSet: query.data?.isPinSet ?? false, isLoading: query.isLoading };
+  return { isPinSet: query.data?.isSet ?? false, isLoading: query.isLoading };
 }
