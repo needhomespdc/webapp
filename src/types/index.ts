@@ -236,6 +236,24 @@ export interface PortfolioPerformance {
   totalInvestments: number;
 }
 
+// ─── Banks ────────────────────────────────────────────────────────────────────
+
+export interface Bank {
+  code: string;
+  name: string;
+  shortName: string;
+  fullName: string;
+  slug: string;
+  logoUrl: string | null;
+}
+
+export interface ResolvedBankAccount {
+  accountNumber: string;
+  accountName: string;
+  bankCode: string;
+  matchesProfile: boolean;
+}
+
 // ─── Wallet & Transactions ─────────────────────────────────────────────────────
 
 export type TransactionType =
@@ -253,6 +271,15 @@ export interface WalletFeeSettings {
   walletWithdrawalFeeCap: number;
   walletWithdrawalFeeFlat: number;
   walletWithdrawalFeePercent: number;
+}
+
+export interface TransactionPinStatus {
+  isSet: boolean;
+  isLocked: boolean;
+  lockedUntil: string | null;
+  isPinOperationsBlocked: boolean;
+  isPinResetAuthorized: boolean;
+  pinResetAuthorizedUntil: string | null;
 }
 
 // Shape confirmed from a live /wallet/me response.
@@ -299,10 +326,14 @@ export interface BankAccount {
   shortName: string;
   fullName: string;
   accountNumber: string;
+  maskedAccountNumber: string;
+  bankCode: string;
+  logoUrl: string | null;
   accountHolderName: string;
-  bankCode?: string;
+  verificationStatus: 'verified' | 'pending' | 'failed';
   isPrimary: boolean;
-  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Exit & Resale ─────────────────────────────────────────────────────────────

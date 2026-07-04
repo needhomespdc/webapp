@@ -37,6 +37,7 @@ const Notifications = lazy(() => import('@/pages/shared/Notifications'));
 const Support = lazy(() => import('@/pages/shared/Support'));
 const Profile = lazy(() => import('@/pages/shared/Profile'));
 const Settings = lazy(() => import('@/pages/shared/Settings'));
+const AddBankAccount = lazy(() => import('@/pages/shared/AddBankAccount'));
 
 
 function PageLoader() {
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
           { path: '/investor/exits', element: withSuspense(Exits) },
           { path: '/investor/resales', element: withSuspense(Resales) },
           { path: '/investor/favorites', element: withSuspense(Favorites) },
+          { path: '/investor/add-bank-account', element: withSuspense(AddBankAccount) },
           { path: '/investor/notifications', element: withSuspense(Notifications) },
           { path: '/investor/support', element: withSuspense(Support) },
           { path: '/investor/settings', element: withSuspense(Settings) },
