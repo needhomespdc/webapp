@@ -21,7 +21,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     queryFn: () => walletApi.getWallet(),
     enabled: isAuthenticated && user?.role === 'investor',
     staleTime: 60_000,
-    refetchInterval: 60_000,w
+    refetchInterval: 60_000,
   });
 
   const refreshWallet = useCallback(() => {
@@ -30,7 +30,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <WalletContext.Provider
-      value={{ wallet: data ?? null, isLoadingWallet: isLoading, refreshWallet }}
+      value={{ wallet: data ?? null as any, isLoadingWallet: isLoading, refreshWallet }}
     >
       {children}
     </WalletContext.Provider>
