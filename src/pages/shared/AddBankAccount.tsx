@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   RiBankLine,
   RiQuestionLine,
@@ -10,6 +11,7 @@ import {
   RiAddCircleLine,
   RiDeleteBinLine,
   RiStarLine,
+  RiArrowLeftLine,
 } from 'react-icons/ri';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,11 +33,19 @@ export default function AddBankAccount() {
   const [formOpen, setFormOpen] = useState(false);
   const { bankAccounts, isLoading } = useBankAccounts();
   const hasAccount = bankAccounts.length > 0;
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-5 w-full min-w-0">
-      {/* Page title */}
+      {/* Back button + page title */}
       <div>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-sm text-foreground/50 hover:text-foreground transition-colors mb-3"
+        >
+          <RiArrowLeftLine className="text-base" />
+          Back
+        </button>
         <h1 className="text-2xl font-bold text-foreground">Bank Account</h1>
         <p className="text-foreground/50 text-sm mt-1">
           Manage your linked bank account for withdrawals.

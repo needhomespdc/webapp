@@ -30,7 +30,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <WalletContext.Provider
-      value={{ wallet: data ?? null, isLoadingWallet: isLoading, refreshWallet }}
+      value={{ wallet: data ?? null as any, isLoadingWallet: isLoading, refreshWallet }}
     >
       {children}
     </WalletContext.Provider>

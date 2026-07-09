@@ -22,7 +22,7 @@ export const walletApi = {
   topUp: (payload: {
     amount: number;
     paymentMethod: string;
-  }): Promise<ApiResponse<{ paymentUrl: string; reference: string }>> =>
+  }): Promise<Transaction & { payment: { provider: string; publicKey: string; authorizationUrl: string; accessCode: string } }> =>
     api.post('/wallet/top-up', payload),
 
   verifyTopUp: (reference: string): Promise<ApiResponse<Transaction>> =>
