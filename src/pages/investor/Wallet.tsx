@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   RiAddLine,
   RiArrowRightLine,
@@ -16,9 +17,6 @@ import {
   useWallet,
   useWalletTransactions,
   useBankAccounts,
-  // useTopUpWallet,
-  // useWithdraw,
-  // useRemoveBankAccount,
   useTransactionPinStatus,
   useSetTransactionPin,
 } from '@/hooks/useWallet';
@@ -38,23 +36,48 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from '@/hooks/useToast';
+import { walletApi } from '@/api/wallet.api';
+import { queryKeys } from '@/lib/queryKeys';
 import { ApiError } from '@/lib/fetchClient';
-import { BankAccount } from '@/types';
+import { TopUpSheet } from '@/components/wallet/TopUpSheet';
+import { WithdrawSheet } from '@/components/wallet/WithdrawSheet';
+import { TransactionDetailModal } from '@/components/wallet/TransactionDetailModal';
+import type { BankAccount } from '@/types';
 
 export default function InvestorWallet() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const { wallet, isLoading: walletLoading } = useWallet();
   const { transactions, isLoading: txLoading } = useWalletTransactions(1, 20);
   const { bankAccounts, isLoading: banksLoading } = useBankAccounts();
   const { isPinSet } = useTransactionPinStatus();
 
-  console.log("BANK HELLO", bankAccounts);
-
-  // const [topUpOpen, setTopUpOpen] = useState(false);
-  // const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const [showBalance, setShowBalance] = useState(true);
   const [txFilter, setTxFilter] = useState<'all' | 'in' | 'out'>('all');
+
+  // Verify top-up on redirect back from Paystack
+  useEffect(() => {
+    const reference = searchParams.get('reference');
+    if (!reference) return;
+    walletApi.verifyTopUp(reference)
+      .then(() => {
+        toast.success('Wallet funded successfully');
+        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
+        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactions(1) });
+      })
+      .catch(() => {
+        toast.error('Could not verify payment. Contact support if funds were deducted.');
+      })
+      .finally(() => {
+        setSearchParams({}, { replace: true });
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredTx = transactions.filter((tx) => {
     if (txFilter === 'in') return tx.isCredit;
@@ -103,9 +126,9 @@ export default function InvestorWallet() {
             </p>
           </div>
           <div className="bg-white/10 rounded-xl px-3 py-2">
-            <p className="text-white/50 text-[10px]">Locked in Investments</p>
+            <p className="text-white/50 text-[10px]">Pending Balance</p>
             <p className="text-white text-sm font-semibold mt-0.5">
-              {showBalance ? formatCurrency(0) : '••••••'} {/* TODO: */}
+              {showBalance ? formatCurrency(wallet?.pendingBalance ?? 0) : '••••••'}
             </p>
           </div>
         </div>
@@ -125,7 +148,7 @@ export default function InvestorWallet() {
       <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="grid grid-cols-2 divide-x divide-foreground/10">
           <button
-            // onClick={() => setTopUpOpen(true)}
+            onClick={() => setTopUpOpen(true)}
             className="flex flex-col items-center gap-2 py-5 hover:bg-foreground/5 transition-colors"
           >
             <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
@@ -137,7 +160,7 @@ export default function InvestorWallet() {
             </div>
           </button>
           <button
-            // onClick={() => setWithdrawOpen(true)}
+            onClick={() => setWithdrawOpen(true)}
             className="flex flex-col items-center gap-2 py-5 hover:bg-foreground/5 transition-colors"
           >
             <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
@@ -169,18 +192,11 @@ export default function InvestorWallet() {
           <>
             <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
               <h2 className="text-foreground font-semibold text-sm">Bank Accounts</h2>
-              {/* <button
-                onClick={() => navigate('/investor/add-bank-account')}
-                className="text-accent text-sm font-medium hover:underline flex items-center gap-1"
-              >
-                <RiAddLine className="h-3.5 w-3.5" /> Add
-              </button> */}
             </div>
             <div className="divide-y divide-foreground/10">
               {bankAccounts.map((b: BankAccount) => (
                 <BankAccountRow
                   key={b.id}
-                  // bankAccountId={b.id}
                   shortName={b.shortName}
                   accountNumber={b.accountNumber}
                   accountHolderName={b.accountHolderName}
@@ -232,7 +248,11 @@ export default function InvestorWallet() {
             </div>
           ) : (
             filteredTx.map((tx) => (
-              <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
+              <button
+                key={tx.id}
+                onClick={() => setSelectedTxId(tx.id)}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors text-left"
+              >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                   tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
                 }`}>
@@ -257,19 +277,34 @@ export default function InvestorWallet() {
                   </p>
                   <p className="text-foreground/50 text-xs mt-0.5">{formatRelativeDate(tx.occurredAt ?? tx.createdAt)}</p>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
       </div>
 
-      {/* <TopUpDialog open={topUpOpen} onOpenChange={setTopUpOpen} /> */}
-      {/* <WithdrawDialog
+      {/* ── Modals ────────────────────────────────────────────────────────────── */}
+      <TopUpSheet
+        open={topUpOpen}
+        onOpenChange={setTopUpOpen}
+        wallet={wallet ?? null}
+        recentTransactions={transactions}
+      />
+
+      <WithdrawSheet
         open={withdrawOpen}
         onOpenChange={setWithdrawOpen}
+        wallet={wallet ?? null}
         bankAccounts={bankAccounts}
-        balance={wallet?.availableBalance ?? 0}
-      /> */}
+        isPinSet={isPinSet}
+        onSetPin={() => { setWithdrawOpen(false); setPinOpen(true); }}
+      />
+
+      <TransactionDetailModal
+        transactionId={selectedTxId}
+        onClose={() => setSelectedTxId(null)}
+      />
+
       <SetPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </div>
   );
@@ -281,14 +316,12 @@ function BankAccountRow({
   accountHolderName,
   isPrimary,
 }: {
-  // bankAccountId: string;
   shortName: string;
   accountNumber: string;
   accountHolderName: string;
   isPrimary: boolean;
 }) {
   const navigate = useNavigate();
-  // const removeMutation = useRemoveBankAccount();
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -303,8 +336,8 @@ function BankAccountRow({
         <p className="text-foreground/40 text-xs">{accountHolderName}</p>
       </div>
       <button
-        className="p-1.5 text-accent transition-colors flex cursor-pointer"
-        onClick={() => navigate("/investor/add-bank-account")}
+        className="p-1.5 text-accent transition-colors flex cursor-pointer items-center"
+        onClick={() => navigate('/investor/add-bank-account')}
       >
         <span className="text-xs font-medium">Manage</span>
         <RiArrowRightLine className="h-4 w-4" />
@@ -312,142 +345,6 @@ function BankAccountRow({
     </div>
   );
 }
-
-// function TopUpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-//   const [amount, setAmount] = useState('');
-//   const topUpMutation = useTopUpWallet();
-
-//   const handleTopUp = () => {
-//     const numAmount = parseFloat(amount);
-//     if (!numAmount || numAmount <= 0) {
-//       toast.error('Enter a valid amount');
-//       return;
-//     }
-//     topUpMutation.mutate(
-//       { amount: numAmount, paymentMethod: 'card' },
-//       {
-//         onSuccess: (res) => {
-//           window.location.href = res.data.paymentUrl;
-//         },
-//         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Top up failed'),
-//       }
-//     );
-//   };
-
-//   return (
-//     <Dialog open={open} onOpenChange={onOpenChange}>
-//       <DialogContent>
-//         <DialogHeader>
-//           <DialogTitle>Top Up Wallet</DialogTitle>
-//           <DialogDescription>You'll be redirected to Paystack to complete payment.</DialogDescription>
-//         </DialogHeader>
-//         <div className="space-y-2">
-//           <Label>Amount</Label>
-//           <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
-//         </div>
-//         <DialogFooter>
-//           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-//           <Button onClick={handleTopUp} disabled={topUpMutation.isPending}>
-//             {topUpMutation.isPending ? 'Processing...' : 'Continue to Payment'}
-//           </Button>
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
-
-// function WithdrawDialog({
-//   open,
-//   onOpenChange,
-//   bankAccounts,
-//   balance,
-// }: {
-//   open: boolean;
-//   onOpenChange: (v: boolean) => void;
-//   bankAccounts: { id: string; shortName: string; accountNumber: string; isPrimary: boolean }[];
-//   balance: number;
-// }) {
-//   const [amount, setAmount] = useState('');
-//   const [bankAccountId, setBankAccountId] = useState('');
-//   const [pin, setPin] = useState('');
-//   const withdrawMutation = useWithdraw();
-
-//   const handleWithdraw = () => {
-//     const numAmount = parseFloat(amount);
-//     if (!numAmount || numAmount <= 0) {
-//       toast.error('Enter a valid amount');
-//       return;
-//     }
-//     if (numAmount > balance) {
-//       toast.error('Insufficient balance');
-//       return;
-//     }
-//     const accountId = bankAccountId || bankAccounts.find((b) => b.isPrimary)?.id || bankAccounts[0]?.id;
-//     if (!accountId) {
-//       toast.error('Add a bank account first');
-//       return;
-//     }
-//     withdrawMutation.mutate(
-//       { amount: numAmount, bankAccountId: accountId, transactionPin: pin },
-//       {
-//         onSuccess: () => {
-//           toast.success('Withdrawal initiated');
-//           onOpenChange(false);
-//           setAmount('');
-//           setPin('');
-//         },
-//         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Withdrawal failed'),
-//       }
-//     );
-//   };
-
-//   return (
-//     <Dialog open={open} onOpenChange={onOpenChange}>
-//       <DialogContent>
-//         <DialogHeader>
-//           <DialogTitle>Withdraw Funds</DialogTitle>
-//         </DialogHeader>
-//         <div className="space-y-4">
-//           <div className="space-y-2">
-//             <Label>Amount</Label>
-//             <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
-//           </div>
-//           <div className="space-y-2">
-//             <Label>Bank Account</Label>
-//             <select
-//               className="flex h-14 w-full rounded-xl bg-foreground/10 border border-foreground/10 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-//               value={bankAccountId}
-//               onChange={(e) => setBankAccountId(e.target.value)}
-//             >
-//               <option value="" disabled>Select bank account</option>
-//               {bankAccounts.map((b) => (
-//                 <option key={b.id} value={b.id} className="bg-card">
-//                   {b.shortName} — {b.accountNumber}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//           <div className="space-y-2">
-//             <Label>Transaction PIN</Label>
-//             <Input
-//               type="password"
-//               maxLength={4}
-//               placeholder="Enter 4-digit PIN"
-//               value={pin}
-//               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-//             />
-//           </div>
-//         </div>
-//         <DialogFooter>
-//           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-//           <Button onClick={handleWithdraw} disabled={withdrawMutation.isPending || pin.length < 4}>
-//             {withdrawMutation.isPending ? 'Processing...' : 'Withdraw'}
-//           </Button>
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
 
 function SetPinDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [pin, setPin] = useState('');

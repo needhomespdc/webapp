@@ -16,6 +16,7 @@ export const queryKeys = {
   wallet: {
     me: ['wallet', 'me'] as const,
     transactions: (page: number) => ['wallet', 'transactions', page] as const,
+    transaction: (id: string) => ['wallet', 'transaction', id] as const,
     bankAccounts: ['wallet', 'bank-accounts'] as const,
     banks: ['wallet', 'banks'] as const,
     pinStatus: ['wallet', 'pin-status'] as const,

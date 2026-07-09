@@ -21,7 +21,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     queryFn: () => walletApi.getWallet(),
     enabled: isAuthenticated && user?.role === 'investor',
     staleTime: 60_000,
-    refetchInterval: 60_000,
+    refetchInterval: 60_000,w
   });
 
   const refreshWallet = useCallback(() => {
