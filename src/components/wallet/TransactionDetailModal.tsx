@@ -82,7 +82,7 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
 
   const content = (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+      <div className="px-5 pt-5 pb-3 border-b border-foreground/10 shrink-0">
         <SheetHeader>
           <SheetTitle className="text-base font-semibold text-foreground text-left">
             Transaction Details
@@ -115,8 +115,8 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
 
               <div>
                 <p className="text-base font-semibold text-foreground">{tx.title}</p>
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  {tx.subtitle && <p className="text-sm text-foreground/50">{tx.subtitle}</p>}
+                <div className="flex items-center flex-wrap justify-center gap-2 mt-1">
+                  {tx.subtitle && <p className="text-sm text-foreground/50 max-w-xs">{tx.subtitle}</p>}
                   <span className={cn(
                     'text-[10px] font-semibold px-2 py-0.5 rounded-full',
                     tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
@@ -127,7 +127,7 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
               </div>
 
               <p className={cn(
-                'text-3xl font-bold mt-1',
+                'text-2xl font-bold mt-1',
                 tx.isCredit ? 'text-green-400' : 'text-foreground'
               )}>
                 {tx.isCredit ? '+' : '-'}{formatCurrency(tx.amount)}
@@ -141,10 +141,10 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
 
             {/* Detail fields */}
             <div className="bg-foreground/5 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border">
+              <div className="px-4 py-3 border-b border-foreground/10">
                 <p className="text-sm font-semibold text-foreground">Transaction Details</p>
               </div>
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-foreground/10">
                 {tx.detailFields?.length ? (
                   tx.detailFields.map((field) => (
                     <div key={field.label} className="flex items-start justify-between px-4 py-3 gap-3">
@@ -203,7 +203,7 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
 
       {/* Receipt buttons */}
       {tx && (
-        <div className="px-5 py-4 border-t border-border shrink-0 space-y-2">
+        <div className="px-5 py-4 border-t border-foreground/10 shrink-0 space-y-2">
           <Button
             className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl gap-2"
             onClick={() => downloadBlob('download')}

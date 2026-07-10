@@ -8,8 +8,11 @@ export const investmentsApi = {
     transactionPin: string;
   }): Promise<ApiResponse<Investment>> => api.post<ApiResponse<Investment>>('/investments', payload),
 
-  list: (page = 1, limit = 10): Promise<PaginatedResponse<Investment>> =>
-    api.get<PaginatedResponse<Investment>>(`/investments/me?page=${page}&limit=${limit}`),
+  list: (page = 1, limit = 10, status?: string): Promise<PaginatedResponse<Investment>> => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status && status !== 'all') params.set('status', status);
+    return api.get<PaginatedResponse<Investment>>(`/investments/me?${params}`);
+  },
 
   getPerformance: (period = 'past_6_months'): Promise<PortfolioPerformance> =>
     api.get<PortfolioPerformance>(`/investments/me/performance?period=${period}`),

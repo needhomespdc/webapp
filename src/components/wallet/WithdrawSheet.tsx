@@ -88,7 +88,7 @@ export function WithdrawSheet({
 
   const formContent = (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+      <div className="px-5 pt-5 pb-3 border-b border-foreground/10 shrink-0">
         <SheetHeader>
           <SheetTitle className="text-base font-semibold text-foreground text-left">Withdraw</SheetTitle>
         </SheetHeader>
@@ -168,7 +168,7 @@ export function WithdrawSheet({
           ) : (
             <>
               <div className="bg-foreground/5 rounded-xl p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-card border border-foreground/10 flex items-center justify-center shrink-0">
                   {primaryBank.logoUrl ? (
                     <img src={primaryBank.logoUrl} alt={primaryBank.shortName} className="w-8 h-8 object-contain" />
                   ) : (
@@ -223,7 +223,7 @@ export function WithdrawSheet({
               <span className="text-foreground/50">Amount</span>
               <span className="font-medium text-foreground">{formatCurrency(numAmount)}</span>
             </div>
-            <div className="flex justify-between text-sm border-t border-border pt-2 mt-1">
+            <div className="flex justify-between text-sm border-t border-foreground/10 pt-2 mt-1">
               <span className="font-semibold text-foreground">Total Deducted</span>
               <span className="font-bold text-foreground">{formatCurrency(numAmount)}</span>
             </div>
@@ -231,7 +231,7 @@ export function WithdrawSheet({
         )}
       </div>
 
-      <div className="px-5 py-4 border-t border-border shrink-0 space-y-2">
+      <div className="px-5 py-4 border-t border-foreground/10 shrink-0 space-y-2">
         <Button
           className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
           onClick={handleProceed}
@@ -318,7 +318,7 @@ function PinConfirmDialog({
           {/* Summary */}
           <div className="bg-foreground/5 rounded-xl p-4 text-center space-y-1">
             <p className="text-2xl font-bold text-foreground">{formatCurrency(amount)}</p>
-            <p className="text-xs text-foreground/50">
+            <p className="text-xs text-foreground/50 truncate max-w-50">
               To {bankName} · {accountNumber}
             </p>
           </div>

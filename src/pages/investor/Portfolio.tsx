@@ -28,7 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import type { Investment, InvestmentStatus } from '@/types';
+import type { Investment } from '@/types';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -146,15 +146,15 @@ export default function Portfolio() {
   const [sortOpen, setSortOpen] = useState(false);
 
   const { performance: perf, isLoading: perfLoading } = usePortfolioPerformance(period);
-  const { investments: allInvestments, pagination, isLoading } = useInvestmentList(page, 10);
+  const { investments: rawInvestments, pagination, isLoading } = useInvestmentList(
+    page,
+    10,
+    tab === 'all' ? undefined : tab,
+  );
 
-  const filtered = useMemo(() => {
-    const byStatus =
-      tab === 'all'
-        ? allInvestments
-        : allInvestments.filter((inv) => inv.status === (tab as InvestmentStatus));
-    return sortInvestments(byStatus, sort);
-  }, [allInvestments, tab, sort]);
+  const filtered = useMemo(() => sortInvestments(rawInvestments, sort), [rawInvestments, sort]);
+
+  const handleTabChange = (newTab: TabValue) => { setTab(newTab); setPage(1); };
 
   const currentPeriodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? 'This month';
   const currentSortLabel = SORT_OPTIONS.find((s) => s.value === sort)?.label ?? 'Recent';
@@ -319,7 +319,7 @@ export default function Portfolio() {
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
-              onClick={() => setTab(t.value)}
+              onClick={() => handleTabChange(t.value)}
               className={cn(
                 'shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
                 tab === t.value

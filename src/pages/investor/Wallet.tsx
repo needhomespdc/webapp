@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -15,7 +15,7 @@ import {
 import { HiArrowTrendingDown, HiArrowTrendingUp } from 'react-icons/hi2';
 import {
   useWallet,
-  useWalletTransactions,
+  useWalletTransactionsFeed,
   useBankAccounts,
   useTransactionPinStatus,
   useSetTransactionPin,
@@ -42,7 +42,57 @@ import { ApiError } from '@/lib/fetchClient';
 import { TopUpSheet } from '@/components/wallet/TopUpSheet';
 import { WithdrawSheet } from '@/components/wallet/WithdrawSheet';
 import { TransactionDetailModal } from '@/components/wallet/TransactionDetailModal';
-import type { BankAccount } from '@/types';
+import { TransactionFilterSheet } from '@/components/wallet/TransactionFilterSheet';
+import type { BankAccount, TxFilterState } from '@/types';
+import { EMPTY_TX_FILTERS } from '@/types';
+import type { TxApiFilters } from '@/api/wallet.api';
+
+function computeApiFilters(f: TxFilterState): TxApiFilters {
+  const result: TxApiFilters = {};
+
+  if (f.type) result.type = f.type;
+  if (f.status) result.status = f.status;
+  if (f.direction !== 'all') result.direction = f.direction;
+
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString();
+
+  const now = new Date();
+  switch (f.dateRange) {
+    case 'today':
+      result.startDate = startOfDay(now);
+      result.endDate = new Date().toISOString();
+      break;
+    case '7d': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 7);
+      result.startDate = startOfDay(d);
+      break;
+    }
+    case '30d': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 30);
+      result.startDate = startOfDay(d);
+      break;
+    }
+    case '3m': {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - 3);
+      result.startDate = startOfDay(d);
+      break;
+    }
+    case 'custom':
+      if (f.dateFrom) result.startDate = new Date(f.dateFrom).toISOString();
+      if (f.dateTo) {
+        const end = new Date(f.dateTo);
+        end.setHours(23, 59, 59, 999);
+        result.endDate = end.toISOString();
+      }
+      break;
+  }
+
+  return result;
+}
 
 export default function InvestorWallet() {
   const navigate = useNavigate();
@@ -50,16 +100,38 @@ export default function InvestorWallet() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { wallet, isLoading: walletLoading } = useWallet();
-  const { transactions, isLoading: txLoading } = useWalletTransactions(1, 20);
   const { bankAccounts, isLoading: banksLoading } = useBankAccounts();
   const { isPinSet } = useTransactionPinStatus();
 
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const [showBalance, setShowBalance] = useState(true);
-  const [txFilter, setTxFilter] = useState<'all' | 'in' | 'out'>('all');
+  const [activeFilters, setActiveFilters] = useState<TxFilterState>(EMPTY_TX_FILTERS);
+
+  const apiFilters = useMemo(() => computeApiFilters(activeFilters), [activeFilters]);
+
+  const {
+    data,
+    isLoading: txLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useWalletTransactionsFeed(apiFilters);
+
+  const transactions = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data]
+  );
+
+  const activeFilterCount = [
+    activeFilters.dateRange !== 'all',
+    activeFilters.direction !== 'all',
+    !!activeFilters.status,
+    !!activeFilters.type,
+  ].filter(Boolean).length;
 
   // Verify top-up on redirect back from Paystack
   useEffect(() => {
@@ -69,7 +141,8 @@ export default function InvestorWallet() {
       .then(() => {
         toast.success('Wallet funded successfully');
         queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
-        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactions(1) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsBase });
+        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsFeedBase });
       })
       .catch(() => {
         toast.error('Could not verify payment. Contact support if funds were deducted.');
@@ -78,12 +151,6 @@ export default function InvestorWallet() {
         setSearchParams({}, { replace: true });
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const filteredTx = transactions.filter((tx) => {
-    if (txFilter === 'in') return tx.isCredit;
-    if (txFilter === 'out') return !tx.isCredit;
-    return true;
-  });
 
   return (
     <div className="space-y-5">
@@ -144,96 +211,93 @@ export default function InvestorWallet() {
         )}
       </div>
 
-      {/* ── Action buttons ────────────────────────────────────────────────────── */}
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-2 divide-x divide-foreground/10">
-          <button
-            onClick={() => setTopUpOpen(true)}
-            className="flex flex-col items-center gap-2 py-5 hover:bg-foreground/5 transition-colors"
-          >
-            <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
-              <RiAddLine className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-center">
-              <p className="text-foreground text-sm font-semibold">Add Funds</p>
-              <p className="text-foreground/40 text-xs">Top up wallet</p>
-            </div>
-          </button>
-          <button
-            onClick={() => setWithdrawOpen(true)}
-            className="flex flex-col items-center gap-2 py-5 hover:bg-foreground/5 transition-colors"
-          >
-            <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
-              <RiArrowUpLine className="h-6 w-6 text-white" />
-            </div>
-            <div className="text-center">
-              <p className="text-foreground text-sm font-semibold">Withdraw</p>
-              <p className="text-foreground/40 text-xs">To bank account</p>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* ── Bank accounts ─────────────────────────────────────────────────────── */}
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-        {banksLoading ? (
-          <div className="p-4"><Skeleton className="h-5 w-48" /></div>
-        ) : !bankAccounts.length ? (
-          <div className="flex items-center justify-between px-4 py-4">
-            <p className="text-foreground/50 text-sm">No bank account linked yet.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* ── Action buttons ──────────────────────────────────────────────────── */}
+        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-2 divide-x divide-foreground/10">
             <button
-              onClick={() => navigate('/investor/add-bank-account')}
-              className="text-accent text-sm font-semibold hover:underline"
+              onClick={() => setTopUpOpen(true)}
+              className="flex flex-col items-center gap-2 py-5 hover:bg-foreground/5 transition-colors"
             >
-              Link account
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
+                <RiAddLine className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-center">
+                <p className="text-foreground text-sm font-semibold">Add Funds</p>
+                <p className="text-foreground/40 text-xs">Top up wallet</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setWithdrawOpen(true)}
+              className="flex flex-col items-center gap-2 py-5 hover:bg-foreground/5 transition-colors"
+            >
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
+                <RiArrowUpLine className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-center">
+                <p className="text-foreground text-sm font-semibold">Withdraw</p>
+                <p className="text-foreground/40 text-xs">To bank account</p>
+              </div>
             </button>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
-              <h2 className="text-foreground font-semibold text-sm">Bank Accounts</h2>
+        </div>
+
+        {/* ── Bank accounts ────────────────────────────────────────────────────── */}
+        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+          {banksLoading ? (
+            <div className="p-4"><Skeleton className="h-5 w-48" /></div>
+          ) : !bankAccounts.length ? (
+            <div className="flex items-center justify-between px-4 py-4">
+              <p className="text-foreground/50 text-sm">No bank account linked yet.</p>
+              <button
+                onClick={() => navigate('/investor/add-bank-account')}
+                className="text-accent text-sm font-semibold hover:underline"
+              >
+                Link account
+              </button>
             </div>
-            <div className="divide-y divide-foreground/10">
-              {bankAccounts.map((b: BankAccount) => (
-                <BankAccountRow
-                  key={b.id}
-                  shortName={b.shortName}
-                  accountNumber={b.accountNumber}
-                  accountHolderName={b.accountHolderName}
-                  isPrimary={b.isPrimary}
-                />
-              ))}
-            </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
+                <h2 className="text-foreground font-semibold text-sm">Bank Accounts</h2>
+              </div>
+              <div className="divide-y divide-foreground/10">
+                {bankAccounts.map((b: BankAccount) => (
+                  <BankAccountRow
+                    key={b.id}
+                    shortName={b.shortName}
+                    accountNumber={b.accountNumber}
+                    accountHolderName={b.accountHolderName}
+                    isPrimary={b.isPrimary}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* ── Transaction history ───────────────────────────────────────────────── */}
       <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
           <h2 className="text-foreground font-semibold">Transaction History</h2>
-          <button className="flex items-center gap-1.5 border border-foreground/20 rounded-full px-3 py-1.5 text-foreground/60 text-xs hover:border-foreground/40 transition-colors">
+          <button
+            onClick={() => setFilterOpen(true)}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors',
+              activeFilterCount > 0
+                ? 'bg-accent/15 text-accent border border-accent/30 font-medium'
+                : 'border border-foreground/20 text-foreground/60 hover:border-foreground/40'
+            )}
+          >
             <RiFilterLine className="h-3.5 w-3.5" />
             Filter
+            {activeFilterCount > 0 && (
+              <span className="bg-accent text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-foreground/10">
-          {(['all', 'in', 'out'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setTxFilter(tab)}
-              className={cn(
-                'px-4 py-1.5 rounded-full text-sm font-medium transition-colors',
-                txFilter === tab
-                  ? 'bg-accent text-white'
-                  : 'text-foreground/50 hover:text-foreground/80'
-              )}
-            >
-              {tab === 'all' ? 'All' : tab === 'in' ? 'Money In' : 'Money Out'}
-            </button>
-          ))}
         </div>
 
         {/* Rows */}
@@ -242,48 +306,85 @@ export default function InvestorWallet() {
             <div className="p-4 space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
-          ) : !filteredTx.length ? (
+          ) : !transactions.length ? (
             <div className="py-10">
-              <EmptyState icon={<RiWallet3Line />} title="No transactions yet" />
+              <EmptyState
+                icon={<RiWallet3Line />}
+                title={activeFilterCount > 0 ? 'No transactions match your filters' : 'No transactions yet'}
+              />
+              {activeFilterCount > 0 && (
+                <div className="flex justify-center mt-3">
+                  <button
+                    onClick={() => setActiveFilters(EMPTY_TX_FILTERS)}
+                    className="text-accent text-sm font-medium hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
-            filteredTx.map((tx) => (
-              <button
-                key={tx.id}
-                onClick={() => setSelectedTxId(tx.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors text-left"
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                  tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
-                }`}>
-                  {tx.isCredit
-                    ? <HiArrowTrendingDown className="h-4 w-4" />
-                    : <HiArrowTrendingUp className="h-4 w-4" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-foreground text-sm font-medium truncate">{tx.title}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <p className="text-foreground/50 text-xs truncate">{tx.subtitle}</p>
-                    <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                      tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
-                    }`}>
-                      {tx.isCredit ? 'Money In' : 'Money Out'}
-                    </span>
+            <>
+              {transactions.map((tx) => (
+                <button
+                  key={tx.id}
+                  onClick={() => setSelectedTxId(tx.id)}
+                  className="w-full flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors text-left"
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
+                  }`}>
+                    {tx.isCredit
+                      ? <HiArrowTrendingDown className="h-4 w-4" />
+                      : <HiArrowTrendingUp className="h-4 w-4" />}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-foreground text-sm font-medium truncate">{tx.title}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
+                      <p className="text-foreground/50 text-xs truncate min-w-0">{tx.subtitle}</p>
+                      <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
+                      }`}>
+                        {tx.isCredit ? 'Money In' : 'Money Out'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-semibold ${tx.isCredit ? 'text-green-400' : 'text-foreground'}`}>
+                      {tx.isCredit ? '+' : '-'}{formatCurrency(tx.amount)}
+                    </p>
+                    <p className="text-foreground/50 text-xs mt-0.5">{formatRelativeDate(tx.occurredAt ?? tx.createdAt)}</p>
+                  </div>
+                </button>
+              ))}
+
+              {/* Load More */}
+              {hasNextPage && (
+                <div className="p-4 flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="min-w-32"
+                  >
+                    {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                  </Button>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className={`text-sm font-semibold ${tx.isCredit ? 'text-green-400' : 'text-foreground'}`}>
-                    {tx.isCredit ? '+' : '-'}{formatCurrency(tx.amount)}
-                  </p>
-                  <p className="text-foreground/50 text-xs mt-0.5">{formatRelativeDate(tx.occurredAt ?? tx.createdAt)}</p>
-                </div>
-              </button>
-            ))
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/* ── Modals ────────────────────────────────────────────────────────────── */}
+      <TransactionFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        value={activeFilters}
+        onApply={setActiveFilters}
+      />
+
       <TopUpSheet
         open={topUpOpen}
         onOpenChange={setTopUpOpen}
@@ -324,14 +425,19 @@ function BankAccountRow({
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-3 px-4 py-3 flex-wrap">
       <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
         <RiBankLine className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
         <span className="flex items-center gap-2">
-          <p className="text-foreground text-sm font-medium">{shortName} — {accountNumber}</p>
-          {isPrimary && <span className="text-xs bg-emerald-700/10 p-1 rounded-xl text-emerald-700 font-medium shrink-0">Primary</span>}
+          <p className="text-foreground text-sm font-medium min-w-0 flex items-center gap-1">
+            <span className="truncate">{shortName}</span>
+            <span className="shrink-0 hidden sm:inline">— {accountNumber}</span>
+          </p>
+          {isPrimary && (
+            <span className="text-xs bg-emerald-700/10 p-1 rounded-xl text-emerald-700 font-medium shrink-0">Primary</span>
+          )}
         </span>
         <p className="text-foreground/40 text-xs">{accountHolderName}</p>
       </div>

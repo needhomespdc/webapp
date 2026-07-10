@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { investmentsApi } from '@/api/investments.api';
 import { queryKeys } from '@/lib/queryKeys';
 
-export function useInvestmentList(page = 1, limit = 10) {
+export function useInvestmentList(page = 1, limit = 10, status?: string) {
   const query = useQuery({
-    queryKey: queryKeys.investments.list(page),
-    queryFn: () => investmentsApi.list(page, limit),
+    queryKey: queryKeys.investments.list(page, status),
+    queryFn: () => investmentsApi.list(page, limit, status),
   });
 
   return {

@@ -60,7 +60,7 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
 
   const content = (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+      <div className="px-5 pt-5 pb-3 border-b border-foreground/10 shrink-0">
         <SheetHeader>
           <SheetTitle className="text-base font-semibold text-foreground text-left">Add Funds</SheetTitle>
         </SheetHeader>
@@ -207,7 +207,7 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
         )}
       </div>
 
-      <div className="px-5 py-4 border-t border-border shrink-0">
+      <div className="px-5 py-4 border-t border-foreground/10 shrink-0">
         <Button
           className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
           onClick={handleSubmit}

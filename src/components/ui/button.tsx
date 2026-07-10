@@ -9,10 +9,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-accent text-white hover:bg-[#d45a1e] focus-visible:ring-accent',
-        outline: 'border border-white/20 bg-transparent text-white hover:bg-white/10',
-        ghost: 'bg-transparent text-white hover:bg-white/10',
+        outline: 'border border-foreground/20 bg-transparent text-foreground hover:bg-foreground/8',
+        ghost: 'bg-transparent text-foreground hover:bg-foreground/8',
         link: 'text-accent underline-offset-4 hover:underline p-0 h-auto',
-        secondary: 'bg-white/10 text-white hover:bg-white/20',
+        secondary: 'bg-foreground/10 text-foreground hover:bg-foreground/15',
       },
       size: {
         default: 'h-12 px-6 py-3 text-base',

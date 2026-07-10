@@ -56,14 +56,14 @@ const investorNavItems = [
     activeIcon: <RiShieldCheckFill />,
   },
   {
-    label: 'Support Center',
+    label: 'Help Center',
     to: '/investor/support',
     icon: <BiSupport />,
     activeIcon: <BiSupport />,
   },
   {
     label: 'Settings',
-    to: '/investor/settings',
+    to: '/investor/profile',
     icon: <RiSettings4Line />,
     activeIcon: <RiSettings4Fill />,
   },

@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { walletApi } from '@/api/wallet.api';
+import type { TxApiFilters } from '@/api/wallet.api';
 import { queryKeys } from '@/lib/queryKeys';
 import { useWalletContext } from '@/contexts/WalletContext';
 
@@ -8,9 +9,9 @@ export function useWallet() {
   return { wallet, isLoading: isLoadingWallet, refresh: refreshWallet };
 }
 
-export function useWalletTransactions(page = 1, limit = 10) {
+export function useWalletTransactions(page = 1, limit = 5) {
   const query = useQuery({
-    queryKey: queryKeys.wallet.transactions(page),
+    queryKey: queryKeys.wallet.transactions(page, limit),
     queryFn: () => walletApi.getTransactions(page, limit),
   });
 
@@ -20,6 +21,18 @@ export function useWalletTransactions(page = 1, limit = 10) {
     isLoading: query.isLoading,
     error: query.error,
   };
+}
+
+export function useWalletTransactionsFeed(filters: TxApiFilters = {}) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.wallet.transactionsFeed(filters),
+    queryFn: ({ pageParam }) => walletApi.getTransactions(pageParam as number, 10, filters),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
+  });
 }
 
 export function useBankAccounts() {
@@ -45,7 +58,8 @@ export function useWithdraw() {
     mutationFn: walletApi.withdraw,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
-      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactions(1) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsBase });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsFeedBase });
     },
   });
 }

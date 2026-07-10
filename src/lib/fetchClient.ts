@@ -3,14 +3,14 @@ const REFRESH_TOKEN_STORAGE_KEY = 'needhomes_refresh_token';
 
 function readPersistedRefreshToken(): string | null {
   try {
-    return localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    return sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
   } catch {
     return null;
   }
 }
 
 let accessToken: string | null = null;
-// Seed from localStorage so a page reload can restore the session.
+// Seed from sessionStorage so a page reload can restore the session.
 let refreshTokenValue: string | null = readPersistedRefreshToken();
 let refreshPromise: Promise<string> | null = null;
 let onUnauthorized: (() => void) | null = null;
@@ -30,7 +30,7 @@ export function getAccessToken(): string | null {
  * The token itself comes back in the login response body, so the client must
  * hold onto it and send it explicitly on every refresh.
  *
- * Always persisted to localStorage so a reload restores the session — the
+ * Always persisted to sessionStorage so a reload restores the session — the
  * "Remember Me" checkbox is sent to the backend (it may affect server-side
  * refresh-token expiry) but no longer gates client-side persistence.
  */
@@ -38,12 +38,12 @@ export function setRefreshToken(token: string | null) {
   refreshTokenValue = token;
   try {
     if (token) {
-      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token);
+      sessionStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token);
     } else {
-      localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+      sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
     }
   } catch {
-    // localStorage unavailable (e.g. private browsing) — falls back to memory-only.
+    // sessionStorage unavailable (e.g. private browsing) — falls back to memory-only.
   }
 }
 
