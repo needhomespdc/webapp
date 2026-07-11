@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getGreeting } from '@/utils/helpers';
-import { HiArrowTrendingDown, HiArrowTrendingUp } from 'react-icons/hi2';
+import { HiArrowTrendingDown, HiArrowTrendingUp, HiOutlineBuildingOffice2 } from 'react-icons/hi2';
 
 export default function InvestorDashboard() {
   const { user } = useAuth();
@@ -217,9 +217,9 @@ export default function InvestorDashboard() {
       <div className="grid grid-cols-3 gap-3">
         <Link to="/investor/marketplace">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
-            <CardContent className="p-2.5 flex items-center gap-3">
+            <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
-                <RiStore2LineIcon />
+                <HiOutlineBuildingOffice2 />
               </div>
               <div className="hidden sm:block">
                 <p className="text-foreground text-sm font-semibold">Explore</p>
@@ -233,7 +233,7 @@ export default function InvestorDashboard() {
         </Link>
         <Link to="/investor/wallet">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
-            <CardContent className="p-2.5 flex items-center gap-3">
+            <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiWalletIcon />
               </div>
@@ -249,7 +249,7 @@ export default function InvestorDashboard() {
         </Link>
         <Link to="/investor/favorites">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
-            <CardContent className="p-2.5 flex items-center gap-3">
+            <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiHeartIcon />
               </div>
@@ -276,7 +276,7 @@ export default function InvestorDashboard() {
             </Link>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 p-3">
           {invLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
