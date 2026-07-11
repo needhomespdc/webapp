@@ -13,7 +13,7 @@ import {
   // RiUserAddLine,
   RiArrowDownSLine,
 } from 'react-icons/ri';
-import { usePortfolioPerformance, useInvestmentList } from '@/hooks/useInvestment';
+import { usePortfolioPerformance, useInvestmentListFeed } from '@/hooks/useInvestment';
 // import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 // import { useToast } from '@/hooks/useToast';
@@ -137,7 +137,6 @@ export default function Portfolio() {
   // const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 639px)');
 
-  const [page, setPage] = useState(1);
   const [tab, setTab] = useState<TabValue>('all');
   const [period, setPeriod] = useState<PeriodValue>('past_6_months');
   const [sort, setSort] = useState<SortValue>('recent');
@@ -146,15 +145,22 @@ export default function Portfolio() {
   const [sortOpen, setSortOpen] = useState(false);
 
   const { performance: perf, isLoading: perfLoading } = usePortfolioPerformance(period);
-  const { investments: rawInvestments, pagination, isLoading } = useInvestmentList(
-    page,
-    10,
-    tab === 'all' ? undefined : tab,
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInvestmentListFeed(tab === 'all' ? undefined : tab);
+
+  const rawInvestments = useMemo(
+    () => data?.pages.flatMap((p) => p.data ?? []) ?? [],
+    [data],
   );
 
   const filtered = useMemo(() => sortInvestments(rawInvestments, sort), [rawInvestments, sort]);
 
-  const handleTabChange = (newTab: TabValue) => { setTab(newTab); setPage(1); };
+  const handleTabChange = (newTab: TabValue) => { setTab(newTab); };
 
   const currentPeriodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? 'This month';
   const currentSortLabel = SORT_OPTIONS.find((s) => s.value === sort)?.label ?? 'Recent';
@@ -186,43 +192,32 @@ export default function Portfolio() {
 
       {/* Hero — Total Portfolio Value */}
       <div className="relative rounded-2xl overflow-hidden bg-primary p-5 min-h-[170px] flex flex-col justify-between">
-        {/* Decorative rings */}
-        <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute -bottom-8 right-4 w-28 h-28 rounded-full bg-white/5 pointer-events-none" />
-        {/* Building SVG decoration */}
-        <div className="absolute top-3 right-4 opacity-[0.07] pointer-events-none select-none">
-          <svg viewBox="0 0 80 80" fill="white" className="h-28 w-28">
-            <rect x="5" y="30" width="30" height="45" rx="2" />
-            <rect x="45" y="20" width="30" height="55" rx="2" />
-            <rect x="12" y="38" width="8" height="8" rx="1" opacity="0.6" />
-            <rect x="12" y="52" width="8" height="8" rx="1" opacity="0.6" />
-            <rect x="52" y="28" width="8" height="8" rx="1" opacity="0.6" />
-            <rect x="52" y="42" width="8" height="8" rx="1" opacity="0.6" />
-            <rect x="52" y="56" width="8" height="8" rx="1" opacity="0.6" />
-            <rect x="0" y="73" width="80" height="4" rx="1" />
-          </svg>
-        </div>
+        <div className="flex flex-row justify-between">
+          <div className="flex flex-col gap-1">
+            {/* Label + toggle */}
+            <div className="flex items-center gap-2">
+              <p className="text-white/60 text-sm">Total Portfolio Value</p>
+              <button
+                onClick={() => setShowValue((v) => !v)}
+                className="text-white/40 hover:text-white/70 transition-colors"
+              >
+                {showValue ? <RiEyeLine className="h-4 w-4" /> : <RiEyeOffLine className="h-4 w-4" />}
+              </button>
+            </div>
 
-        {/* Label + toggle */}
-        <div className="flex items-center gap-2">
-          <p className="text-white/60 text-sm">Total Portfolio Value</p>
-          <button
-            onClick={() => setShowValue((v) => !v)}
-            className="text-white/40 hover:text-white/70 transition-colors"
-          >
-            {showValue ? <RiEyeLine className="h-4 w-4" /> : <RiEyeOffLine className="h-4 w-4" />}
-          </button>
-        </div>
+            {/* Big value */}
+            <div className="mt-1">
+              {perfLoading ? (
+                <Skeleton className="h-9 w-40 bg-white/10" />
+              ) : showValue ? (
+                <CurrencyDisplay amount={perf?.totalPortfolioValue ?? 0} size="xl" className="text-white" />
+              ) : (
+                <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
+              )}
+            </div>
+          </div>
 
-        {/* Big value */}
-        <div className="mt-1">
-          {perfLoading ? (
-            <Skeleton className="h-9 w-40 bg-white/10" />
-          ) : showValue ? (
-            <CurrencyDisplay amount={perf?.totalPortfolioValue ?? 0} size="xl" className="text-white" />
-          ) : (
-            <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
-          )}
+          <img src="/resources/portfolio-hero.png" alt="portfolio_image" className='h-auto w-20' />
         </div>
 
         {/* Mini stats row */}
@@ -354,19 +349,16 @@ export default function Portfolio() {
           </div>
         )}
 
-        {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-center gap-3 mt-5">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              Previous
-            </Button>
-            <span className="text-foreground/60 text-sm">{pagination.page} / {pagination.totalPages}</span>
+        {hasNextPage && (
+          <div className="flex justify-center mt-5">
             <Button
               variant="outline"
               size="sm"
-              disabled={page >= pagination.totalPages}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="min-w-32"
             >
-              Next
+              {isFetchingNextPage ? 'Loading...' : 'Load More'}
             </Button>
           </div>
         )}

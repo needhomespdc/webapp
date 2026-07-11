@@ -9,32 +9,34 @@ import { EMPTY_TX_FILTERS } from '@/types';
 const DATE_RANGES: { value: TxFilterState['dateRange']; label: string }[] = [
   { value: 'all', label: 'All Time' },
   { value: 'today', label: 'Today' },
-  { value: '7d', label: 'Last 7 Days' },
-  { value: '30d', label: 'Last 30 Days' },
-  { value: '3m', label: 'Last 3 Months' },
+  { value: 'last_7_days', label: 'Last 7 Days' },
+  { value: 'last_30_days', label: 'Last 30 Days' },
+  { value: 'last_3_months', label: 'Last 3 Months' },
   { value: 'custom', label: 'Custom Range' },
 ];
 
 const DIRECTIONS: { value: TxFilterState['direction']; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'credit', label: 'Money In' },
-  { value: 'debit', label: 'Money Out' },
+  { value: 'money_in', label: 'Money In' },
+  { value: 'money_out', label: 'Money Out' },
 ];
 
 const STATUSES: { value: TxFilterState['status']; label: string }[] = [
   { value: '', label: 'All' },
-  { value: 'successful' as TransactionStatus, label: 'Completed' },
+  { value: 'completed' as TransactionStatus, label: 'Completed' },
   { value: 'failed' as TransactionStatus, label: 'Failed' },
   { value: 'pending' as TransactionStatus, label: 'Pending' },
 ];
 
 const TYPES: { value: TxFilterState['type']; label: string }[] = [
   { value: '', label: 'All' },
-  { value: 'payout' as TransactionType, label: 'Investment Return' },
-  { value: 'deposit' as TransactionType, label: 'Wallet Top Up' },
-  { value: 'commission' as TransactionType, label: 'Referral Bonus' },
-  { value: 'investment' as TransactionType, label: 'Investment In' },
+  { value: 'investment_return' as TransactionType, label: 'Investment Return' },
+  { value: 'wallet_top_up' as TransactionType, label: 'Wallet Top Up' },
+  { value: 'referral_bonus' as TransactionType, label: 'Referral Bonus' },
+  { value: 'investment_in' as TransactionType, label: 'Investment In' },
   { value: 'withdrawal' as TransactionType, label: 'Withdrawal' },
+  { value: 'admin_credit' as TransactionType, label: 'Admin Credit' },
+  { value: 'admin_debit' as TransactionType, label: 'Admin Debit' },
 ];
 
 interface Props {

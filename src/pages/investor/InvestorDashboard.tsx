@@ -25,7 +25,7 @@ export default function InvestorDashboard() {
 
   const { performance: performanceData, isLoading: perfLoading } = usePortfolioPerformance('past_6_months');
   const { wallet: walletData, isLoading: walletLoading } = useWallet();
-  const { investments: investmentsData, isLoading: invLoading } = useInvestmentList(1, 5);
+  const { investments: investmentsData, isLoading: invLoading } = useInvestmentList(1, 3);
   const { transactions: txData } = useWalletTransactions(1, 5);
 
   const displayName =
@@ -78,7 +78,7 @@ export default function InvestorDashboard() {
         className="group relative block rounded-2xl overflow-hidden min-h-[160px] sm:min-h-[180px]"
       >
         <img
-          src="/resources/woman-with-card.jpg"
+          src="/resources/invest-hero-house.png"
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
         />
@@ -214,16 +214,19 @@ export default function InvestorDashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link to="/investor/marketplace">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
             <CardContent className="p-2.5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
+              <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiStore2LineIcon />
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <p className="text-foreground text-sm font-semibold">Explore</p>
                 <p className="text-foreground/50 text-xs">Browse properties</p>
+              </div>
+              <div className="sm:hidden">
+                <p className="text-foreground text-xs font-semibold">Explore</p>
               </div>
             </CardContent>
           </Card>
@@ -231,12 +234,31 @@ export default function InvestorDashboard() {
         <Link to="/investor/wallet">
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
             <CardContent className="p-2.5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
+              <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiWalletIcon />
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <p className="text-foreground text-sm font-semibold">Fund Wallet</p>
                 <p className="text-foreground/50 text-xs">Top up balance</p>
+              </div>
+              <div className="sm:hidden">
+                <p className="text-foreground text-xs font-semibold">Fund Wallet</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/investor/favorites">
+          <Card className="hover:border-accent/40 transition-colors cursor-pointer">
+            <CardContent className="p-2.5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
+                <RiHeartIcon />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-foreground text-sm font-semibold">Favorites</p>
+                <p className="text-foreground/50 text-xs">Saved properties</p>
+              </div>
+              <div className="sm:hidden">
+                <p className="text-foreground text-xs font-semibold">Favorites</p>
               </div>
             </CardContent>
           </Card>
@@ -393,6 +415,14 @@ function RiWalletIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
       <path d="M22 7h1v10h-1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h19a1 1 0 0 1 1 1v3zm-2 10h-6a5 5 0 0 1 0-10h6V5H3v14h17v-2zm1-2V9h-7a3 3 0 0 0 0 6h7zm-7-4h3v2h-3v-2z" />
+    </svg>
+  );
+}
+
+function RiHeartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+      <path d="M12 20.703l-.343.302a1 1 0 0 0 .686 0L12 20.703zm0 0l.343.302L12 20.703zm0 0C5.5 15.5 2 11.954 2 8.5 2 5.42 4.42 3 7.5 3c1.742 0 3.344.87 4.5 2.265C13.156 3.87 14.758 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.454-3.5 7-10 12.203z" />
     </svg>
   );
 }

@@ -20,7 +20,7 @@ import {
 import { MarketplaceSortSheet } from '@/components/property/MarketplaceSortSheet';
 import type { PropertyFilters } from '@/api/properties.api';
 
-const SEARCH_DEBOUNCE_MS = 3000;
+const SEARCH_DEBOUNCE_MS = 250;
 const DEFAULT_SORT: NonNullable<PropertyFilters['sort']> = 'popular';
 const VALID_SORTS = new Set<PropertyFilters['sort']>(['popular', 'price_asc', 'price_desc', 'name_asc']);
 
@@ -84,7 +84,7 @@ export default function Marketplace() {
   const apiFilters: PropertyFilters = useMemo(
     () => ({
       page,
-      limit: 12,
+      limit: 10,
       type: modelType || undefined,
       search: debouncedSearch || undefined,
       sort,
@@ -145,7 +145,7 @@ export default function Marketplace() {
           <Button
             type="button"
             variant="default"
-            size="sm"
+            size="md"
             className="relative shrink-0"
             onClick={() => setFilterSheetOpen(true)}
           >
@@ -235,8 +235,8 @@ export default function Marketplace() {
         </div>
       )}
 
-      {/* Pagination — always visible once we have results, buttons disable at the edges */}
-      {pagination && properties.length > 0 && (
+      {/* Pagination — only shown when there are multiple pages */}
+      {pagination && pagination.totalPages > 1 && properties.length > 0 && (
         <div className="flex items-center justify-center gap-3 pt-2">
           <Button variant="outline" size="sm" disabled={!hasPrevPage} onClick={() => setPage((p) => p - 1)}>
             Previous

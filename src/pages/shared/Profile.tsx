@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,12 +17,13 @@ import {
   RiEyeOffLine,
   RiPencilLine,
   RiVerifiedBadgeLine,
+  RiArrowDownSLine,
 } from 'react-icons/ri';
 import { Country, State } from 'country-state-city';
 import authApi from '@/api/auth.api';
 import { mediaApi } from '@/api/media.api';
-import { PhoneInput } from '@/components/shared/PhoneInput';
-import { AppSelect, type SelectOption } from '@/components/shared/AppSelect';
+import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
+import { SelectDropdown, type SelectOption } from '@/components/shared/SelectDropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
@@ -41,24 +42,24 @@ import {
 import { toast } from '@/hooks/useToast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { ApiError, unwrapEnvelope } from '@/lib/fetchClient';
-import type { SecurityQuestionsStatus } from '@/api/auth.api';
 import type { User } from '@/types';
+import { cn } from '@/lib/utils';
 
 const EMPLOYMENT_STATUSES: SelectOption[] = [
-  { value: 'Student', label: 'Student' },
-  { value: 'Self employed', label: 'Self employed' },
-  { value: 'Unemployed', label: 'Unemployed' },
-  { value: 'Employed', label: 'Employed' },
+  { value: 'student', label: 'Student' },
+  { value: 'self_employed', label: 'Self Employed' },
+  { value: 'unemployed', label: 'Unemployed' },
+  { value: 'employed', label: 'Employed' },
 ];
 
-// const SECURITY_QUESTIONS = [
-//   "What is the name of your first school?",
-//   "What city were you born in?",
-//   "What is your mother's maiden name?",
-//   "What was the name of your first pet?",
-//   "What was the make of your first car?",
-//   "What is your oldest sibling's middle name?",
-// ];
+const SECURITY_QUESTIONS = [
+  "What is the name of your first school?",
+  "What city were you born in?",
+  "What is your mother's maiden name?",
+  "What was the name of your first pet?",
+  "What is your favourite food?",
+  "What was your childhood nickname?",
+];
 
 export default function Profile() {
   const { user, logout, updateProfile } = useAuth();
@@ -91,16 +92,16 @@ export default function Profile() {
   const [pwOpen, setPwOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // const [sqOpen, setSqOpen] = useState(false);
-  // const [questionOne, setQuestionOne] = useState('');
-  // const [answerOne, setAnswerOne] = useState('');
-  // const [questionTwo, setQuestionTwo] = useState('');
-  // const [answerTwo, setAnswerTwo] = useState('');
+  const [sqOpen, setSqOpen] = useState(false);
+  const [questionOne, setQuestionOne] = useState('');
+  const [answerOne, setAnswerOne] = useState('');
+  const [questionTwo, setQuestionTwo] = useState('');
+  const [answerTwo, setAnswerTwo] = useState('');
 
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
@@ -108,8 +109,13 @@ export default function Profile() {
 
   const { data: sqStatus } = useQuery({
     queryKey: ['auth', 'security-questions'],
-    queryFn: () => authApi.getSecurityQuestionsStatus().then((r) => unwrapEnvelope<SecurityQuestionsStatus>(r)),
+    queryFn: () => authApi.getSecurityQuestionsStatus(),
   });
+
+  useEffect(() => {
+    if (sqStatus?.questionOne) setQuestionOne(sqStatus.questionOne);
+    if (sqStatus?.questionTwo) setQuestionTwo(sqStatus.questionTwo);
+  }, [sqStatus]);
 
   const updateProfileMutation = useMutation({
     mutationFn: authApi.updateProfile,
@@ -121,14 +127,14 @@ export default function Profile() {
     onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Update failed'),
   });
 
-  // const securityQuestionsMutation = useMutation({
-  //   mutationFn: authApi.setSecurityQuestions,
-  //   onSuccess: () => {
-  //     toast.success('Security questions saved');
-  //     setSqOpen(false);
-  //   },
-  //   onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to save security questions'),
-  // });
+  const securityQuestionsMutation = useMutation({
+    mutationFn: authApi.setSecurityQuestions,
+    onSuccess: () => {
+      toast.success('Security questions saved');
+      setSqOpen(false);
+    },
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to save security questions'),
+  });
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -156,7 +162,7 @@ export default function Profile() {
       setPwOpen(false);
       setCurrentPassword('');
       setNewPassword('');
-      setConfirmNewPassword('');
+      setConfirmPassword('');
     },
     onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to change password'),
   });
@@ -203,7 +209,7 @@ export default function Profile() {
 
       {/* Profile card */}
       <div className="bg-primary rounded-2xl p-5">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           {/* Avatar with pen overlay */}
           <div className="relative shrink-0">
             <div className="w-24 h-24 rounded-full bg-accent/80 ring-4 ring-white/10 flex items-center justify-center text-white text-3xl font-bold shadow-lg overflow-hidden">
@@ -239,7 +245,7 @@ export default function Profile() {
               {isInvestor && user.kycStatus === 'approved' ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-3 py-1 rounded-full">
                   <RiVerifiedBadgeLine className="text-sm" />
-                  Verified Account
+                  Verified
                 </span>
               ) : isInvestor ? (
                 <StatusBadge status={user.kycStatus} />
@@ -277,11 +283,11 @@ export default function Profile() {
             label="Security Questions"
             desc={sqStatus?.isSet ? 'Questions are set' : 'Set up security questions'}
             onClick={() => {
-              // setQuestionOne(sqStatus?.questionOne ?? '');
-              // setQuestionTwo(sqStatus?.questionTwo ?? '');
-              // setAnswerOne('');
-              // setAnswerTwo('');
-              // setSqOpen(true);
+              setQuestionOne(sqStatus?.questionOne ?? '');
+              setQuestionTwo(sqStatus?.questionTwo ?? '');
+              setAnswerOne('');
+              setAnswerTwo('');
+              setSqOpen(true);
             }}
           />
           <MenuItem
@@ -377,10 +383,13 @@ export default function Profile() {
               isPending={updateProfileMutation.isPending}
               onCancel={() => setEditOpen(false)}
               onSave={() => updateProfileMutation.mutate({
-                firstName, lastName, phone, dateOfBirth,
-                country: Country.getCountryByCode(country)?.name ?? country,
-                state, city, street, employmentStatus,
-                nextOfKinName, nextOfKinAddress, nextOfKinPhone, nextOfKinEmail,
+                firstName, lastName, phone,
+                ...(dateOfBirth ? { dateOfBirth } : {}),
+                ...(employmentStatus ? { employmentStatus } : {}),
+                ...(nextOfKinName ? { nextOfKinName } : {}),
+                ...(nextOfKinAddress ? { nextOfKinAddress } : {}),
+                ...(nextOfKinPhone ? { nextOfKinPhone } : {}),
+                ...(nextOfKinEmail ? { nextOfKinEmail } : {}),
               })}
             />
           </SheetContent>
@@ -401,148 +410,93 @@ export default function Profile() {
               isPending={updateProfileMutation.isPending}
               onCancel={() => setEditOpen(false)}
               onSave={() => updateProfileMutation.mutate({
-                firstName, lastName, phone, dateOfBirth,
-                country: Country.getCountryByCode(country)?.name ?? country,
-                state, city, street, employmentStatus,
-                nextOfKinName, nextOfKinAddress, nextOfKinPhone, nextOfKinEmail,
+                firstName, lastName, phone,
+                ...(dateOfBirth ? { dateOfBirth } : {}),
+                ...(employmentStatus ? { employmentStatus } : {}),
+                ...(nextOfKinName ? { nextOfKinName } : {}),
+                ...(nextOfKinAddress ? { nextOfKinAddress } : {}),
+                ...(nextOfKinPhone ? { nextOfKinPhone } : {}),
+                ...(nextOfKinEmail ? { nextOfKinEmail } : {}),
               })}
             />
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Change password dialog */}
-      <Dialog open={pwOpen} onOpenChange={setPwOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Current Password</Label>
-              <div className="relative">
-                <Input
-                  type={showCurrent ? 'text' : 'password'}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrent((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/70"
-                >
-                  {showCurrent ? <RiEyeOffLine /> : <RiEyeLine />}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>New Password</Label>
-              <div className="relative">
-                <Input
-                  type={showNew ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/70"
-                >
-                  {showNew ? <RiEyeOffLine /> : <RiEyeLine />}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Confirm New Password</Label>
-              <div className="relative">
-                <Input
-                  type={showConfirm ? 'text' : 'password'}
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/70"
-                >
-                  {showConfirm ? <RiEyeOffLine /> : <RiEyeLine />}
-                </button>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPwOpen(false)}>Cancel</Button>
-            <Button
-              onClick={() => changePasswordMutation.mutate({ currentPassword, newPassword, confirmNewPassword })}
-              disabled={changePasswordMutation.isPending}
-            >
-              {changePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Change password — Sheet on mobile, Dialog on desktop */}
+      {isMobile ? (
+        <Sheet open={pwOpen} onOpenChange={setPwOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+            <SheetHeader>
+              <SheetTitle>Change Password</SheetTitle>
+            </SheetHeader>
+            <ChangePasswordForm
+              showCurrent={showCurrent} setShowCurrent={setShowCurrent} currentPassword={currentPassword} setCurrentPassword={setCurrentPassword}
+              showNew={showNew} setShowNew={setShowNew} newPassword={newPassword} setNewPassword={setNewPassword}
+              showConfirm={showConfirm} setShowConfirm={setShowConfirm} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword}
+              isPending={changePasswordMutation.isPending}
+              onCancel={() => setPwOpen(false)}
+              onSubmit={() => changePasswordMutation.mutate({ currentPassword, newPassword, confirmPassword })}
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={pwOpen} onOpenChange={setPwOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+            </DialogHeader>
+            <ChangePasswordForm
+              showCurrent={showCurrent} setShowCurrent={setShowCurrent} currentPassword={currentPassword} setCurrentPassword={setCurrentPassword}
+              showNew={showNew} setShowNew={setShowNew} newPassword={newPassword} setNewPassword={setNewPassword}
+              showConfirm={showConfirm} setShowConfirm={setShowConfirm} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword}
+              isPending={changePasswordMutation.isPending}
+              onCancel={() => setPwOpen(false)}
+              onSubmit={() => changePasswordMutation.mutate({ currentPassword, newPassword, confirmPassword })}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
-      {/* Security questions dialog */}
-      {/* <Dialog open={sqOpen} onOpenChange={setSqOpen}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Security Questions</DialogTitle>
-            <DialogDescription className="text-sm text-foreground/50">
-              Choose questions and answers that can be used to verify your identity during account recovery.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-1">
-            <div className="space-y-2">
-              <Label>Security Question 1</Label>
-              <AppSelect<SelectOption>
-                options={SECURITY_QUESTIONS.map((q) => ({ value: q, label: q }))}
-                value={questionOne ? { value: questionOne, label: questionOne } : null}
-                onChange={(opt) => setQuestionOne((opt as SelectOption | null)?.value ?? '')}
-                placeholder="Select a question"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Answer 1</Label>
-              <Input
-                type="password"
-                placeholder="Enter your answer"
-                value={answerOne}
-                onChange={(e) => setAnswerOne(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Security Question 2</Label>
-              <AppSelect<SelectOption>
-                options={SECURITY_QUESTIONS.filter((q) => q !== questionOne).map((q) => ({ value: q, label: q }))}
-                value={questionTwo ? { value: questionTwo, label: questionTwo } : null}
-                onChange={(opt) => setQuestionTwo((opt as SelectOption | null)?.value ?? '')}
-                placeholder="Select a question"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Answer 2</Label>
-              <Input
-                type="password"
-                placeholder="Enter your answer"
-                value={answerTwo}
-                onChange={(e) => setAnswerTwo(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter className="mt-2">
-            <Button
-              className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
-              onClick={() => securityQuestionsMutation.mutate({ questionOne, answerOne, questionTwo, answerTwo })}
-              disabled={!questionOne || !answerOne || !questionTwo || !answerTwo || securityQuestionsMutation.isPending}
-            >
-              {securityQuestionsMutation.isPending ? 'Saving...' : 'Save Security Questions'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
+      {/* Security questions — Sheet on mobile, Dialog on desktop */}
+      {isMobile ? (
+        <Sheet open={sqOpen} onOpenChange={setSqOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+            <SheetHeader>
+              <SheetTitle>Security Questions</SheetTitle>
+            </SheetHeader>
+            <SecurityQuestionsForm
+              questionOne={questionOne} setQuestionOne={setQuestionOne}
+              answerOne={answerOne} setAnswerOne={setAnswerOne}
+              questionTwo={questionTwo} setQuestionTwo={setQuestionTwo}
+              answerTwo={answerTwo} setAnswerTwo={setAnswerTwo}
+              availableQuestions={sqStatus?.availableQuestions}
+              isPending={securityQuestionsMutation.isPending}
+              onSubmit={() => securityQuestionsMutation.mutate({ questionOne, answerOne, questionTwo, answerTwo })}
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={sqOpen} onOpenChange={setSqOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Security Questions</DialogTitle>
+              <DialogDescription>
+                Choose questions and answers to verify your identity during account recovery.
+              </DialogDescription>
+            </DialogHeader>
+            <SecurityQuestionsForm
+              questionOne={questionOne} setQuestionOne={setQuestionOne}
+              answerOne={answerOne} setAnswerOne={setAnswerOne}
+              questionTwo={questionTwo} setQuestionTwo={setQuestionTwo}
+              answerTwo={answerTwo} setAnswerTwo={setAnswerTwo}
+              availableQuestions={sqStatus?.availableQuestions}
+              isPending={securityQuestionsMutation.isPending}
+              onSubmit={() => securityQuestionsMutation.mutate({ questionOne, answerOne, questionTwo, answerTwo })}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Deactivate dialog */}
       <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
@@ -658,7 +612,7 @@ function EditProfileForm({
 
         <div className="space-y-2">
           <Label>Phone Number</Label>
-          <PhoneInput value={fields.phone} onChange={fields.setPhone} />
+          <PhoneNumberInput value={fields.phone} onChange={fields.setPhone} />
         </div>
 
         <div className="space-y-2">
@@ -673,7 +627,7 @@ function EditProfileForm({
 
         <div className="space-y-2">
           <Label>Country</Label>
-          <AppSelect<SelectOption>
+          <SelectDropdown<SelectOption>
             options={Country.getAllCountries().map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))}
             value={Country.getAllCountries()
               .map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))
@@ -689,7 +643,7 @@ function EditProfileForm({
 
         <div className="space-y-2">
           <Label>State</Label>
-          <AppSelect<SelectOption>
+          <SelectDropdown<SelectOption>
             options={State.getStatesOfCountry(fields.country).map((s) => ({ value: s.name, label: s.name }))}
             value={fields.state ? { value: fields.state, label: fields.state } : null}
             onChange={(opt) => fields.setState((opt as SelectOption | null)?.value ?? '')}
@@ -711,7 +665,7 @@ function EditProfileForm({
 
         <div className="space-y-2">
           <Label>Employment Status</Label>
-          <AppSelect<SelectOption>
+          <SelectDropdown<SelectOption>
             options={EMPLOYMENT_STATUSES}
             value={EMPLOYMENT_STATUSES.find((o) => o.value === fields.employmentStatus) ?? null}
             onChange={(opt) => fields.setEmploymentStatus((opt as SelectOption | null)?.value ?? '')}
@@ -741,7 +695,7 @@ function EditProfileForm({
             </div>
             <div className="space-y-2">
               <Label>Phone Number</Label>
-              <PhoneInput value={fields.nextOfKinPhone} onChange={fields.setNextOfKinPhone} />
+              <PhoneNumberInput value={fields.nextOfKinPhone} onChange={fields.setNextOfKinPhone} />
             </div>
             <div className="space-y-2">
               <Label>Email Address <span className="text-foreground/40 font-normal">(Optional)</span></Label>
@@ -814,5 +768,176 @@ function MenuItem({
       </div>
       <RiArrowRightLine className="text-foreground/25 shrink-0" />
     </button>
+  );
+}
+
+function ChangePasswordForm({
+  showCurrent, setShowCurrent, currentPassword, setCurrentPassword,
+  showNew, setShowNew, newPassword, setNewPassword,
+  showConfirm, setShowConfirm, confirmPassword, setConfirmPassword,
+  isPending, onCancel, onSubmit,
+}: {
+  showCurrent: boolean; setShowCurrent: (v: boolean) => void;
+  currentPassword: string; setCurrentPassword: (v: string) => void;
+  showNew: boolean; setShowNew: (v: boolean) => void;
+  newPassword: string; setNewPassword: (v: string) => void;
+  showConfirm: boolean; setShowConfirm: (v: boolean) => void;
+  confirmPassword: string; setConfirmPassword: (v: string) => void;
+  isPending: boolean;
+  onCancel: () => void;
+  onSubmit: () => void;
+}) {
+  const fields = [
+    { label: 'Current Password', value: currentPassword, setValue: setCurrentPassword, show: showCurrent, setShow: setShowCurrent },
+    { label: 'New Password', value: newPassword, setValue: setNewPassword, show: showNew, setShow: setShowNew },
+    { label: 'Confirm New Password', value: confirmPassword, setValue: setConfirmPassword, show: showConfirm, setShow: setShowConfirm },
+  ];
+
+  return (
+    <div className="space-y-4 mt-4">
+      {fields.map(({ label, value, setValue, show, setShow }) => (
+        <div key={label} className="space-y-2">
+          <Label>{label}</Label>
+          <div className="relative">
+            <Input
+              type={show ? 'text' : 'password'}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShow(!show)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/70"
+            >
+              {show ? <RiEyeOffLine /> : <RiEyeLine />}
+            </button>
+          </div>
+        </div>
+      ))}
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" className="flex-1" onClick={onCancel}>Cancel</Button>
+        <Button className="flex-1" onClick={onSubmit} disabled={isPending}>
+          {isPending ? 'Updating...' : 'Update Password'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SecurityQuestionsForm({
+  questionOne, setQuestionOne, answerOne, setAnswerOne,
+  questionTwo, setQuestionTwo, answerTwo, setAnswerTwo,
+  availableQuestions,
+  isPending, onSubmit,
+}: {
+  questionOne: string; setQuestionOne: (v: string) => void;
+  answerOne: string; setAnswerOne: (v: string) => void;
+  questionTwo: string; setQuestionTwo: (v: string) => void;
+  answerTwo: string; setAnswerTwo: (v: string) => void;
+  availableQuestions?: string[];
+  isPending: boolean;
+  onSubmit: () => void;
+}) {
+  const [pickerTarget, setPickerTarget] = useState<1 | 2 | null>(null);
+  const isMobile = useMediaQuery('(max-width: 639px)');
+
+  const questions = availableQuestions ?? SECURITY_QUESTIONS;
+  const availableForTwo = questions.filter((q) => q !== questionOne);
+
+  function QuestionSelect({ num, value, onChange, options }: {
+    num: 1 | 2; value: string; onChange: (v: string) => void; options: string[];
+  }) {
+    if (isMobile) {
+      return (
+        <button
+          type="button"
+          onClick={() => setPickerTarget(num)}
+          className="w-full flex items-center justify-between h-11 px-3 rounded-xl border border-foreground/15 bg-foreground/5 text-sm text-left"
+        >
+          <span className={value ? 'text-foreground' : 'text-foreground/40'}>
+            {value || 'Select a question'}
+          </span>
+          <RiArrowDownSLine className="h-4 w-4 text-foreground/40 shrink-0" />
+        </button>
+      );
+    }
+    return (
+      <SelectDropdown<SelectOption>
+        options={options.map((q) => ({ value: q, label: q }))}
+        value={value ? { value, label: value } : null}
+        onChange={(opt) => onChange((opt as SelectOption | null)?.value ?? '')}
+        placeholder="Select a question"
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-4 mt-4">
+        <div className="space-y-2">
+          <Label>Security Question 1</Label>
+          <QuestionSelect num={1} value={questionOne} onChange={setQuestionOne} options={questions} />
+        </div>
+        <div className="space-y-2">
+          <Label>Answer 1</Label>
+          <Input
+            placeholder="Enter your answer"
+            value={answerOne}
+            onChange={(e) => setAnswerOne(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Security Question 2</Label>
+          <QuestionSelect num={2} value={questionTwo} onChange={setQuestionTwo} options={availableForTwo} />
+        </div>
+        <div className="space-y-2">
+          <Label>Answer 2</Label>
+          <Input
+            placeholder="Enter your answer"
+            value={answerTwo}
+            onChange={(e) => setAnswerTwo(e.target.value)}
+          />
+        </div>
+
+        <Button
+          className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
+          onClick={onSubmit}
+          disabled={!questionOne || !answerOne || !questionTwo || !answerTwo || isPending}
+        >
+          {isPending ? 'Saving...' : 'Save Security Questions'}
+        </Button>
+      </div>
+
+      {/* Question picker sheet (mobile only) */}
+      <Sheet open={pickerTarget !== null} onOpenChange={(open) => { if (!open) setPickerTarget(null); }}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+          <SheetHeader>
+            <SheetTitle>Select security question</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2 mt-4">
+            {(pickerTarget === 1 ? questions : availableForTwo).map((q) => (
+              <button
+                key={q}
+                onClick={() => {
+                  if (pickerTarget === 1) setQuestionOne(q);
+                  else setQuestionTwo(q);
+                  setPickerTarget(null);
+                }}
+                className={cn(
+                  'w-full text-left px-4 py-3.5 rounded-xl text-sm font-medium transition-colors',
+                  (pickerTarget === 1 ? questionOne : questionTwo) === q
+                    ? 'bg-accent/15 text-accent border border-accent/30'
+                    : 'bg-foreground/5 text-foreground hover:bg-foreground/10'
+                )}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

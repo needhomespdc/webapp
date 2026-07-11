@@ -12,7 +12,7 @@ import {
   RiBuilding2Line,
   RiMegaphoneLine,
 } from 'react-icons/ri';
-import { PhoneInput } from '@/components/shared/PhoneInput';
+import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -235,7 +235,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <PhoneInput value={field.value} onChange={field.onChange} size="lg" />
+                <PhoneNumberInput value={field.value} onChange={field.onChange} size="lg" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -423,7 +423,7 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <PhoneInput value={field.value} onChange={field.onChange} />
+                <PhoneNumberInput value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -569,7 +569,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
           <FormItem>
             <FormLabel>Phone Number</FormLabel>
             <FormControl>
-              <PhoneInput value={field.value} onChange={field.onChange} />
+              <PhoneNumberInput value={field.value} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>

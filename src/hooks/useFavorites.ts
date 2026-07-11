@@ -48,7 +48,7 @@ export function useToggleFavorite() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.favorites.ids });
-      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.list(1) });
+      queryClient.invalidateQueries({ queryKey: ['favorites', 'list'] });
     },
   });
 }

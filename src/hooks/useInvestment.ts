@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { investmentsApi } from '@/api/investments.api';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -14,6 +14,19 @@ export function useInvestmentList(page = 1, limit = 10, status?: string) {
     isLoading: query.isLoading,
     error: query.error,
   };
+}
+
+export function useInvestmentListFeed(status?: string) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.investments.feed(status ?? 'all'),
+    queryFn: ({ pageParam }) => investmentsApi.list(pageParam as number, 10, status),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const p = lastPage?.pagination;
+      if (!p) return undefined;
+      return p.page < p.totalPages ? p.page + 1 : undefined;
+    },
+  });
 }
 
 export function useInvestmentDetail(investmentId: string | undefined) {

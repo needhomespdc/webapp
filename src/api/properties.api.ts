@@ -1,6 +1,20 @@
 import { api } from '@/lib/fetchClient';
 import type { Property, PaginatedResponse, ApiResponse } from '@/types';
 
+export interface OutrightCheckoutPreview {
+  propertyId: string;
+  quantity: number;
+  unitsAvailable: number;
+  unitPrice: number;
+  propertyPrice: number;
+  managementFee: number;
+  managementFeeDiscountPercent: number;
+  managementFeeDiscount: number;
+  totalPurchasePrice: number;
+  qualifiesForDiscount: boolean;
+  multiUnitDiscountMinQuantity: number;
+}
+
 export interface PropertyFilters {
   // Investment model (fractional/outright/land_banking/save_to_own/co_development).
   // Query param name `type` is confirmed via the Postman collection.
@@ -19,7 +33,7 @@ export interface PropertyFilters {
 }
 
 export const propertiesApi = {
-  list: (filters: PropertyFilters = {}): Promise<PaginatedResponse<Property>> => {
+  list: async (filters: PropertyFilters = {}): Promise<PaginatedResponse<Property>> => {
     const params = new URLSearchParams();
     if (filters.type) params.set('type', filters.type);
     if (filters.propertyKind) params.set('propertyKind', filters.propertyKind);
@@ -28,7 +42,8 @@ export const propertiesApi = {
     if (filters.sort) params.set('sort', filters.sort);
     if (filters.page) params.set('page', String(filters.page));
     if (filters.limit) params.set('limit', String(filters.limit));
-    return api.get<PaginatedResponse<Property>>(`/properties?${params}`);
+    const raw = await api.get<{ data: Property[]; meta: PaginatedResponse<Property>['pagination'] }>(`/properties?${params}`);
+    return { data: raw.data, pagination: raw.meta };
   },
 
   getById: (propertyId: string): Promise<ApiResponse<Property>> =>
@@ -40,6 +55,6 @@ export const propertiesApi = {
   outrightCheckoutPreview: (
     propertyId: string,
     quantity: number
-  ): Promise<ApiResponse<{ totalAmount: number; breakdown: Record<string, number> }>> =>
+  ): Promise<OutrightCheckoutPreview> =>
     api.get(`/properties/${propertyId}/outright-checkout-preview?quantity=${quantity}`),
 };

@@ -10,6 +10,7 @@ export const queryKeys = {
   investments: {
     all: ['investments'] as const,
     list: (page: number, status = 'all') => ['investments', 'list', page, status] as const,
+    feed: (status = 'all') => ['investments', 'feed', status] as const,
     detail: (id: string) => ['investments', id] as const,
     performance: (period: string) => ['investments', 'performance', period] as const,
   },

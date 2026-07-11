@@ -96,10 +96,14 @@ export function WithdrawSheet({
 
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-5">
         {/* Balance card */}
-        <div className="bg-primary rounded-2xl p-4">
-          <p className="text-white/60 text-xs">Available Balance</p>
-          <p className="text-white text-2xl font-bold mt-1">{formatCurrency(availableBalance)}</p>
-          <p className="text-white/40 text-[11px] mt-0.5">This is your withdrawable balance</p>
+        <div className="bg-primary rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p className="text-white/60 text-xs">Available Balance</p>
+            <p className="text-white text-2xl font-bold mt-1">{formatCurrency(availableBalance)}</p>
+            <p className="text-white/40 text-[11px] mt-0.5">This is your withdrawable balance</p>
+          </div>
+
+          <img src="/resources/wallet-hero.png" alt="wallet_icon" className="h-20 w-20" />
         </div>
 
         {/* No PIN warning */}

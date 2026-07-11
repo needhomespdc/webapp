@@ -29,8 +29,9 @@ export function useWalletTransactionsFeed(filters: TxApiFilters = {}) {
     queryFn: ({ pageParam }) => walletApi.getTransactions(pageParam as number, 10, filters),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      const { page, totalPages } = lastPage.pagination;
-      return page < totalPages ? page + 1 : undefined;
+      const pagination = lastPage?.pagination;
+      if (!pagination) return undefined;
+      return pagination.page < pagination.totalPages ? pagination.page + 1 : undefined;
     },
   });
 }

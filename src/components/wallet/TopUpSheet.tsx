@@ -76,9 +76,8 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
             </p>
             <p className="text-white/40 text-[11px] mt-0.5">Available Balance</p>
           </div>
-          <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center">
-            <RiBankCardLine className="h-7 w-7 text-accent" />
-          </div>
+
+          <img src="/resources/wallet-hero.png" alt="wallet_icon" className="h-20 w-20" />
         </div>
 
         {/* Amount input */}
@@ -179,7 +178,7 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
         {recentFunding.length > 0 && (
           <div>
             <p className="text-sm font-semibold text-foreground mb-2">Recent Topup</p>
-            <div className="bg-foreground/5 rounded-xl overflow-hidden divide-y divide-border">
+            <div className="bg-foreground/5 rounded-xl overflow-hidden divide-y divide-foreground/10">
               {recentFunding.map((tx) => (
                 <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="w-9 h-9 rounded-full bg-green-600/15 flex items-center justify-center shrink-0">
@@ -193,7 +192,7 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
                     <p className="text-sm font-semibold text-green-400">+{formatCurrency(tx.amount)}</p>
                     <span className={cn(
                       'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
-                      tx.status === 'successful' ? 'bg-green-600/10 text-green-500' :
+                      tx.status === 'completed' ? 'bg-green-600/10 text-green-500' :
                       tx.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
                       'bg-red-500/10 text-red-500'
                     )}>

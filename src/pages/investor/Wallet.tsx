@@ -54,41 +54,11 @@ function computeApiFilters(f: TxFilterState): TxApiFilters {
   if (f.status) result.status = f.status;
   if (f.direction !== 'all') result.direction = f.direction;
 
-  const startOfDay = (d: Date) =>
-    new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).toISOString();
-
-  const now = new Date();
-  switch (f.dateRange) {
-    case 'today':
-      result.startDate = startOfDay(now);
-      result.endDate = new Date().toISOString();
-      break;
-    case '7d': {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 7);
-      result.startDate = startOfDay(d);
-      break;
-    }
-    case '30d': {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 30);
-      result.startDate = startOfDay(d);
-      break;
-    }
-    case '3m': {
-      const d = new Date(now);
-      d.setMonth(d.getMonth() - 3);
-      result.startDate = startOfDay(d);
-      break;
-    }
-    case 'custom':
-      if (f.dateFrom) result.startDate = new Date(f.dateFrom).toISOString();
-      if (f.dateTo) {
-        const end = new Date(f.dateTo);
-        end.setHours(23, 59, 59, 999);
-        result.endDate = end.toISOString();
-      }
-      break;
+  if (f.dateRange === 'custom') {
+    if (f.dateFrom) result.startDate = f.dateFrom;
+    if (f.dateTo) result.endDate = f.dateTo;
+  } else if (f.dateRange !== 'all') {
+    result.dateRange = f.dateRange;
   }
 
   return result;
@@ -122,7 +92,7 @@ export default function InvestorWallet() {
   } = useWalletTransactionsFeed(apiFilters);
 
   const transactions = useMemo(
-    () => data?.pages.flatMap((p) => p.data) ?? [],
+    () => data?.pages.flatMap((p) => p.data ?? []) ?? [],
     [data]
   );
 
@@ -180,12 +150,11 @@ export default function InvestorWallet() {
               <p className="text-3xl font-bold text-white/30 tracking-widest">••••••</p>
             )}
           </div>
-          <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
-            <RiWallet3Line className="h-8 w-8 text-accent" />
-          </div>
+
+          <img src="/resources/wallet-hero.png" alt="wallet_icon" className="h-20 w-20" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="grid grid-cols-2 gap-3 mt-1">
           <div className="bg-white/10 rounded-xl px-3 py-2">
             <p className="text-white/50 text-[10px]">Total Balance</p>
             <p className="text-white text-sm font-semibold mt-0.5">
@@ -193,9 +162,9 @@ export default function InvestorWallet() {
             </p>
           </div>
           <div className="bg-white/10 rounded-xl px-3 py-2">
-            <p className="text-white/50 text-[10px]">Pending Balance</p>
+            <p className="text-white/50 text-[10px]">Locked in Investments</p>
             <p className="text-white text-sm font-semibold mt-0.5">
-              {showBalance ? formatCurrency(wallet?.pendingBalance ?? 0) : '••••••'}
+              {showBalance ? formatCurrency(0) : '••••••'}
             </p>
           </div>
         </div>
@@ -300,6 +269,28 @@ export default function InvestorWallet() {
           </button>
         </div>
 
+        {/* Direction tabs */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-foreground/10">
+          {([
+            { value: 'all', label: 'All' },
+            { value: 'money_in', label: 'Money In' },
+            { value: 'money_out', label: 'Money Out' },
+          ] as const).map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveFilters((f) => ({ ...f, direction: tab.value }))}
+              className={cn(
+                'px-4 py-1.5 rounded-full text-sm font-medium transition-colors',
+                activeFilters.direction === tab.value
+                  ? 'bg-accent text-white'
+                  : 'text-foreground/50 hover:text-foreground/80'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Rows */}
         <div className="divide-y divide-foreground/10">
           {txLoading ? (
@@ -340,7 +331,7 @@ export default function InvestorWallet() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-foreground text-sm font-medium truncate">{tx.title}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
+                    <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden flex-wrap">
                       <p className="text-foreground/50 text-xs truncate min-w-0">{tx.subtitle}</p>
                       <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
                         tx.isCredit ? 'bg-green-600/15 text-green-400' : 'bg-accent/15 text-accent'
