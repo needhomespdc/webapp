@@ -161,9 +161,6 @@ export function CoDevelopmentJoinSheet({
       propertyId: string;
       quantity: number;
       transactionPin: string;
-      payInstallmentally?: boolean;
-      installmentFrequency?: PayFrequency;
-      installmentInterval?: number;
     }) => api.post<ApiResponse<Investment>>('/investments', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
@@ -183,7 +180,8 @@ export function CoDevelopmentJoinSheet({
 
   const handleOpenChange = useCallback(
     (v: boolean) => {
-      if (!v && step !== 'processing') resetState();
+      if (!v && step === 'processing') return;
+      if (!v) resetState();
       onOpenChange(v);
     },
     [onOpenChange, step, resetState]
@@ -231,17 +229,14 @@ export function CoDevelopmentJoinSheet({
         propertyId: property.id,
         quantity: slots,
         transactionPin: pin.replace(/\s/g, ''),
-        ...(payInstallmentally && {
-          payInstallmentally: true,
-          installmentFrequency: frequency,
-          installmentInterval: payInterval,
-        }),
       },
       {
         onSuccess: (res) => {
+          const raw = res as unknown as Record<string, unknown>;
+          const investment = (raw.data != null ? raw.data : raw) as Investment;
           resetState();
           onOpenChange(false);
-          onSuccess(res.data);
+          onSuccess(investment);
         },
         onError: (err) => {
           setStep('pin');

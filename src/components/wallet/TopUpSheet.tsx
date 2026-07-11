@@ -15,6 +15,7 @@ import { formatCurrency, formatRelativeDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/fetchClient';
 import type { Wallet, Transaction } from '@/types';
+import { LottieLoader } from '@/components/shared/LottieLoader';
 
 const QUICK_AMOUNTS = [5000, 10000, 50000, 100000, 200000];
 
@@ -59,7 +60,10 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
   };
 
   const content = (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 relative">
+      {topUpMutation.isPending && (
+        <LottieLoader overlay size={130} label="Redirecting to payment…" />
+      )}
       <div className="px-5 pt-5 pb-3 border-b border-foreground/10 shrink-0">
         <SheetHeader>
           <SheetTitle className="text-base font-semibold text-foreground text-left">Add Funds</SheetTitle>
@@ -212,11 +216,7 @@ export function TopUpSheet({ open, onOpenChange, wallet, recentTransactions }: T
           onClick={handleSubmit}
           disabled={topUpMutation.isPending || numAmount < 5000}
         >
-          {topUpMutation.isPending
-            ? 'Redirecting to payment...'
-            : numAmount >= 5000
-            ? `Add ${formatCurrency(numAmount)} to wallet`
-            : 'Add to wallet'}
+          {numAmount >= 5000 ? `Add ${formatCurrency(numAmount)} to wallet` : 'Add to wallet'}
         </Button>
       </div>
     </div>

@@ -5,18 +5,25 @@ import {
   RiShieldCheckLine,
   RiInformationLine,
   RiArrowRightLine,
+  RiArrowLeftLine,
   RiLockPasswordLine,
+  RiTimeLine,
+  RiDownload2Line,
 } from 'react-icons/ri';
+import Lottie from 'lottie-react';
+import successAnimation from '@/assets/lottie/success-confetti.json';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/useToast';
 import { useWithdraw } from '@/hooks/useWallet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/fetchClient';
-import type { Wallet, BankAccount } from '@/types';
+import type { Wallet, BankAccount, Transaction } from '@/types';
+import { LottieLoader } from '@/components/shared/LottieLoader';
+import { walletApi } from '@/api/wallet.api';
 
 const QUICK_AMOUNTS = [5000, 10000, 50000, 100000, 200000];
 
@@ -40,7 +47,9 @@ export function WithdrawSheet({
   const isMobile = useMediaQuery('(max-width: 639px)');
   const navigate = useNavigate();
   const [rawAmount, setRawAmount] = useState('');
-  const [pinOpen, setPinOpen] = useState(false);
+  const [step, setStep] = useState<'form' | 'pin' | 'success'>('form');
+  const [pin, setPin] = useState('');
+  const [withdrawalTx, setWithdrawalTx] = useState<Transaction | null>(null);
   const withdrawMutation = useWithdraw();
 
   const numAmount = parseInt(rawAmount, 10) || 0;
@@ -48,45 +57,40 @@ export function WithdrawSheet({
   const primaryBank = bankAccounts.find((b) => b.isPrimary) ?? bankAccounts[0];
   const availableBalance = wallet?.availableBalance ?? 0;
 
-  // Reset on close
   useEffect(() => {
     if (!open) {
       setRawAmount('');
-      setPinOpen(false);
+      setStep('form');
+      setPin('');
+      setWithdrawalTx(null);
     }
   }, [open]);
 
   const handleProceed = () => {
-    if (numAmount < 5000) {
-      toast.error('Minimum withdrawal amount is ₦5,000');
-      return;
-    }
-    if (numAmount > availableBalance) {
-      toast.error('Insufficient balance');
-      return;
-    }
-    if (!primaryBank) {
-      toast.error('No bank account linked');
-      return;
-    }
-    setPinOpen(true);
+    if (numAmount < 5000) { toast.error('Minimum withdrawal amount is ₦5,000'); return; }
+    if (numAmount > availableBalance) { toast.error('Insufficient balance'); return; }
+    if (!primaryBank) { toast.error('No bank account linked'); return; }
+    setStep('pin');
   };
 
-  const handleConfirmWithdraw = (pin: string) => {
+  const handleConfirmWithdraw = () => {
     withdrawMutation.mutate(
       { amount: numAmount, bankAccountId: primaryBank!.id, transactionPin: pin },
       {
-        onSuccess: () => {
-          toast.success('Withdrawal initiated successfully');
-          setPinOpen(false);
-          onOpenChange(false);
+        onSuccess: (res) => {
+          // Handle both wrapped { data: Transaction } and unwrapped Transaction shapes
+          const raw = res as unknown as Record<string, unknown>;
+          const tx = (raw.data ?? raw) as Transaction;
+          setWithdrawalTx(tx ?? null);
+          setStep('success');
         },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Withdrawal failed'),
       }
     );
   };
 
-  const formContent = (
+  // ── Form view ─────────────────────────────────────────────────────────────────
+  const formView = (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="px-5 pt-5 pb-3 border-b border-foreground/10 shrink-0">
         <SheetHeader>
@@ -95,18 +99,15 @@ export function WithdrawSheet({
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-5">
-        {/* Balance card */}
         <div className="bg-primary rounded-2xl p-4 flex items-center justify-between">
           <div>
             <p className="text-white/60 text-xs">Available Balance</p>
             <p className="text-white text-2xl font-bold mt-1">{formatCurrency(availableBalance)}</p>
             <p className="text-white/40 text-[11px] mt-0.5">This is your withdrawable balance</p>
           </div>
-
           <img src="/resources/wallet-hero.png" alt="wallet_icon" className="h-20 w-20" />
         </div>
 
-        {/* No PIN warning */}
         {!isPinSet && (
           <button
             onClick={() => { onOpenChange(false); onSetPin(); }}
@@ -121,7 +122,6 @@ export function WithdrawSheet({
           </button>
         )}
 
-        {/* Amount input */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground/70">Enter Amount</p>
           <div className="bg-foreground/5 rounded-xl px-4 py-4 flex items-center gap-2">
@@ -138,7 +138,6 @@ export function WithdrawSheet({
           <p className="text-xs text-foreground/40">Minimum amount is ₦5,000</p>
         </div>
 
-        {/* Quick amount chips */}
         <div className="flex flex-wrap gap-2">
           {QUICK_AMOUNTS.map((amt) => (
             <button
@@ -156,7 +155,6 @@ export function WithdrawSheet({
           ))}
         </div>
 
-        {/* Withdraw To */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground/70">Withdraw To</p>
           {!primaryBank ? (
@@ -201,7 +199,6 @@ export function WithdrawSheet({
           )}
         </div>
 
-        {/* Important Information */}
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <RiInformationLine className="text-amber-500 shrink-0" />
@@ -219,7 +216,6 @@ export function WithdrawSheet({
           </ul>
         </div>
 
-        {/* Summary */}
         {numAmount > 0 && (
           <div className="bg-foreground/5 rounded-xl p-4 space-y-2">
             <p className="text-sm font-semibold text-foreground">Withdrawal Summary</p>
@@ -251,95 +247,235 @@ export function WithdrawSheet({
     </div>
   );
 
-  return (
-    <>
-      {isMobile ? (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-          <SheetContent side="bottom" className="rounded-t-2xl p-0 h-[90vh] flex flex-col overflow-hidden">
-            {formContent}
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogContent className="p-0 max-w-lg rounded-2xl overflow-hidden gap-0 h-[90vh] flex flex-col">
-            {formContent}
-          </DialogContent>
-        </Dialog>
+  // ── PIN confirmation view ─────────────────────────────────────────────────────
+  const pinView = (
+    <div className="flex flex-col flex-1 min-h-0 relative">
+      {withdrawMutation.isPending && (
+        <LottieLoader overlay size={120} label="Processing withdrawal…" />
       )}
 
-      {/* PIN confirmation — always centered Dialog */}
-      <PinConfirmDialog
-        open={pinOpen}
-        onOpenChange={setPinOpen}
-        amount={numAmount}
-        bankName={primaryBank?.shortName ?? ''}
-        accountNumber={primaryBank?.maskedAccountNumber ?? primaryBank?.accountNumber ?? ''}
-        isPending={withdrawMutation.isPending}
-        onConfirm={handleConfirmWithdraw}
-      />
-    </>
+      <div className="px-5 pt-5 pb-3 border-b border-foreground/10 shrink-0 flex items-center gap-3">
+        <button
+          onClick={() => setStep('form')}
+          className="text-foreground/50 hover:text-foreground transition-colors"
+          disabled={withdrawMutation.isPending}
+        >
+          <RiArrowLeftLine className="h-5 w-5" />
+        </button>
+        <SheetHeader className="flex-1">
+          <SheetTitle className="text-base font-semibold text-foreground text-left">Confirm Transaction</SheetTitle>
+        </SheetHeader>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-6 space-y-6">
+        <p className="text-sm text-foreground/50 text-center">
+          Enter your 4-digit PIN to authorize this withdrawal
+        </p>
+
+        <div className="bg-foreground/5 rounded-2xl p-5 text-center space-y-1">
+          <p className="text-3xl font-bold text-foreground">{formatCurrency(numAmount)}</p>
+          <p className="text-xs text-foreground/50 truncate">
+            To {primaryBank?.shortName ?? ''} · {primaryBank?.maskedAccountNumber ?? primaryBank?.accountNumber ?? ''}
+          </p>
+        </div>
+
+        <PinBoxes value={pin} onChange={setPin} />
+      </div>
+
+      <div className="px-5 py-4 border-t border-foreground/10 shrink-0">
+        <Button
+          className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
+          onClick={handleConfirmWithdraw}
+          disabled={pin.length < 4 || withdrawMutation.isPending}
+        >
+          Confirm Withdrawal
+        </Button>
+      </div>
+    </div>
+  );
+
+  // ── Success view ──────────────────────────────────────────────────────────────
+  const txAmount = withdrawalTx?.amount ?? numAmount;
+  const txFee = withdrawalTx?.feeAmount ?? 0;
+  const youReceive = txAmount - txFee;
+
+
+  const handleDownloadReceipt = async () => {
+    const txId = withdrawalTx?.id;
+    if (!txId) return;
+    try {
+      const blob = await walletApi.getTransactionReceipt(txId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${withdrawalTx?.reference ?? txId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Could not download receipt. Try again later.');
+    }
+  };
+
+  const successView = (
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-6 pb-4 space-y-5">
+        {/* Confetti animation */}
+        <div className="flex justify-center">
+          <Lottie
+            animationData={successAnimation}
+            loop={true}
+            autoplay
+            style={{ width: 160, height: 160 }}
+          />
+        </div>
+
+        {/* Title */}
+        <div className="text-center -mt-2">
+          <h2 className="text-xl font-bold text-foreground">Withdrawal Submitted!</h2>
+          <p className="text-sm text-foreground/50 mt-1 leading-relaxed">
+            Your withdrawal request has been received and is being processed.
+          </p>
+        </div>
+
+        {/* Amount card */}
+        <div className="bg-foreground/5 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p className="text-foreground/50 text-xs">Amount Withdrawn</p>
+            <p className="text-foreground text-2xl font-bold mt-1">{formatCurrency(txAmount)}</p>
+            <p className="text-foreground/40 text-xs mt-0.5">
+              Processing fee: {formatCurrency(txFee)}
+            </p>
+          </div>
+          <img src="/resources/wallet-hero.png" alt="wallet" className="h-16 w-16" />
+        </div>
+
+        {/* Transaction details */}
+        <div className="bg-foreground/5 rounded-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-foreground/10">
+            <p className="text-sm font-semibold text-foreground">Transaction Details</p>
+          </div>
+          <div className="divide-y divide-foreground/10">
+            <TxRow
+              label="Transaction ID"
+              value={withdrawalTx?.reference ?? '—'}
+              mono
+            />
+            <TxRow
+              label="Status"
+              value={withdrawalTx?.statusLabel ?? 'Pending'}
+              valueClassName="capitalize font-semibold"
+            />
+            <TxRow
+              label="To"
+              value={`${primaryBank?.fullName ?? primaryBank?.shortName ?? ''} · ${primaryBank?.maskedAccountNumber ?? primaryBank?.accountNumber ?? ''}`}
+            />
+            <TxRow
+              label="Date & Time"
+              value={
+                withdrawalTx?.occurredAt
+                  ? formatDate(withdrawalTx.occurredAt, { hour: '2-digit', minute: '2-digit', hour12: true })
+                  : formatDate(new Date().toISOString(), { hour: '2-digit', minute: '2-digit', hour12: true })
+              }
+            />
+            <TxRow
+              label="Processing Fee"
+              value={formatCurrency(txFee)}
+            />
+            <TxRow
+              label="You Will Receive"
+              value={formatCurrency(youReceive)}
+              valueClassName="text-accent font-semibold"
+            />
+            {withdrawalTx?.balanceAfter != null && (
+              <TxRow
+                label="New Wallet Balance"
+                value={formatCurrency(withdrawalTx.balanceAfter)}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Processing note */}
+        <div className="flex items-start gap-3 bg-foreground/5 rounded-xl p-4">
+          <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+            <RiTimeLine className="text-accent text-base" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Processing your withdrawal</p>
+            <p className="text-xs text-foreground/50 mt-0.5 leading-relaxed">
+              Funds are typically sent to your linked account within 24 hours.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-4 border-t border-foreground/10 shrink-0 space-y-2.5">
+        <Button
+          className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
+          onClick={() => onOpenChange(false)}
+        >
+          Back to Wallet
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full h-12 rounded-xl flex items-center justify-center gap-2"
+          onClick={handleDownloadReceipt}
+          disabled={!withdrawalTx?.id}
+        >
+          <RiDownload2Line className="h-4 w-4" />
+          Download Receipt
+        </Button>
+      </div>
+    </div>
+  );
+
+  const content =
+    step === 'success' ? successView
+    : step === 'pin' ? pinView
+    : formView;
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={step === 'success' ? undefined : onOpenChange}>
+        <SheetContent side="bottom" className="rounded-t-2xl p-0 h-[90vh] flex flex-col overflow-hidden">
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={step === 'success' ? undefined : onOpenChange}>
+      <DialogContent className="p-0 max-w-lg rounded-2xl overflow-hidden gap-0 h-[90vh] flex flex-col">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Withdraw</DialogTitle>
+        </DialogHeader>
+        {content}
+      </DialogContent>
+    </Dialog>
   );
 }
 
-// ── PIN confirmation dialog ───────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 
-interface PinConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  amount: number;
-  bankName: string;
-  accountNumber: string;
-  isPending: boolean;
-  onConfirm: (pin: string) => void;
-}
-
-function PinConfirmDialog({
-  open,
-  onOpenChange,
-  amount,
-  bankName,
-  accountNumber,
-  isPending,
-  onConfirm,
-}: PinConfirmDialogProps) {
-  const [pin, setPin] = useState('');
-
-  useEffect(() => {
-    if (!open) setPin('');
-  }, [open]);
-
+function TxRow({
+  label,
+  value,
+  mono = false,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  valueClassName?: string;
+}) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl p-6 gap-0">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-center">Confirm Transaction</DialogTitle>
-          <DialogDescription className="text-center text-sm text-foreground/50 mt-1">
-            Enter your 4-digit PIN to authorize this withdrawal
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="mt-5 space-y-5">
-          {/* Summary */}
-          <div className="bg-foreground/5 rounded-xl p-4 text-center space-y-1">
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(amount)}</p>
-            <p className="text-xs text-foreground/50 truncate max-w-50">
-              To {bankName} · {accountNumber}
-            </p>
-          </div>
-
-          {/* PIN boxes */}
-          <PinBoxes value={pin} onChange={setPin} />
-
-          <Button
-            className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
-            onClick={() => onConfirm(pin)}
-            disabled={pin.length < 4 || isPending}
-          >
-            {isPending ? 'Processing...' : 'Confirm Withdrawal'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div className="flex items-start justify-between gap-4 px-4 py-3">
+      <span className="text-xs text-foreground/50 shrink-0">{label}</span>
+      <span className={cn('text-xs text-foreground text-right break-all', mono && 'font-mono', valueClassName)}>
+        {value}
+      </span>
+    </div>
   );
 }
 

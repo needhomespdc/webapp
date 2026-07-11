@@ -123,8 +123,8 @@ export default function InvestorDashboard() {
                 <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
               </linearGradient>
             </defs>
-            <path d="M 0,36 L 10,32 L 14,37 L 20,26 L 24,18 L 28,28 L 36,22 L 42,30 L 50,20 L 56,24 L 64,16 L 70,22 L 80,17 L 90,24 L 100,14 L 112,20 L 120,16 L 120,40 L 0,40 Z" fill="url(#cg1)" />
-            <path d="M 0,36 L 10,32 L 14,37 L 20,26 L 24,18 L 28,28 L 36,22 L 42,30 L 50,20 L 56,24 L 64,16 L 70,22 L 80,17 L 90,24 L 100,14 L 112,20 L 120,16" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M 0,38 C 20,36 30,28 45,25 C 60,22 65,30 80,24 C 95,18 105,14 120,11 L 120,40 L 0,40 Z" fill="url(#cg1)" />
+            <path d="M 0,38 C 20,36 30,28 45,25 C 60,22 65,30 80,24 C 95,18 105,14 120,11" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </Card>
 
@@ -151,8 +151,8 @@ export default function InvestorDashboard() {
                 <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
               </linearGradient>
             </defs>
-            <path d="M 0,38 L 8,30 L 12,36 L 18,22 L 22,15 L 26,26 L 32,30 L 38,20 L 44,28 L 50,17 L 54,13 L 58,24 L 66,28 L 74,18 L 82,24 L 92,14 L 104,22 L 120,13 L 120,40 L 0,40 Z" fill="url(#cg2)" />
-            <path d="M 0,38 L 8,30 L 12,36 L 18,22 L 22,15 L 26,26 L 32,30 L 38,20 L 44,28 L 50,17 L 54,13 L 58,24 L 66,28 L 74,18 L 82,24 L 92,14 L 104,22 L 120,13" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M 0,37 C 18,34 28,27 44,24 C 60,21 66,29 82,23 C 97,17 108,13 120,10 L 120,40 L 0,40 Z" fill="url(#cg2)" />
+            <path d="M 0,37 C 18,34 28,27 44,24 C 60,21 66,29 82,23 C 97,17 108,13 120,10" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </Card>
 
@@ -179,8 +179,8 @@ export default function InvestorDashboard() {
                 <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
               </linearGradient>
             </defs>
-            <path d="M 0,36 L 12,30 L 18,34 L 26,26 L 34,30 L 40,21 L 46,16 L 50,26 L 58,20 L 66,28 L 74,18 L 80,24 L 88,15 L 94,22 L 104,17 L 112,22 L 120,15 L 120,40 L 0,40 Z" fill="url(#cg3)" />
-            <path d="M 0,36 L 12,30 L 18,34 L 26,26 L 34,30 L 40,21 L 46,16 L 50,26 L 58,20 L 66,28 L 74,18 L 80,24 L 88,15 L 94,22 L 104,17 L 112,22 L 120,15" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M 0,36 C 22,33 32,26 48,23 C 64,20 70,28 86,22 C 100,16 108,13 120,11 L 120,40 L 0,40 Z" fill="url(#cg3)" />
+            <path d="M 0,36 C 22,33 32,26 48,23 C 64,20 70,28 86,22 C 100,16 108,13 120,11" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </Card>
 
@@ -207,8 +207,8 @@ export default function InvestorDashboard() {
                 <stop offset="100%" style={{ stopColor: '#F97316', stopOpacity: 0 }} />
               </linearGradient>
             </defs>
-            <path d="M 0,38 L 6,30 L 10,38 L 16,23 L 20,14 L 24,28 L 30,21 L 34,34 L 40,18 L 44,12 L 48,26 L 56,18 L 62,30 L 68,16 L 74,24 L 82,13 L 92,21 L 104,15 L 112,21 L 120,12 L 120,40 L 0,40 Z" fill="url(#cg4)" />
-            <path d="M 0,38 L 6,30 L 10,38 L 16,23 L 20,14 L 24,28 L 30,21 L 34,34 L 40,18 L 44,12 L 48,26 L 56,18 L 62,30 L 68,16 L 74,24 L 82,13 L 92,21 L 104,15 L 112,21 L 120,12" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M 0,38 C 16,35 26,29 42,26 C 58,23 64,30 80,24 C 95,18 106,14 120,10 L 120,40 L 0,40 Z" fill="url(#cg4)" />
+            <path d="M 0,38 C 16,35 26,29 42,26 C 58,23 64,30 80,24 C 95,18 106,14 120,10" fill="none" style={{ stroke: '#F97316', strokeOpacity: 0.9 }} strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </Card>
       </div>

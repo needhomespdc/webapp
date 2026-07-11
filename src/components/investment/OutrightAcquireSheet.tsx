@@ -125,7 +125,8 @@ export function OutrightAcquireSheet({
 
   const handleOpenChange = useCallback(
     (v: boolean) => {
-      if (!v && step !== 'processing') {
+      if (!v && step === 'processing') return;
+      if (!v) {
         setStep('quantity');
         setQuantity(1);
         setPin('');
@@ -171,11 +172,13 @@ export function OutrightAcquireSheet({
       {
         onSuccess: (res) => {
           queryClient.invalidateQueries({ queryKey: ['outright-preview', property.id] });
+          const raw = res as unknown as Record<string, unknown>;
+          const investment = (raw.data != null ? raw.data : raw) as Investment;
           setStep('quantity');
           setPin('');
           setQuantity(1);
           onOpenChange(false);
-          onSuccess(res.data);
+          onSuccess(investment);
         },
         onError: (err) => {
           setStep('pin');
@@ -185,6 +188,7 @@ export function OutrightAcquireSheet({
       }
     );
   };
+
 
   // ─── Derived values ──────────────────────────────────────────────────────────
 
