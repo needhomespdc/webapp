@@ -2,9 +2,15 @@ import { api } from '@/lib/fetchClient';
 import type { ApiResponse } from '@/types';
 
 export const mediaApi = {
-  upload: (file: File): Promise<ApiResponse<{ url: string; publicId: string }>> => {
+  upload: (
+    file: File,
+    folder = 'general',
+    resourceType = 'image'
+  ): Promise<ApiResponse<{ url: string; publicId: string }>> => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('folder', folder);
+    formData.append('resourceType', resourceType);
     return api.post('/media/upload', formData);
   },
 

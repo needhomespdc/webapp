@@ -40,8 +40,8 @@ const partnerNavItems = [
     activeIcon: <RiWalletFill />,
   },
   {
-      label: 'Support Center',
-      to: '/investor/support',
+      label: 'Help Center',
+      to: '/partner/support',
       icon: <BiSupport />,
       activeIcon: <BiSupport />,
     },

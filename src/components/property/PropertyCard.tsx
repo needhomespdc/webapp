@@ -3,6 +3,17 @@ import { RiHeartLine, RiHeartFill, RiMapPinLine, RiArrowRightLine } from 'react-
 import { formatCurrency } from '@/lib/utils';
 import type { Property } from '@/types';
 
+function getPriceLabel(type?: string): string {
+  switch (type) {
+    case 'fractional': return 'Price per Slot';
+    case 'outright':
+    case 'co_development': return 'Price per Unit';
+    case 'save_to_own': return 'Plot Price';
+    case 'land_banking': return 'Price per Plot';
+    default: return 'Min. Investment';
+  }
+}
+
 const MODEL_COLORS: Record<string, string> = {
   fractional: 'bg-violet-500',
   outright: 'bg-amber-500',
@@ -31,11 +42,6 @@ interface PropertyCardProps {
 export function PropertyCard({ property, isFavorited, onToggleFavorite }: PropertyCardProps) {
   const listingStats = property.listingStats ?? [];
   const hasStatBoxes = listingStats.length >= 2;
-  const progress =
-    property.progressPercent ??
-    (property.inventoryTotal > 0
-      ? Math.round(((property.inventoryTotal - property.inventoryAvailable) / property.inventoryTotal) * 100)
-      : null);
 
   return (
     <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden hover:border-foreground/20 transition-all">
@@ -89,7 +95,7 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
         </div>
 
         {/* Stats — rendered generically from whatever the backend computed for this type */}
-        {hasStatBoxes ? (
+        {hasStatBoxes && (
           <div className="grid grid-cols-2 gap-2 mt-3">
             {listingStats.slice(0, 2).map((stat, i) => (
               <div key={i} className="bg-foreground/5 border border-foreground/10 rounded-lg px-2.5 py-1.5 text-center">
@@ -98,28 +104,15 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite }: Proper
               </div>
             ))}
           </div>
-        ) : property.totalPrice != null ? (
-          <p className="text-foreground text-sm font-bold mt-3">
-            <span className="text-foreground/40 font-normal text-xs">Price </span>
-            {formatCurrency(property.totalPrice)}
-          </p>
-        ) : listingStats[0] ? (
-          <p className="text-foreground text-sm font-bold mt-3">
-            <span className="text-foreground/40 font-normal text-xs capitalize">{listingStats[0].label} </span>
-            {listingStats[0].value}
-          </p>
-        ) : null}
-
-        {hasStatBoxes && property.totalPrice == null && (
-          <p className="text-foreground/50 text-xs mt-2">
-            Min. Investment <span className="text-foreground font-semibold">{formatCurrency(property.minInvestment)}</span>
-          </p>
         )}
 
-        {hasStatBoxes && progress != null && (
-          <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden mt-2">
-            <div className="h-full bg-accent rounded-full" style={{ width: `${progress}%` }} />
-          </div>
+        {property.minInvestment != null && (
+          <p className={hasStatBoxes ? 'text-foreground/50 text-xs mt-2' : 'text-foreground text-sm font-bold mt-3'}>
+            <span className="text-foreground/40 font-normal text-xs">{getPriceLabel(property.investmentModelType)} </span>
+            <span className={hasStatBoxes ? 'text-foreground font-semibold' : ''}>
+              {formatCurrency(property.minInvestment)}
+            </span>
+          </p>
         )}
 
         <Link

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { RiMenuLine, RiLogoutBoxLine, RiUserLine, RiArrowDownSLine } from 'react-icons/ri';
+import { RiMenuLine, RiLogoutBoxLine, RiUserLine, RiArrowDownSLine, RiVerifiedBadgeLine } from 'react-icons/ri';
 import { HiOutlineBell } from 'react-icons/hi2';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -47,7 +47,11 @@ export function Header({ navItems }: HeaderProps) {
       ? (user.companyName ?? 'Corporate')
       : `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
-  const initials = (displayName || user?.email || '?').trim().charAt(0).toUpperCase();
+  const initials = user?.role === 'investor' && user.investorType === 'corporate'
+    ? (user.companyName ?? 'C').charAt(0).toUpperCase()
+    : `${(user?.firstName ?? '').charAt(0)}${(user?.lastName ?? '').charAt(0)}`.toUpperCase() || '?';
+
+  const isVerified = user?.role === 'investor' && user?.kycStatus === 'approved';
 
   const notifPath = user?.role === 'investor' ? '/investor/notifications' : user?.role === 'partner' ? '/partner/notifications' : "/";
   const profilePath = user?.role === 'investor' ? '/investor/profile' : user?.role === 'partner' ? '/partner/profile' : "/";
@@ -66,10 +70,10 @@ export function Header({ navItems }: HeaderProps) {
           >
             <RiMenuLine className="h-5 w-5" />
           </button>
-          <div className="flex items-center lg:hidden">
+          <a href={user?.role === 'partner' ? '/partner/dashboard' : '/investor/dashboard'} className="flex items-center lg:hidden">
             <img src="/logo/logo-hero-white.png" alt="NeedHomes Logo" className="w-30 hidden dark:block" />
             <img src="/logo/needhomes-logo.png" alt="NeedHomes Logo" className="w-30 dark:hidden" />
-          </div>
+          </a>
         </div>
 
         {/* Actions */}
@@ -92,8 +96,18 @@ export function Header({ navItems }: HeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 pl-1 pr-1 lg:pr-2 py-1 rounded-xl hover:bg-foreground/5 transition-colors">
-                <span className="w-8 h-8 rounded-full bg-accent/15 text-accent flex items-center justify-center text-sm font-semibold shrink-0">
-                  {initials}
+                <span className="relative shrink-0">
+                  <span className="w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center text-sm font-bold overflow-hidden">
+                    {user?.avatarUrl
+                      ? <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                      : initials}
+                  </span>
+                  {isVerified && (
+                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap flex items-center gap-0.5 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                      <RiVerifiedBadgeLine className="text-[9px]" />
+                      Verified
+                    </span>
+                  )}
                 </span>
                 <span className="hidden lg:flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground max-w-30 truncate">

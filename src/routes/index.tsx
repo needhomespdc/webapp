@@ -89,7 +89,7 @@ export const router = createBrowserRouter([
           { path: '/investor/add-bank-account', element: withSuspense(AddBankAccount) },
           { path: '/investor/notifications', element: withSuspense(Notifications) },
           { path: '/investor/support', element: withSuspense(Support) },
-          { path: '/investor/settings', element: withSuspense(Settings) },
+          // { path: '/investor/settings', element: withSuspense(Settings) },
           { path: '/investor/profile', element: withSuspense(Profile) },
         ],
       },

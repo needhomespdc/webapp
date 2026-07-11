@@ -78,13 +78,14 @@ export interface ResetPasswordPayload {
 export interface ChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
-  confirmNewPassword: string;
+  confirmPassword: string;
 }
 
 export interface SecurityQuestionsStatus {
   isSet: boolean;
   questionOne?: string;
   questionTwo?: string;
+  availableQuestions: string[];
 }
 
 export interface SetSecurityQuestionsPayload {
@@ -130,7 +131,7 @@ const authApi = {
     api.patch<ApiResponse<null>>('/auth/change-password', payload),
 
   getSecurityQuestionsStatus: () =>
-    api.get<ApiResponse<SecurityQuestionsStatus>>('/auth/security/questions'),
+    api.get<SecurityQuestionsStatus>('/auth/security/questions'),
 
   setSecurityQuestions: (payload: SetSecurityQuestionsPayload) =>
     api.put<ApiResponse<null>>('/auth/security/questions', payload),

@@ -16,6 +16,17 @@ export interface User {
   companyName?: string;
   email: string;
   phone: string;
+  dateOfBirth?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  street?: string;
+  employmentStatus?: string;
+  avatarUrl?: string;
+  nextOfKinName?: string;
+  nextOfKinAddress?: string;
+  nextOfKinPhone?: string;
+  nextOfKinEmail?: string;
   isEmailVerified: boolean;
   kycStatus: KYCStatus;
   referralCode?: string;
@@ -103,6 +114,9 @@ export interface Property {
   developmentStageLabel?: string | null;
   projectStartDate?: string | null;
   projectEndDate?: string | null;
+  projectManagerName?: string | null;
+  projectManagerContact?: string | null;
+  projectManagerImageUrl?: string | null;
 }
 
 export interface PropertyImage {
@@ -170,6 +184,7 @@ export interface PropertyInvestmentModelConfig {
   typeLabel: string;
   config: Record<string, unknown>;
 }
+
 
 // ─── Investment ────────────────────────────────────────────────────────────────
 // Shape confirmed from a live /investments/me list response.
@@ -257,14 +272,15 @@ export interface ResolvedBankAccount {
 // ─── Wallet & Transactions ─────────────────────────────────────────────────────
 
 export type TransactionType =
-  | 'deposit'
+  | 'investment_return'
+  | 'wallet_top_up'
+  | 'referral_bonus'
+  | 'investment_in'
   | 'withdrawal'
-  | 'investment'
-  | 'commission'
-  | 'payout'
-  | 'refund';
+  | 'admin_credit'
+  | 'admin_debit';
 
-export type TransactionStatus = 'pending' | 'successful' | 'failed' | 'processing';
+export type TransactionStatus = 'pending' | 'completed' | 'failed';
 
 export interface WalletFeeSettings {
   walletTopUpFeeRate: number;
@@ -320,6 +336,24 @@ export interface Transaction {
   // Only present on detail view
   detailFields?: TransactionDetailField[];
 }
+
+export interface TxFilterState {
+  dateRange: 'all' | 'today' | 'last_7_days' | 'last_30_days' | 'last_3_months' | 'custom';
+  dateFrom: string;
+  dateTo: string;
+  direction: 'all' | 'money_in' | 'money_out';
+  status: '' | TransactionStatus;
+  type: '' | TransactionType;
+}
+
+export const EMPTY_TX_FILTERS: TxFilterState = {
+  dateRange: 'all',
+  dateFrom: '',
+  dateTo: '',
+  direction: 'all',
+  status: '',
+  type: '',
+};
 
 export interface BankAccount {
   id: string;

@@ -1,11 +1,29 @@
 import { api } from '@/lib/fetchClient';
 import type { Wallet, Transaction, BankAccount, Bank, ResolvedBankAccount, PaginatedResponse, ApiResponse } from '@/types';
 
+export interface TxApiFilters {
+  dateRange?: string;
+  startDate?: string;
+  endDate?: string;
+  type?: string;
+  status?: string;
+  direction?: string;
+}
+
 export const walletApi = {
   getWallet: (): Promise<Wallet> => api.get<Wallet>('/wallet/me'),
 
-  getTransactions: (page = 1, limit = 10): Promise<PaginatedResponse<Transaction>> =>
-    api.get<PaginatedResponse<Transaction>>(`/wallet/transactions?page=${page}&limit=${limit}`),
+  getTransactions: async (page = 1, limit = 10, filters?: TxApiFilters): Promise<PaginatedResponse<Transaction>> => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (filters?.dateRange) params.set('dateRange', filters.dateRange);
+    if (filters?.startDate) params.set('startDate', filters.startDate);
+    if (filters?.endDate) params.set('endDate', filters.endDate);
+    if (filters?.type) params.set('type', filters.type);
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.direction) params.set('direction', filters.direction);
+    const raw = await api.get<{ data: Transaction[]; meta: PaginatedResponse<Transaction>['pagination'] }>(`/wallet/transactions?${params}`);
+    return { data: raw.data, pagination: raw.meta };
+  },
 
   getTransaction: (transactionId: string): Promise<ApiResponse<Transaction>> =>
     api.get<ApiResponse<Transaction>>(`/wallet/transactions/${transactionId}`),

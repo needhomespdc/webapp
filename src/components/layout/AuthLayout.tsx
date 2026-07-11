@@ -11,7 +11,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       {/* Image panel — hidden below lg, fixed full-height on desktop */}
       <div className="hidden lg:block relative lg:w-[42%] xl:w-[38%] h-screen shrink-0">
         <img
-          src="/resources/woman-with-card.jpg"
+          src="/resources/login-hero-duplex.png"
           alt="Invest with NeedHomes"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -38,8 +38,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage: `
-              linear-gradient(color-mix(in oklch, var(--foreground) 7%, transparent) 1px, transparent 1px),
-              linear-gradient(90deg, color-mix(in oklch, var(--foreground) 7%, transparent) 1px, transparent 1px)
+              linear-gradient(color-mix(in oklch, var(--foreground) 3%, transparent) 1px, transparent 1px),
+              linear-gradient(90deg, color-mix(in oklch, var(--foreground) 3%, transparent) 1px, transparent 1px)
             `,
             backgroundSize: '40px 40px',
           }}

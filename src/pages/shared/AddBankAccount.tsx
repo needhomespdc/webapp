@@ -172,7 +172,7 @@ function BankAccountRow({
           <RiBankLine className="text-xl text-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-foreground truncate">{shortName}</p>
             {isPrimary && (
               <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-accent bg-accent/10 px-1.5 py-0.5 rounded-full shrink-0">

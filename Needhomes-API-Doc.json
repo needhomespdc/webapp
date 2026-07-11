@@ -1,13 +1,17 @@
 {
   "info": {
-    "_postman_id": "b0845e2c-22d1-4082-a72b-9c50d1a8600c",
+    "_postman_id": "79aac8d6-35c4-4e4c-9ce2-a8e43bfa8911",
     "name": "Needhomes API Doc",
-    "description": "NeedHomes backend API. Import into a Postman workspace named \"Needhomes API Doc\".\n\nFolders: Public —, Account —, Investor —, Partner —, Admin —, Shared —\n\n1. Import the environment file and select it.\n2. Run Account — Authentication > Login to set accessToken.\n3. Partner routes: login with a partner account.\n4. Admin routes: login with an admin account.\n\nBase URL: {{baseUrl}} (default http://localhost:3000)\nAPI prefix: /api",
+    "description": "NeedHomes backend API. Import into a Postman workspace named \"Needhomes API Doc\".\n\nFolders: Public —, Account —, Investor —, Partner —, Admin —, Shared —\n\n1. Import the environment file and select it.\n2. Run Account — Authentication > Login to set accessToken.\n3. Partner routes: login with a partner account.\n4. Admin routes: login with an admin account.\n5. Real-time notifications: see Shared — Realtime (Socket.IO) (use a Socket.IO client; Postman HTTP requests cannot subscribe).\n\nBase URL: {{baseUrl}} (default http://localhost:3000)\nWebSocket base: {{wsBaseUrl}}\nAPI prefix: /api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "wsBaseUrl",
       "value": "http://localhost:3000"
     },
     {
@@ -89,6 +93,14 @@
     {
       "key": "commissionEntryId",
       "value": ""
+    },
+    {
+      "key": "referralTrackingToken",
+      "value": ""
+    },
+    {
+      "key": "deviceId",
+      "value": "needhomes-device-demo-01"
     },
     {
       "key": "kycSessionId",
@@ -308,10 +320,10 @@
     },
     {
       "name": "Public — Partner Referrals",
-      "description": "Anonymous referral analytics events",
+      "description": "Anonymous referral analytics events (rate-limited; prefer signed trackingToken)",
       "item": [
         {
-          "name": "Track Referral Event",
+          "name": "Track Referral Event (signed token)",
           "request": {
             "method": "POST",
             "header": [
@@ -332,7 +344,41 @@
                 "events"
               ]
             },
-            "description": "",
+            "description": "Preferred: mint a token via Partner — Commissions > Create Referral Tracking Token, then track with trackingToken. Rate limit: 60/min per IP.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackingToken\": \"{{referralTrackingToken}}\",\n  \"eventType\": \"click\",\n  \"propertySlug\": \"{{propertySlug}}\",\n  \"propertyTitle\": \"Ikoyi Luxury Apartments\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Track Referral Event (legacy referralCode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partner-referrals/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partner-referrals",
+                "events"
+              ]
+            },
+            "description": "Legacy fallback when no signed token is available.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"referralCode\": \"PARTNER01\",\n  \"eventType\": \"click\",\n  \"propertySlug\": \"ikoyi-luxury-apartments\",\n  \"propertyTitle\": \"Ikoyi Luxury Apartments\",\n  \"channel\": \"whatsapp\"\n}",
@@ -608,10 +654,10 @@
                 "refresh"
               ]
             },
-            "description": "",
+            "description": "Include deviceId when refreshing a biometric session (refresh token with biometricSession: true).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"deviceId\": \"{{deviceId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -775,10 +821,10 @@
                 "login"
               ]
             },
-            "description": "",
+            "description": "Requires biometric login enabled (PATCH /auth/security/biometric) and matching deviceId.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"deviceId\": \"{{deviceId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1024,7 +1070,7 @@
                 "biometric"
               ]
             },
-            "description": "",
+            "description": "deviceId is required when enabled: true (stable per-install ID from mobile).",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1037,7 +1083,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"enabled\": true\n}",
+              "raw": "{\n  \"enabled\": true,\n  \"deviceId\": \"{{deviceId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1590,6 +1636,30 @@
       ]
     },
     {
+      "name": "Shared — Realtime (Socket.IO)",
+      "description": "WebSocket namespaces — use a Socket.IO client (not plain HTTP)",
+      "item": [
+        {
+          "name": "Notifications — Real-time Inbox",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Socket.IO namespace (not HTTP REST).\n\nConnect: {{wsBaseUrl}}/notifications\nAuth: Bearer access token via handshake auth { \"token\": \"{{accessToken}}\" }\n\nListen for events:\n- notification_created → { type, notification, unreadCount }\n- notification_read → { type, notificationId, unreadCount }\n- notifications_all_read → { type, unreadCount, updatedCount }\n\nInvestor/Partner room: user:{userId}\nAdmin rooms: admin_inbox + admin:{adminUserId}\n\nUse REST folders \"Investor — Notifications\" / \"Admin — Notifications\" for inbox CRUD.\nSee API.md → Notifications → Real-time inbox (Socket.IO)."
+          }
+        }
+      ]
+    },
+    {
       "name": "Shared — Media",
       "description": "Cloudinary helpers",
       "item": [
@@ -1728,7 +1798,7 @@
     },
     {
       "name": "Investor — Notifications",
-      "description": "In-app notifications and push token registration",
+      "description": "In-app notifications, push tokens, and Socket.IO real-time inbox (/notifications)",
       "item": [
         {
           "name": "List Notifications",
@@ -2772,10 +2842,52 @@
                 {
                   "key": "limit",
                   "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "wallet_top_up",
+                  "description": "investment_return | wallet_top_up | referral_bonus | investment_in | withdrawal | admin_credit | admin_debit",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "description": "completed | pending | failed",
+                  "disabled": true
+                },
+                {
+                  "key": "direction",
+                  "value": "money_in",
+                  "description": "money_in | money_out",
+                  "disabled": true
+                },
+                {
+                  "key": "dateRange",
+                  "value": "last_30_days",
+                  "description": "today | last_7_days | last_30_days | last_3_months",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-07-01",
+                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-07-10",
+                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Matches reference, title, or subtitle",
+                  "disabled": true
                 }
               ]
             },
-            "description": "",
+            "description": "List the authenticated user's wallet transactions. Supports filtering by type, status, direction (money in/out), date presets, custom date range, and search.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -3492,6 +3604,67 @@
               ]
             }
           }
+        },
+        {
+          "name": "Create Referral Tracking Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partners/me/referral-tracking-tokens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partners",
+                "me",
+                "referral-tracking-tokens"
+              ]
+            },
+            "description": "Mint signed token for share links (?t=) and public event tracking.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertySlug\": \"{{propertySlug}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.trackingToken) {",
+                  "    pm.collectionVariables.set(\"referralTrackingToken\", data.trackingToken);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Commission Wallet",
@@ -4407,7 +4580,7 @@
     },
     {
       "name": "Admin — Notifications",
-      "description": "Admin in-app notification inbox",
+      "description": "Admin in-app inbox + Socket.IO real-time (/notifications, room admin:{adminUserId})",
       "item": [
         {
           "name": "List Admin Notifications",
@@ -7444,7 +7617,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/wallets/{{userId}}/transactions",
+              "raw": "{{baseUrl}}/api/admin/wallets/{{userId}}/transactions?page=1&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -7454,9 +7627,61 @@
                 "wallets",
                 "{{userId}}",
                 "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "wallet_top_up",
+                  "description": "investment_return | wallet_top_up | referral_bonus | investment_in | withdrawal | admin_credit | admin_debit",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "description": "completed | pending | failed",
+                  "disabled": true
+                },
+                {
+                  "key": "direction",
+                  "value": "money_in",
+                  "description": "money_in | money_out",
+                  "disabled": true
+                },
+                {
+                  "key": "dateRange",
+                  "value": "last_30_days",
+                  "description": "today | last_7_days | last_30_days | last_3_months",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-07-01",
+                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-07-10",
+                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Matches reference, title, or subtitle",
+                  "disabled": true
+                }
               ]
             },
-            "description": "",
+            "description": "List wallet transactions for a specific user. Supports the same filters as the user-facing transactions endpoint.",
             "auth": {
               "type": "bearer",
               "bearer": [

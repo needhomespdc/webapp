@@ -6,13 +6,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   RiUser3Line,
   RiMailLine,
-  RiPhoneLine,
   RiLockLine,
   RiEyeLine,
   RiEyeOffLine,
   RiBuilding2Line,
   RiMegaphoneLine,
 } from 'react-icons/ri';
+import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -128,26 +128,6 @@ function PasswordRequirements({ password }: { password: string }) {
   );
 }
 
-// ─── Phone input with country code ────────────────────────────────────────────
-
-function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex h-14 w-full rounded-xl bg-foreground/10 border border-foreground/10 overflow-hidden focus-within:ring-2 focus-within:ring-accent focus-within:border-transparent transition-all duration-200">
-      <div className="flex items-center gap-1.5 px-3 border-r border-foreground/10 shrink-0">
-        <span className="text-base">🇳🇬</span>
-        <span className="text-sm text-foreground/70">+234</span>
-      </div>
-      <input
-        type="tel"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="8012345678"
-        className="flex-1 bg-transparent px-3 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none"
-      />
-    </div>
-  );
-}
-
 // ─── Individual form ───────────────────────────────────────────────────────────
 
 function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
@@ -255,10 +235,7 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <RiPhoneLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-5 w-5 z-10" />
-                  <PhoneInput value={field.value} onChange={field.onChange} />
-                </div>
+                <PhoneNumberInput value={field.value} onChange={field.onChange} size="lg" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -446,7 +423,7 @@ function CorporateForm({ onSuccess }: { onSuccess: (email: string) => void }) {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <PhoneInput value={field.value} onChange={field.onChange} />
+                <PhoneNumberInput value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -592,7 +569,7 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
           <FormItem>
             <FormLabel>Phone Number</FormLabel>
             <FormControl>
-              <PhoneInput value={field.value} onChange={field.onChange} />
+              <PhoneNumberInput value={field.value} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>
