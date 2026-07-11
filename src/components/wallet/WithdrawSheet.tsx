@@ -21,7 +21,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/fetchClient';
-import type { Wallet, BankAccount, Transaction, ApiResponse } from '@/types';
+import type { Wallet, BankAccount, Transaction } from '@/types';
 import { LottieLoader } from '@/components/shared/LottieLoader';
 import { walletApi } from '@/api/wallet.api';
 
