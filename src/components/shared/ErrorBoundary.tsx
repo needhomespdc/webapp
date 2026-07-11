@@ -173,8 +173,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
-// ─── Route-level error page (used as React Router errorElement) ───────────────
 
+// Route-level error page (used as React Router errorElement)
 function toError(raw: unknown): Error {
   if (raw instanceof Error) return raw;
   if (raw && typeof raw === 'object' && 'status' in raw) {

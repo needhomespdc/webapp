@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getGreeting } from '@/utils/helpers';
-import { HiArrowTrendingDown, HiArrowTrendingUp, HiOutlineBuildingOffice2 } from 'react-icons/hi2';
+import { HiArrowTrendingDown, HiArrowTrendingUp } from 'react-icons/hi2';
 
 export default function InvestorDashboard() {
   const { user } = useAuth();
@@ -83,7 +83,7 @@ export default function InvestorDashboard() {
           className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-linear-to-r from-primary/95 via-primary/80 to-primary/30" />
-        <div className="relative z-10 flex flex-col justify-center w-full h-full p-6 sm:p-8">
+        <div className="relative z-10 flex flex-col justify-center w-full h-full p-4 sm:p-6">
           <h2 className="text-white text-xl sm:text-2xl font-bold leading-tight">
             Grow your wealth through real estate
           </h2>
@@ -219,7 +219,7 @@ export default function InvestorDashboard() {
           <Card className="hover:border-accent/40 transition-colors cursor-pointer">
             <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
-                <HiOutlineBuildingOffice2 />
+                <RiStore2LineIcon />
               </div>
               <div className="hidden sm:block">
                 <p className="text-foreground text-sm font-semibold">Explore</p>
@@ -406,7 +406,11 @@ export default function InvestorDashboard() {
 function RiStore2LineIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-      <path d="M21 11.646V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.354A3.985 3.985 0 0 1 2 9V3a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v6c0 .738-.202 1.430-.546 2.022zM5 13.9V20h14v-6.1a4.027 4.027 0 0 1-2 .578 3.988 3.988 0 0 1-3-1.36 3.988 3.988 0 0 1-3 1.36 3.988 3.988 0 0 1-3-1.36 3.988 3.988 0 0 1-2 .782zM4 4v5a2 2 0 1 0 4 0V4H4zm6 0v5a2 2 0 1 0 4 0V4h-4zm6 0v5a2 2 0 1 0 4 0V4h-4z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M1 21V3h10v18H1zM13 21V7h10v14H13zM3 5h2v3H3zM7 5h2v3H7zM3 10h2v3H3zM7 10h2v3H7zM3 15h2v3H3zM7 15h2v3H7zM15 9h2v3h-2zM19 9h2v3h-2zM15 14h2v3h-2zM19 14h2v3h-2z"
+      />
     </svg>
   );
 }
