@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { HiOutlineWallet } from 'react-icons/hi2';
 import {
   RiArrowLeftLine,
   RiArrowLeftSLine,
@@ -9,7 +10,6 @@ import {
   RiHeartFill,
   RiShareLine,
   RiCheckLine,
-  RiAlertLine,
   RiDownload2Line,
   RiFileTextLine,
   RiBuildingLine,
@@ -23,33 +23,17 @@ import {
   RiCloseLine,
   RiPhoneLine,
   RiFileCopy2Line,
-  RiWhatsappFill,
-  RiFacebookFill,
-  RiLinkedinFill,
-  RiTwitterXFill,
-  RiMailFill,
 } from 'react-icons/ri';
-import { partnersApi } from '@/api/partners.api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
 import { usePropertyBySlug } from '@/hooks/useProperty';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
-// import { useCheckoutInvestment } from '@/hooks/useInvestment';
+import { useReferralLink } from '@/hooks/useReferralLink';
 import { Loader } from '@/components/shared/Loader';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { toast } from '@/hooks/useToast';
-// import { ApiError } from '@/lib/fetchClient';
-import { OutrightAcquireSheet } from '@/components/investment/OutrightAcquireSheet';
-import { CoDevelopmentJoinSheet } from '@/components/investment/CoDevelopmentJoinSheet';
-import { InvestmentSuccessModal } from '@/components/investment/InvestmentSuccessModal';
-import type { Property, Milestone, Investment } from '@/types';
+import { ReferralShareModal } from '@/components/partner/ReferralShareModal';
+import type { Property, Milestone } from '@/types';
 
 // ─── Icon map for property highlights ─────────────────────────────────────────
 
@@ -64,8 +48,6 @@ const HIGHLIGHT_ICON: Record<string, ReactNode> = {
   high_roi: <RiLineChartLine className="h-4 w-4" />,
 };
 
-// ─── Model badge colors (matches PropertyCard) ────────────────────────────────
-
 const MODEL_BADGE_COLOR: Record<string, string> = {
   co_development: 'bg-emerald-500',
   fractional: 'bg-violet-500',
@@ -73,119 +55,6 @@ const MODEL_BADGE_COLOR: Record<string, string> = {
   save_to_own: 'bg-blue-500',
   outright: 'bg-amber-500',
 };
-
-// ─── Per-model CTA config ─────────────────────────────────────────────────────
-
-const MODEL_CTA: Record<string, { priceLabel: string; btnText: string; btnClass: string; unitLabel: string }> = {
-  co_development: { priceLabel: 'Price per Slot', btnText: 'Join Project', btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white', unitLabel: 'Slots' },
-  fractional: { priceLabel: 'Minimum Investment', btnText: 'Invest Now', btnClass: 'bg-violet-500 hover:bg-violet-600 text-white', unitLabel: 'Units' },
-  land_banking: { priceLabel: 'Minimum Plot Investment', btnText: 'Buy Now', btnClass: 'bg-accent hover:bg-accent/90 text-white', unitLabel: 'Plots' },
-  save_to_own: { priceLabel: 'Minimum First Payment', btnText: 'Save Now', btnClass: 'bg-blue-500 hover:bg-blue-600 text-white', unitLabel: 'Units' },
-  outright: { priceLabel: 'Price per unit', btnText: 'Acquire Now', btnClass: 'bg-accent hover:bg-accent/90 text-white', unitLabel: 'Units' },
-};
-
-// ─── Share modal ─────────────────────────────────────────────────────────────
-
-const SOCIALS = [
-  {
-    label: 'WhatsApp',
-    icon: RiWhatsappFill,
-    bg: 'bg-[#25D366]',
-    href: (url: string, title: string) =>
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(title + '\n' + url)}`,
-  },
-  {
-    label: 'X',
-    icon: RiTwitterXFill,
-    bg: 'bg-black',
-    href: (url: string, title: string) =>
-      `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-  },
-  {
-    label: 'Facebook',
-    icon: RiFacebookFill,
-    bg: 'bg-[#1877F2]',
-    href: (url: string) =>
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-  },
-  {
-    label: 'LinkedIn',
-    icon: RiLinkedinFill,
-    bg: 'bg-[#0A66C2]',
-    href: (url: string) =>
-      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-  },
-  {
-    label: 'Email',
-    icon: RiMailFill,
-    bg: 'bg-[#EA4335]',
-    href: (url: string, title: string) =>
-      `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`,
-  },
-] as const;
-
-function ShareModal({
-  open,
-  onOpenChange,
-  url,
-  title,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  url: string;
-  title: string;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5 pb-4 border-b border-foreground/10">
-          <DialogTitle className="text-base font-semibold text-foreground">Share Property</DialogTitle>
-        </DialogHeader>
-
-        <div className="px-5 py-5 space-y-5">
-          {/* Social icons row */}
-          <div className="flex items-center justify-center gap-4">
-            {SOCIALS.map(({ label, icon: Icon, bg, href }) => (
-              <a
-                key={label}
-                href={href(url, title)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center gap-1.5"
-                onClick={() => onOpenChange(false)}
-              >
-                <span className={cn('w-12 h-12 rounded-full flex items-center justify-center text-white text-xl', bg)}>
-                  <Icon />
-                </span>
-                <span className="text-[10px] text-foreground/50">{label}</span>
-              </a>
-            ))}
-          </div>
-
-          <div className="border-t border-foreground/10" />
-
-          {/* Copy link */}
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-2 mx-auto text-accent font-semibold text-sm"
-          >
-            <RiFileCopy2Line className="h-4 w-4" />
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 // ─── Milestone status badge ───────────────────────────────────────────────────
 
@@ -239,7 +108,7 @@ function CoDevSection({ property, config }: { property: Property; config: Record
           <h2 className="text-foreground font-semibold text-sm mb-0.5">Development Milestones</h2>
           <p className="text-foreground/40 text-xs mb-4">Your contribution is released per milestone as construction progresses.</p>
           <div className="space-y-4">
-            {milestones?.filter((ms) => ms.isCurrentStage).map((ms) => (
+            {milestones.filter((ms) => ms.isCurrentStage).map((ms) => (
               <div key={ms.id} className="flex items-start gap-3">
                 <div className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold',
@@ -376,7 +245,7 @@ function SaveToOwnSection({ property, config }: { property: Property; config: Re
   );
 }
 
-// ─── Fractional Investment Details ───────────────────────────────────────────
+// ─── Fractional Investment Details ────────────────────────────────────────────
 
 function FractionalInvestmentDetails({ property, config }: { property: Property; config: Record<string, unknown> }) {
   const rows: Array<{ label: string; value: string; bold?: boolean }> = [
@@ -397,10 +266,7 @@ function FractionalInvestmentDetails({ property, config }: { property: Property;
       {rows.map((row, i) => (
         <div
           key={row.label}
-          className={cn(
-            'flex items-center justify-between px-4 py-3 text-sm',
-            i < rows.length - 1 && 'border-b border-foreground/10'
-          )}
+          className={cn('flex items-center justify-between px-4 py-3 text-sm', i < rows.length - 1 && 'border-b border-foreground/10')}
         >
           <span className="text-foreground/60">{row.label}</span>
           <span className={cn('text-foreground', row.bold ? 'font-bold' : 'font-medium')}>{row.value}</span>
@@ -440,6 +306,74 @@ function PropertyVideoCard({ url }: { url: string }) {
   );
 }
 
+// ─── Commission card ──────────────────────────────────────────────────────────
+
+function CommissionCard({
+  property,
+  link,
+  onCopy,
+  onShare,
+}: {
+  property: Property;
+  link: string;
+  onCopy: () => void;
+  onShare: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    onCopy();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
+            <HiOutlineWallet className="text-accent h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-foreground/50 text-xs">Your Commission</p>
+            {property.commissionEarning != null ? (
+              <p className="text-green-400 font-bold text-xl leading-tight">{formatCurrency(property.commissionEarning)}</p>
+            ) : (
+              <p className="text-foreground/30 text-sm">—</p>
+            )}
+          </div>
+        </div>
+        <span className="bg-green-500/15 text-green-400 text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0">
+          Per sale
+        </span>
+      </div>
+
+      <p className="text-foreground/50 text-sm leading-relaxed">
+        Share your unique referral link with clients. You earn when they invest through your link.
+      </p>
+
+      <div className="flex items-center gap-2 bg-background border border-foreground/10 rounded-xl px-3 py-2.5">
+        <p className="flex-1 text-xs text-foreground/60 truncate font-mono">{link}</p>
+        <button
+          onClick={handleCopy}
+          className="shrink-0 text-accent hover:opacity-70 transition-opacity"
+          aria-label="Copy referral link"
+        >
+          {copied ? <RiCheckLine className="h-4 w-4 text-green-400" /> : <RiFileCopy2Line className="h-4 w-4" />}
+        </button>
+      </div>
+
+      <Button
+        onClick={onShare}
+        className="w-full h-11 bg-accent hover:bg-accent/90 text-white rounded-xl"
+      >
+        <RiShareLine className="h-4 w-4 mr-2" />
+        Share Referral Link
+      </Button>
+    </div>
+  );
+}
+
 // ─── Fullscreen Lightbox ──────────────────────────────────────────────────────
 
 interface LightboxProps {
@@ -471,7 +405,6 @@ function Lightbox({ images, index, onClose }: LightboxProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 select-none"
       onClick={onClose}
     >
-      {/* Close */}
       <button
         className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
@@ -479,14 +412,12 @@ function Lightbox({ images, index, onClose }: LightboxProps) {
         <RiCloseLine className="h-5 w-5" />
       </button>
 
-      {/* Counter */}
       {images.length > 1 && (
         <span className="absolute top-4 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium z-10">
           {current + 1} / {images.length}
         </span>
       )}
 
-      {/* Image */}
       <img
         src={src}
         alt={images[current]?.altText ?? ''}
@@ -494,7 +425,6 @@ function Lightbox({ images, index, onClose }: LightboxProps) {
         onClick={(e) => e.stopPropagation()}
       />
 
-      {/* Prev / Next */}
       {images.length > 1 && (
         <>
           <button
@@ -512,17 +442,13 @@ function Lightbox({ images, index, onClose }: LightboxProps) {
         </>
       )}
 
-      {/* Dot nav */}
       {images.length > 1 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
           {images.map((_, idx) => (
             <button
               key={idx}
               onClick={(e) => { e.stopPropagation(); setCurrent(idx); }}
-              className={cn(
-                'rounded-full transition-all',
-                idx === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/30'
-              )}
+              className={cn('rounded-full transition-all', idx === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/30')}
             />
           ))}
         </div>
@@ -531,55 +457,23 @@ function Lightbox({ images, index, onClose }: LightboxProps) {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function PropertyDetail() {
+export default function PartnerPropertyDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const arrivedWithInvest = useRef(searchParams.get('invest') === 'true');
-  const { user } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  // const [investOpen, setInvestOpen] = useState(false);
-  // const [quantity, setQuantity] = useState(1);
-  // const [pin, setPin] = useState('');
-  const [descExpanded, setDescExpanded] = useState(false);
-  const [acquireOpen, setAcquireOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [successInvestment, setSuccessInvestment] = useState<Investment | null>(null);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const { property, isLoading } = usePropertyBySlug(slug);
   const { favoriteIds } = useFavoriteIds();
-  const isFav = favoriteIds.includes(property?.id ?? '');
-
-  useEffect(() => {
-    const ref = searchParams.get('ref');
-    if (ref && property) {
-      partnersApi.trackReferralEvent({
-        referralCode: ref,
-        eventType: 'click',
-        propertySlug: property.slug,
-        propertyTitle: property.title,
-        channel: 'direct',
-      }).catch(() => null);
-    }
-  }, [searchParams, property]);
-
-  useEffect(() => {
-    if (
-      searchParams.get('invest') === 'true' &&
-      (property?.investmentModelType === 'outright' || property?.investmentModelType === 'co_development')
-    ) {
-      setAcquireOpen(true);
-    }
-  }, [searchParams, property]);
-
   const toggleFavMutation = useToggleFavorite();
-  // const investMutation = useCheckoutInvestment();
+  const { link, copy } = useReferralLink(slug ?? '');
 
-  const handleShare = () => setShareOpen(true);
+  const isFav = favoriteIds.includes(property?.id ?? '');
 
   if (isLoading) return <Loader fullPage />;
   if (!property) return null;
@@ -592,20 +486,6 @@ export default function PropertyDetail() {
   const currentImageUrl = images[selectedImage]?.secureUrl ?? images[selectedImage]?.url ?? '';
 
   const config = (property.investmentModelConfig?.config ?? {}) as Record<string, unknown>;
-  const kycApproved = user?.kycStatus === 'approved';
-  const isAvailable = property.status === 'published' && property.inventoryAvailable > 0;
-  const ctaConfig = MODEL_CTA[property.investmentModelType] ?? MODEL_CTA.fractional;
-
-  const ctaPrice = (() => {
-    if (property.investmentModelType === 'outright') {
-      return property.minInvestment;
-    }
-    if (property.investmentModelType === 'co_development') {
-      return (config.pricePerSlot as number | undefined) ?? property.minInvestment;
-    }
-    return property.totalPrice ?? property.minInvestment;
-  })();
-
   const descParagraphs = (property.description ?? '').split(/<br\s*\/?>/gi).filter(Boolean);
   const longDesc = (property.description?.length ?? 0) > 250;
 
@@ -614,7 +494,7 @@ export default function PropertyDetail() {
       {/* ── Image gallery ──────────────────────────────────────────────────── */}
       <div>
         <div className="relative h-62 overflow-hidden sm:rounded-2xl bg-foreground/5">
-          {images?.length > 0 ? (
+          {images.length > 0 ? (
             <img
               src={currentImageUrl}
               alt={property.title}
@@ -623,7 +503,6 @@ export default function PropertyDetail() {
             />
           ) : (
             <div className="h-72 bg-foreground/5 flex items-center justify-center text-foreground/20 text-5xl">🏠</div>
-
           )}
           <div className="absolute inset-0 bg-linear-to-b from-black/50 via-transparent to-black/60 pointer-events-none" />
 
@@ -639,7 +518,7 @@ export default function PropertyDetail() {
           {/* Top: back / heart / share */}
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
             <button
-              onClick={() => arrivedWithInvest.current ? navigate('/investor/marketplace') : navigate(-1)}
+              onClick={() => navigate(-1)}
               className="w-9 h-9 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white"
             >
               <RiArrowLeftLine className="h-4 w-4" />
@@ -657,7 +536,7 @@ export default function PropertyDetail() {
                   : <RiHeartLine className="h-4 w-4 text-white" />}
               </button>
               <button
-                onClick={handleShare}
+                onClick={() => setShareOpen(true)}
                 className="w-9 h-9 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white"
               >
                 <RiShareLine className="h-4 w-4" />
@@ -690,16 +569,12 @@ export default function PropertyDetail() {
               <button
                 key={idx}
                 onClick={() => setSelectedImage(idx)}
-                className={cn(
-                  'rounded-full transition-all',
-                  idx === selectedImage ? 'w-5 h-2 bg-accent' : 'w-2 h-2 bg-foreground/20'
-                )}
+                className={cn('rounded-full transition-all', idx === selectedImage ? 'w-5 h-2 bg-accent' : 'w-2 h-2 bg-foreground/20')}
               />
             ))}
           </div>
         )}
       </div>
-
 
       {/* ── Content ────────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-0 space-y-4 mt-4">
@@ -729,11 +604,111 @@ export default function PropertyDetail() {
           </div>
         )}
 
-        {/* ── Property Manager ────────────────────────────────────────────── */}
-        {property.projectManagerName && (
-          <div>
-            <p className="text-foreground font-semibold text-sm mb-2">Have questions about this property?</p>
+        {/* ── Commission card — full width ─────────────────────────────────── */}
+        <CommissionCard property={property} link={link} onCopy={copy} onShare={() => setShareOpen(true)} />
+
+        {/* ── Info grid ────────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Property Highlights — always first */}
+          {(property.highlights?.length ?? 0) > 0 && (
             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+              <h2 className="text-foreground font-semibold text-sm mb-3">Property Highlights</h2>
+              <div className="grid grid-cols-2 gap-y-3 gap-x-2">
+                {property.highlights!.map((h) => (
+                  <div key={h.label} className="flex items-center gap-2 text-sm text-foreground/70">
+                    <span className="text-foreground/40 shrink-0">
+                      {HIGHLIGHT_ICON[h.iconKey] ?? <RiStarLine className="h-4 w-4" />}
+                    </span>
+                    {h.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Property Video */}
+          {property.video && <PropertyVideoCard url={property.video.secureUrl ?? property.video.url} />}
+
+          {/* Model-specific section */}
+          {property.investmentModelType === 'co_development' && (
+            <CoDevSection property={property} config={config} />
+          )}
+          {property.investmentModelType === 'fractional' && (
+            <FractionalSection config={config} />
+          )}
+          {property.investmentModelType === 'land_banking' && (
+            <LandBankingSection property={property} config={config} />
+          )}
+          {property.investmentModelType === 'outright' && (
+            <OutrightSection property={property} />
+          )}
+          {property.investmentModelType === 'save_to_own' && (
+            <SaveToOwnSection property={property} config={config} />
+          )}
+
+          {/* Fractional Investment Details */}
+          {property.investmentModelType === 'fractional' && (
+            <FractionalInvestmentDetails property={property} config={config} />
+          )}
+
+          {/* Management Fees (hidden for outright — already in cost breakdown) */}
+          {(property.managementFees?.items.length ?? 0) > 0 && property.investmentModelType !== 'outright' && (
+            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-foreground/10">
+                <h2 className="text-foreground font-semibold text-sm">Management Fees</h2>
+              </div>
+              {property.managementFees!.items.map((item) => (
+                <div key={item.label} className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
+                  <span className="text-foreground/60">{item.label}</span>
+                  <span className="text-foreground">{formatCurrency(item.amount)}</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="text-foreground font-semibold">Total Management Fees</span>
+                <span className="text-foreground font-bold">{formatCurrency(property.managementFees!.total)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Documents + Building Permit */}
+          {((property.documents?.length ?? 0) > 0 || property.buildingPermitNumber) && (
+            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
+                <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
+                <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
+                  {property.documents?.length ?? 0}
+                </span>
+              </div>
+              {property.documents?.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={doc.secureUrl ?? doc.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors border-b border-foreground/10"
+                >
+                  <RiFileTextLine className="text-accent h-5 w-5 shrink-0" />
+                  <span className="text-foreground/80 text-sm flex-1">{doc.fileName ?? doc.name ?? 'Document'}</span>
+                  <RiDownload2Line className="text-foreground/40 h-4 w-4 shrink-0" />
+                </a>
+              ))}
+              {property.buildingPermitNumber && (
+                <div className="px-4 py-3">
+                  <p className="text-foreground/50 text-xs mb-1.5">Building Permit Number</p>
+                  <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2">
+                    <p className="text-accent text-sm font-medium">{property.buildingPermitNumber}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Property Manager */}
+          {property.projectManagerName && (
+            <div>
+              <p className="text-foreground font-semibold text-sm mb-2">Have questions about this property?</p>
+              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
               <p className="text-foreground/50 text-xs font-medium mb-3 uppercase tracking-wide">Property Manager</p>
               <div className="flex items-center gap-3">
                 {property.projectManagerImageUrl ? (
@@ -764,203 +739,43 @@ export default function PropertyDetail() {
                 )}
               </div>
             </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          {/* ── Property Highlights — always first ──────────────────────────── */}
-          {(property.highlights?.length ?? 0) > 0 && (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-              <h2 className="text-foreground font-semibold text-sm mb-3">Property Highlights</h2>
-              <div className="grid grid-cols-2 gap-y-3 gap-x-2">
-                {property.highlights!.map((h) => (
-                  <div key={h.label} className="flex items-center gap-2 text-sm text-foreground/70">
-                    <span className="text-foreground/40 shrink-0">
-                      {HIGHLIGHT_ICON[h.iconKey] ?? <RiStarLine className="h-4 w-4" />}
-                    </span>
-                    {h.label}
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
-          {/* ── Property Video ──────────────────────────────────────────────── */}
-          {property.video && <PropertyVideoCard url={property.video.secureUrl ?? property.video.url} />}
-
-          {/* ── Model-specific section ──────────────────────────────────────── */}
-          {property.investmentModelType === 'co_development' && (
-            <CoDevSection property={property} config={config} />
-          )}
-          {property.investmentModelType === 'fractional' && (
-            <FractionalSection config={config} />
-          )}
-          {property.investmentModelType === 'land_banking' && (
-            <LandBankingSection property={property} config={config} />
-          )}
-          {property.investmentModelType === 'outright' && (
-            <OutrightSection property={property} />
-          )}
-          {property.investmentModelType === 'save_to_own' && (
-            <SaveToOwnSection property={property} config={config} />
-          )}
-
-          {/* ── Fractional Investment Details ───────────────────────────────── */}
-          {property.investmentModelType === 'fractional' && (
-            <FractionalInvestmentDetails property={property} config={config} />
-          )}
-
-          {/* ── Management Fees ─────────────────────────────────────────────── */}
-          {(property.managementFees?.items.length ?? 0) > 0 && property.investmentModelType !== 'outright' && (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-foreground/10">
-                <h2 className="text-foreground font-semibold text-sm">Management Fees</h2>
-              </div>
-              {property.managementFees!.items.map((item) => (
-                <div key={item.label} className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-                  <span className="text-foreground/60">{item.label}</span>
-                  <span className="text-foreground">{formatCurrency(item.amount)}</span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="text-foreground font-semibold">Total Management Fees</span>
-                <span className="text-foreground font-bold">{formatCurrency(property.managementFees!.total)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* ── Documents + Building Permit ─────────────────────────────────── */}
-          {((property.documents?.length ?? 0) > 0 || property.buildingPermitNumber) && (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
-                <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
-                <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
-                  {property.documents?.length ?? 0}
-                </span>
-              </div>
-
-              {property.documents?.map((doc) => (
-                <a
-                  key={doc.id}
-                  href={doc.secureUrl ?? doc.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors border-b border-foreground/10"
-                >
-                  <RiFileTextLine className="text-accent h-5 w-5 shrink-0" />
-                  <span className="text-foreground/80 text-sm flex-1">{doc.fileName ?? doc.name ?? 'Document'}</span>
-                  <RiDownload2Line className="text-foreground/40 h-4 w-4 shrink-0" />
-                </a>
-              ))}
-
-              {property.buildingPermitNumber && (
-                <div className="px-4 py-3">
-                  <p className="text-foreground/50 text-xs mb-1.5">Building Permit Number</p>
-                  <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2">
-                    <p className="text-accent text-sm font-medium">{property.buildingPermitNumber}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* KYC inline warning */}
-          {!kycApproved && isAvailable && (
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
-              <RiAlertLine className="text-amber-400 h-5 w-5 shrink-0" />
-              <p className="text-amber-400 text-sm flex-1">Complete KYC to invest.</p>
-              <Button
-                size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-black"
-                onClick={() => navigate('/investor/kyc')}
-              >
-                Complete KYC
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ── Sticky CTA bar ─────────────────────────────────────────────────── */}
-      {property.inventoryAvailable > 0 && <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
+      {/* ── Sticky share floater ───────────────────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
         <div className="max-w-screen-sm mx-auto flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-foreground/50 text-xs truncate">{ctaConfig.priceLabel}</p>
-            <p className="text-foreground font-bold text-lg leading-tight">{formatCurrency(ctaPrice)}</p>
+            <p className="text-foreground/50 text-xs">Your Commission</p>
+            <p className={cn('font-bold text-lg leading-tight', property.commissionEarning != null ? 'text-green-400' : 'text-foreground/30')}>
+              {property.commissionEarning != null ? formatCurrency(property.commissionEarning) : '—'}
+            </p>
           </div>
-          {!isAvailable ? (
-            <Button disabled className="rounded-full px-6 bg-foreground/10 text-foreground/40 border-0 shrink-0">
-              {property.status === 'sold_out' ? 'Sold Out' : 'Window Closed'}
-            </Button>
-          ) : !kycApproved ? (
-            <Button
-              onClick={() => navigate('/investor/kyc')}
-              className="rounded-full px-6 bg-amber-500 hover:bg-amber-600 text-black shrink-0"
-            >
-              Complete KYC
-            </Button>
-          ) : (
-            <Button
-              onClick={
-                property.investmentModelType === 'outright' || property.investmentModelType === 'co_development'
-                  ? () => { setAcquireOpen(true); setSearchParams((p) => { p.set('invest', 'true'); return p; }, { replace: true }); }
-                  : undefined
-              }
-              className={cn('rounded-full px-6 shrink-0', ctaConfig.btnClass)}
-            >
-              {ctaConfig.btnText}
-              <RiArrowRightSLine className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            onClick={() => setShareOpen(true)}
+            className="bg-accent hover:bg-accent/90 text-white rounded-full px-6 shrink-0"
+          >
+            <RiShareLine className="h-4 w-4 mr-1.5" />
+            Share Link
+          </Button>
         </div>
-      </div>}
+      </div>
 
       {/* ── Lightbox ───────────────────────────────────────────────────────── */}
       {lightboxOpen && images.length > 0 && (
-        <Lightbox
-          images={images}
-          index={selectedImage}
-          onClose={() => setLightboxOpen(false)}
-        />
+        <Lightbox images={images} index={selectedImage} onClose={() => setLightboxOpen(false)} />
       )}
 
-      {/* ── Outright acquire sheet ──────────────────────────────────────────── */}
-      {property.investmentModelType === 'outright' && (
-        <OutrightAcquireSheet
-          open={acquireOpen}
-          onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
-          property={property}
-          onSuccess={(investment) => setSuccessInvestment(investment)}
-        />
-      )}
-
-      {/* ── Co-development join sheet ───────────────────────────────────────── */}
-      {property.investmentModelType === 'co_development' && (
-        <CoDevelopmentJoinSheet
-          open={acquireOpen}
-          onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
-          property={property}
-          onSuccess={(investment) => setSuccessInvestment(investment)}
-        />
-      )}
-
-      {/* ── Share modal ─────────────────────────────────────────────────────── */}
-      <ShareModal
+      {/* ── Referral share modal ─────────────────────────────────────────── */}
+      <ReferralShareModal
         open={shareOpen}
         onOpenChange={setShareOpen}
-        url={window.location.href}
-        title={property.title}
+        propertySlug={property.slug}
+        propertyTitle={property.title}
       />
-
-      {/* ── Investment success modal ────────────────────────────────────────── */}
-      {successInvestment && (
-        <InvestmentSuccessModal
-          open={!!successInvestment}
-          onOpenChange={(v) => { if (!v) setSuccessInvestment(null); }}
-          investment={successInvestment}
-        />
-      )}
     </div>
   );
 }

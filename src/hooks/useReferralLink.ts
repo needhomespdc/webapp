@@ -3,8 +3,7 @@ import { toast } from '@/hooks/useToast';
 
 export function useReferralLink(propertySlug: string) {
   const { user } = useAuth();
-  const baseUrl = window.location.origin;
-  const link = `${baseUrl}/investor/marketplace/${propertySlug}?ref=${user?.referralCode ?? ''}`;
+  const link = `https://needhomes.ng/r/${(user?.referralCode ?? '').toLowerCase()}/${propertySlug.toLowerCase()}`;
 
   const copy = () => {
     navigator.clipboard.writeText(link);

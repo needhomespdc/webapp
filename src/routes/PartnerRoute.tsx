@@ -4,15 +4,13 @@ import {
   RiDashboardFill,
   RiMoneyDollarCircleLine,
   RiMoneyDollarCircleFill,
-  RiWalletLine,
-  RiWalletFill,
   RiSettings4Line,
   RiSettings4Fill,
+  RiLinksLine,
 } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { AppShell } from '@/components/layout/AppShell';
 import { HiOutlineBuildingOffice2, HiBuildingOffice2 } from "react-icons/hi2";
-import { BiSupport } from 'react-icons/bi';
 
 const partnerNavItems = [
   {
@@ -28,26 +26,20 @@ const partnerNavItems = [
     activeIcon: <HiBuildingOffice2 />,
   },
   {
-    label: 'Commissions',
+    label: 'Share',
+    to: '/partner/share',
+    icon: <RiLinksLine />,
+    activeIcon: <RiLinksLine />,
+  },
+  {
+    label: 'Earnings',
     to: '/partner/commissions',
     icon: <RiMoneyDollarCircleLine />,
     activeIcon: <RiMoneyDollarCircleFill />,
   },
   {
-    label: 'Wallet',
-    to: '/partner/wallet',
-    icon: <RiWalletLine />,
-    activeIcon: <RiWalletFill />,
-  },
-  {
-      label: 'Help Center',
-      to: '/partner/support',
-      icon: <BiSupport />,
-      activeIcon: <BiSupport />,
-    },
-  {
     label: 'Settings',
-    to: '/partner/settings',
+    to: '/partner/profile',
     icon: <RiSettings4Line />,
     activeIcon: <RiSettings4Fill />,
   },

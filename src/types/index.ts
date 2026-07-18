@@ -5,7 +5,7 @@
 
 export type UserRole = 'investor' | 'partner';
 export type InvestorType = 'individual' | 'corporate';
-export type KYCStatus = 'not_started' | 'pending' | 'approved' | 'rejected';
+export type KYCStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected';
 
 export interface User {
   id: string;
@@ -99,7 +99,11 @@ export interface Property {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Partner promotable-properties context
+  commissionRate?: number;
+  commissionEarning?: number;
   // Detail-view only fields
+  video?: PropertyVideo | null;
   highlights?: PropertyHighlight[];
   howItWorksTitle?: string | null;
   howItWorksSteps?: PropertyHowItWorksStep[];
@@ -156,6 +160,18 @@ export interface Milestone {
   order?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface PropertyVideo {
+  id: string;
+  publicId: string;
+  url: string;
+  secureUrl: string;
+  category: string;
+  fileName: string;
+  originalFilename: string;
+  sortOrder: number;
+  createdAt: string;
 }
 
 export interface PropertyHighlight {
@@ -435,6 +451,7 @@ export interface CommissionEntry {
 
 export interface ReferralAnalytics {
   totalClicks: number;
+  totalShares?: number;
   totalConversions: number;
   totalLifetimeEarnings: number;
   clicksByPeriod: { date: string; clicks: number }[];

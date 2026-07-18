@@ -28,7 +28,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'succes
   in_progress: { label: 'In Progress', variant: 'warning' },
   pending_resale: { label: 'Pending Resale', variant: 'warning' },
   processing: { label: 'Processing', variant: 'warning' },
-  not_started: { label: 'Not Started', variant: 'warning' },
+  not_submitted: { label: 'Not Submitted', variant: 'warning' },
 
   rejected: { label: 'Rejected', variant: 'error' },
   failed: { label: 'Failed', variant: 'error' },

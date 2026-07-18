@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
+import { ApiError, getApiErrorMessage } from '@/lib/fetchClient';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -45,9 +46,14 @@ export default function Login() {
       toast.success('Welcome back!');
       navigate('/');
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Login failed. Please check your credentials.';
+      let message: string;
+      if (err instanceof ApiError && (err.status === 502 || err.status === 503 || err.status === 504)) {
+        message = 'Server is temporarily unavailable. Please try again in a moment.';
+      } else if (err instanceof TypeError) {
+        message = 'Network error. Please check your connection and try again.';
+      } else {
+        message = getApiErrorMessage(err, 'Login failed. Please check your credentials.');
+      }
       toast.error(message);
     } finally {
       setIsLoading(false);
