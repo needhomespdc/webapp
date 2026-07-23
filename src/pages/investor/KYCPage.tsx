@@ -278,8 +278,8 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
 
   const handleLivenessVerified = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
     setStep('success');
+    queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
   };
 
   // ── NIN step ──
@@ -436,27 +436,27 @@ export default function KYCPage() {
 
   if (isLoading) return <Loader fullPage={false} />;
 
-  const kycStatus = status?.status ?? user?.kycStatus ?? 'not_started';
+  const kycStatus = status?.status ?? user?.kycStatus ?? 'not_submitted';
   const isCorporate = user?.role === 'investor' && user?.investorType === 'corporate';
-  const canStart = kycStatus === 'not_started' || kycStatus === 'rejected';
+  const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
 
-  if (flowActive && canStart && !isCorporate) {
+  if (flowActive && !isCorporate) {
     return <IndividualFlow onClose={() => setFlowActive(false)} />;
   }
 
   const ctaConfig = {
-    not_started: { label: 'Start Verification', active: true },
+    not_submitted: { label: 'Start Verification', active: true },
     pending: { label: 'Under Review', active: false },
     approved: { label: 'KYC Approved', active: false },
     rejected: { label: 'Retry Verification', active: true },
   } as const;
-  const cta = ctaConfig[kycStatus as keyof typeof ctaConfig] ?? ctaConfig.not_started;
+  const cta = ctaConfig[kycStatus as keyof typeof ctaConfig] ?? ctaConfig.not_submitted;
 
   const shieldStyle = {
     approved: { bg: 'bg-green-500/15', icon: 'text-green-400' },
     rejected: { bg: 'bg-red-500/10', icon: 'text-red-400' },
     pending: { bg: 'bg-amber-500/10', icon: 'text-amber-400' },
-    not_started: { bg: 'bg-accent/10', icon: 'text-accent' },
+    not_submitted: { bg: 'bg-accent/10', icon: 'text-accent' },
   }[kycStatus] ?? { bg: 'bg-accent/10', icon: 'text-accent' };
 
   // Reusable hero block

@@ -7,6 +7,8 @@ import {
   RiSettings4Line,
   RiSettings4Fill,
   RiLinksLine,
+  RiWallet3Line,
+  RiWallet3Fill,
 } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { AppShell } from '@/components/layout/AppShell';
@@ -33,9 +35,15 @@ const partnerNavItems = [
   },
   {
     label: 'Earnings',
-    to: '/partner/commissions',
+    to: '/partner/commission-earnings',
     icon: <RiMoneyDollarCircleLine />,
     activeIcon: <RiMoneyDollarCircleFill />,
+  },
+  {
+    label: 'Wallet',
+    to: '/partner/wallet',
+    icon: <RiWallet3Line />,
+    activeIcon: <RiWallet3Fill />,
   },
   {
     label: 'Settings',

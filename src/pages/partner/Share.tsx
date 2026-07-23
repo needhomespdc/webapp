@@ -21,7 +21,7 @@ import {
 import { HiOutlineUsers, HiOutlineWallet } from 'react-icons/hi2';
 import { useAuth } from '@/hooks/useAuth';
 import { useReferralAnalytics, usePromotableProperties, useCommissionEntries } from '@/hooks/usePartner';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -39,10 +39,10 @@ import {
 import type { Property } from '@/types';
 
 const PERIOD_OPTIONS = [
-  { label: 'This Week', value: '7d' },
-  { label: 'This Month', value: '30d' },
-  { label: 'This Quarter', value: '90d' },
-  { label: 'This Year', value: '1y' },
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'this_week' },
+  { label: 'This Month', value: 'this_month' },
+  { label: 'All Time', value: 'all_time' },
 ];
 
 const MODEL_COLORS: Record<string, string> = {
@@ -220,7 +220,7 @@ function QuickShareCard({ property, onShare }: { property: Property; onShare: ()
 
 export default function Share() {
   const { user } = useAuth();
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useState('this_month');
   const [periodOpen, setPeriodOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [filters, setFilters] = useState<MarketplaceFilterValues>(EMPTY_FILTERS);
@@ -434,7 +434,8 @@ export default function Share() {
                 <div className="flex-1 min-w-0">
                   <p className="text-foreground text-sm font-medium truncate">{entry.propertyTitle}</p>
                   <p className="text-foreground/40 text-xs mt-0.5">
-                    {formatCurrency(entry.commissionAmount)} commission
+                    {/* {formatCurrency(entry.commissionAmount)} commission */}
+                    0 commission
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -454,7 +455,7 @@ export default function Share() {
                         ? 'Lead Generated'
                         : 'Pending'}
                   </span>
-                  <p className="text-foreground/30 text-[10px]">{formatDate(entry.createdAt)}</p>
+                  {/* <p className="text-foreground/30 text-[10px]">{formatDate(entry.createdAt)}</p> */}
                 </div>
                 <RiArrowRightSLine className="h-4 w-4 text-foreground/30 shrink-0" />
               </div>

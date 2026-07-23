@@ -260,8 +260,8 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
   };
 
   const handleLivenessVerified = (_photoBase64: string) => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
     setStep('success');
+    queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
   };
 
   if (step === 'nin') {

@@ -39,17 +39,17 @@ import { getGreeting } from '@/utils/helpers';
 import type { ReferralAnalytics, CommissionEntry } from '@/types';
 
 const PERIODS = [
-  { value: '7d', label: 'This Week' },
-  { value: '30d', label: 'This Month' },
-  { value: '90d', label: 'Last 90 Days' },
-  { value: '1y', label: 'This Year' },
+  { value: 'today', label: 'Today' },
+  { value: 'this_week', label: 'This Week' },
+  { value: 'this_month', label: 'This Month' },
+  { value: 'all_time', label: 'All Time' },
 ];
 
 const PERIOD_FROM_LABEL: Record<string, string> = {
-  '7d': 'from last week',
-  '30d': 'from last month',
-  '90d': 'from last 90 days',
-  '1y': 'from last year',
+  today: 'from yesterday',
+  this_week: 'from last week',
+  this_month: 'from last month',
+  all_time: 'all time',
 };
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
@@ -155,13 +155,13 @@ function PerformanceChart({ data }: { data: ReferralAnalytics['clicksByPeriod'] 
 // ─── Commission Status Badge ──────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<string, string> = {
-  paid: 'bg-green-600/15 text-green-400',
+  completed: 'bg-green-600/15 text-green-400',
   approved: 'bg-blue-500/15 text-blue-400',
   pending: 'bg-amber-500/15 text-amber-400',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  paid: 'Sale Completed',
+  completed: 'Sale Completed',
   approved: 'Approved',
   pending: 'Pending',
 };
@@ -182,8 +182,8 @@ function SaleRow({ entry }: { entry: CommissionEntry }) {
       </div>
       <div className="text-right shrink-0">
         <p className="text-foreground/40 text-[10px]">You Earned</p>
-        <p className="text-green-400 text-sm font-bold mt-0.5">+{formatCurrency(entry.commissionAmount)}</p>
-        <p className="text-foreground/30 text-[10px] mt-0.5">{formatDate(entry.createdAt, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+        <p className="text-green-400 text-sm font-bold mt-0.5">+{formatCurrency(entry.amount)}</p>
+        <p className="text-foreground/30 text-[10px] mt-0.5">{formatDate(entry.occurredAt, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
       </div>
     </div>
   );
@@ -194,12 +194,13 @@ function SaleRow({ entry }: { entry: CommissionEntry }) {
 export default function PartnerDashboard() {
   const { user } = useAuth();
   const isMobile = useMediaQuery('(max-width: 639px)');
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useState('this_month');
   const [periodOpen, setPeriodOpen] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
 
   const { analytics, isLoading: analyticsLoading } = useReferralAnalytics(period);
-  const { wallet, isLoading: walletLoading } = useCommissionWallet();
+  // const { wallet, isLoading: walletLoading } = useCommissionWallet();
+  const { isLoading: walletLoading } = useCommissionWallet();
   const { entries, isLoading: entriesLoading } = useCommissionEntries(1, 3);
 
   const periodLabel = PERIODS.find((p) => p.value === period)?.label ?? 'This Month';
@@ -244,7 +245,8 @@ export default function PartnerDashboard() {
           {walletLoading ? (
             <Skeleton className="h-9 w-44 bg-white/10" />
           ) : showBalance ? (
-            <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-white" />
+            // <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-white" />
+            <CurrencyDisplay amount={0} size="xl" className="text-white" />
           ) : (
             <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
           )}

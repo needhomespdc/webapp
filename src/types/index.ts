@@ -431,22 +431,35 @@ export interface KYCStatusResponse {
 
 export interface CommissionWallet {
   id: string;
-  partnerId: string;
-  balance: number;
-  totalEarned: number;
   currency: string;
+  availableBalance: number;
+  pendingCommissions: number;
+  totalEarned: number;
+  paidOut: number;
+  minimumPayout: number;
+  payoutFeePercent: number;
+  updatedAt: string;
 }
 
 export interface CommissionEntry {
   id: string;
-  partnerId: string;
-  investmentId: string;
-  investorId: string;
+  type: 'earned' | 'payout';
+  amount: number;
+  feeAmount: number;
+  status: string;
+  reference: string;
+  occurredAt: string;
+  processedAt?: string | null;
   propertyTitle: string;
-  commissionAmount: number;
-  commissionRate: number;
-  status: 'pending' | 'approved' | 'paid';
-  createdAt: string;
+  location?: string | null;
+  propertyImageUrl?: string | null;
+  subtitle: string;
+  investorName?: string | null;
+  investmentAmount?: number | null;
+  commissionRate?: number | null;
+  leadSource?: string | null;
+  payoutAccount?: unknown | null;
+  processingFee?: number | null;
 }
 
 export interface ReferralAnalytics {

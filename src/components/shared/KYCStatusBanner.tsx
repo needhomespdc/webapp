@@ -9,15 +9,15 @@ interface KYCStatusBannerProps {
 }
 
 const MESSAGES: Record<Exclude<KYCStatus, 'approved'>, string> = {
-  pending: 'Your KYC is under review. We'll notify you once approved.',
+  pending: 'Your KYC is under review. We\'ll notify you once approved.',
   rejected: 'Your KYC was rejected. Please re-submit to unlock payouts.',
-  not_started: 'Complete KYC verification to unlock withdrawals and payouts.',
+  not_submitted: 'Complete KYC verification to unlock withdrawals and payouts.',
 };
 
 export function KYCStatusBanner({ kycStatus, kycPath }: KYCStatusBannerProps) {
   if (kycStatus === 'approved') return null;
 
-  const message = MESSAGES[kycStatus] ?? MESSAGES.not_started;
+  const message = MESSAGES[kycStatus] ?? MESSAGES.not_submitted;
   const showCta = kycStatus !== 'pending';
   const ctaLabel = kycStatus === 'rejected' ? 'Re-submit' : 'Complete KYC';
 
