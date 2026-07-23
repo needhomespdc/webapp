@@ -48,6 +48,7 @@ import { toast } from '@/hooks/useToast';
 // import { ApiError } from '@/lib/fetchClient';
 import { OutrightAcquireSheet } from '@/components/investment/OutrightAcquireSheet';
 import { CoDevelopmentJoinSheet } from '@/components/investment/CoDevelopmentJoinSheet';
+import { LandBankingReserveSheet } from '@/components/investment/LandBankingReserveSheet';
 import { InvestmentSuccessModal } from '@/components/investment/InvestmentSuccessModal';
 import type { Property, Milestone, Investment } from '@/types';
 
@@ -570,7 +571,11 @@ export default function PropertyDetail() {
   useEffect(() => {
     if (
       searchParams.get('invest') === 'true' &&
-      (property?.investmentModelType === 'outright' || property?.investmentModelType === 'co_development')
+      (
+        property?.investmentModelType === 'outright' ||
+        property?.investmentModelType === 'co_development' ||
+        property?.investmentModelType === 'land_banking'
+      )
     ) {
       setAcquireOpen(true);
     }
@@ -903,7 +908,9 @@ export default function PropertyDetail() {
           ) : (
             <Button
               onClick={
-                property.investmentModelType === 'outright' || property.investmentModelType === 'co_development'
+                property.investmentModelType === 'outright' ||
+                property.investmentModelType === 'co_development' ||
+                property.investmentModelType === 'land_banking'
                   ? () => { setAcquireOpen(true); setSearchParams((p) => { p.set('invest', 'true'); return p; }, { replace: true }); }
                   : undefined
               }
@@ -938,6 +945,16 @@ export default function PropertyDetail() {
       {/* ── Co-development join sheet ───────────────────────────────────────── */}
       {property.investmentModelType === 'co_development' && (
         <CoDevelopmentJoinSheet
+          open={acquireOpen}
+          onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
+          property={property}
+          onSuccess={(investment) => setSuccessInvestment(investment)}
+        />
+      )}
+
+      {/* ── Land banking reserve sheet ──────────────────────────────────────── */}
+      {property.investmentModelType === 'land_banking' && (
+        <LandBankingReserveSheet
           open={acquireOpen}
           onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
           property={property}
