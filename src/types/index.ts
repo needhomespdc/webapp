@@ -422,6 +422,9 @@ export interface ResaleListing {
 
 export interface KYCStatusResponse {
   status: KYCStatus;
+  statusLabel?: string;
+  verificationKind?: string;
+  verificationTitle?: string;
   submittedAt?: string;
   reviewedAt?: string;
   rejectionReason?: string;

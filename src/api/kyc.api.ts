@@ -1,9 +1,9 @@
 import { api } from '@/lib/fetchClient';
-import type { KYCStatusResponse, ApiResponse } from '@/types';
+import type { KYCStatusResponse } from '@/types';
 
 export const kycApi = {
-  getStatus: (): Promise<ApiResponse<KYCStatusResponse>> =>
-    api.get<ApiResponse<KYCStatusResponse>>('/kyc/status'),
+  getStatus: (): Promise<KYCStatusResponse> =>
+    api.get<KYCStatusResponse>('/kyc/status'),
 
   getPrefill: (): Promise<ApiResponse<Record<string, string>>> => api.get('/kyc/prefill'),
 

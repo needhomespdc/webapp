@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export function useKYCStatus() {
   const query = useQuery({
     queryKey: queryKeys.kyc.status,
-    queryFn: () => kycApi.getStatus().then((r) => r.data),
+    queryFn: kycApi.getStatus,
   });
 
   return { status: query.data, isLoading: query.isLoading, error: query.error };
