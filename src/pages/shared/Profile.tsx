@@ -241,15 +241,16 @@ export default function Profile() {
             <p className="text-white font-bold truncate text-lg">{displayName || 'User'}</p>
             <p className="text-white/60 text-sm truncate">{user.email}</p>
             <p className="text-white/60 text-sm">{user.phone}</p>
-            <div className="mt-2">
-              {isInvestor && user.kycStatus === 'approved' ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {user.kycStatus === 'approved' ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-3 py-1 rounded-full">
                   <RiVerifiedBadgeLine className="text-sm" />
                   Verified
                 </span>
-              ) : isInvestor ? (
-                <StatusBadge status={user.kycStatus} />
               ) : (
+                <StatusBadge status={user.kycStatus} />
+              )}
+              {!isInvestor && (
                 <span className="text-xs text-white/40 capitalize bg-white/10 px-2 py-0.5 rounded-full">{user.role}</span>
               )}
             </div>
@@ -263,6 +264,27 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      {user.kycStatus !== 'approved' && (
+        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <RiAlertLine className="text-amber-400 h-5 w-5 mt-0.5 shrink-0" />
+          <p className="text-amber-400 text-sm font-medium flex-1 min-w-0">
+            {user.kycStatus === 'pending'
+              ? "Your KYC is under review. We'll notify you once approved."
+              : user.kycStatus === 'rejected'
+              ? "Your KYC was rejected. Please re-submit to unlock all features."
+              : "Complete KYC verification to unlock withdrawals and payouts."}
+          </p>
+          {user.kycStatus !== 'pending' && (
+            <button
+              onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
+              className="shrink-0 text-xs font-semibold text-amber-400 border border-amber-500/50 rounded-lg px-3 py-1.5 hover:bg-amber-500/10 transition-colors"
+            >
+              {user.kycStatus === 'rejected' ? 'Re-submit' : 'Complete KYC'}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
@@ -295,8 +317,8 @@ export default function Profile() {
             iconBg="bg-accent/15"
             iconColor="text-accent"
             label="KYC Verification"
-            desc={isInvestor ? `Status: ${user.kycStatus?.replace('_', ' ')}` : 'Identity verification'}
-            onClick={() => navigate(isInvestor ? '/investor/kyc' : '/profile')}
+            desc={`Status: ${(user.kycStatus ?? 'not_started').replace('_', ' ')}`}
+            onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
           />
         </MenuSection>
 

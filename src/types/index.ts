@@ -5,7 +5,7 @@
 
 export type UserRole = 'investor' | 'partner';
 export type InvestorType = 'individual' | 'corporate';
-export type KYCStatus = 'not_started' | 'pending' | 'approved' | 'rejected';
+export type KYCStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected';
 
 export interface User {
   id: string;
@@ -99,7 +99,11 @@ export interface Property {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Partner promotable-properties context
+  commissionRate?: number;
+  commissionEarning?: number;
   // Detail-view only fields
+  video?: PropertyVideo | null;
   highlights?: PropertyHighlight[];
   howItWorksTitle?: string | null;
   howItWorksSteps?: PropertyHowItWorksStep[];
@@ -156,6 +160,18 @@ export interface Milestone {
   order?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface PropertyVideo {
+  id: string;
+  publicId: string;
+  url: string;
+  secureUrl: string;
+  category: string;
+  fileName: string;
+  originalFilename: string;
+  sortOrder: number;
+  createdAt: string;
 }
 
 export interface PropertyHighlight {
@@ -406,6 +422,9 @@ export interface ResaleListing {
 
 export interface KYCStatusResponse {
   status: KYCStatus;
+  statusLabel?: string;
+  verificationKind?: string;
+  verificationTitle?: string;
   submittedAt?: string;
   reviewedAt?: string;
   rejectionReason?: string;
@@ -415,26 +434,40 @@ export interface KYCStatusResponse {
 
 export interface CommissionWallet {
   id: string;
-  partnerId: string;
-  balance: number;
-  totalEarned: number;
   currency: string;
+  availableBalance: number;
+  pendingCommissions: number;
+  totalEarned: number;
+  paidOut: number;
+  minimumPayout: number;
+  payoutFeePercent: number;
+  updatedAt: string;
 }
 
 export interface CommissionEntry {
   id: string;
-  partnerId: string;
-  investmentId: string;
-  investorId: string;
+  type: 'earned' | 'payout';
+  amount: number;
+  feeAmount: number;
+  status: string;
+  reference: string;
+  occurredAt: string;
+  processedAt?: string | null;
   propertyTitle: string;
-  commissionAmount: number;
-  commissionRate: number;
-  status: 'pending' | 'approved' | 'paid';
-  createdAt: string;
+  location?: string | null;
+  propertyImageUrl?: string | null;
+  subtitle: string;
+  investorName?: string | null;
+  investmentAmount?: number | null;
+  commissionRate?: number | null;
+  leadSource?: string | null;
+  payoutAccount?: unknown | null;
+  processingFee?: number | null;
 }
 
 export interface ReferralAnalytics {
   totalClicks: number;
+  totalShares?: number;
   totalConversions: number;
   totalLifetimeEarnings: number;
   clicksByPeriod: { date: string; clicks: number }[];

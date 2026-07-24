@@ -16,7 +16,7 @@ import {
 import { toast } from '@/hooks/useToast';
 import { PropertyCard } from '@/components/property/PropertyCard';
 
-export default function Favorites() {
+export default function PartnerFavorites() {
   const [page, setPage] = useState(1);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const { favorites, pagination, isLoading } = useFavoritesList(page, 10);
@@ -51,8 +51,8 @@ export default function Favorites() {
           title="No favorites yet"
           description="Save properties you're interested in to find them here later."
           action={
-            <Link to="/investor/marketplace">
-              <Button variant="outline" size="sm">Browse Marketplace</Button>
+            <Link to="/partner/properties">
+              <Button variant="outline" size="sm">Browse Properties</Button>
             </Link>
           }
         />
@@ -64,13 +64,14 @@ export default function Favorites() {
               property={property}
               isFavorited
               onToggleFavorite={() => setConfirmId(property.id)}
+              basePath="/partner/properties"
             />
           ))}
         </div>
       )}
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6">
+        <div className="flex items-center justify-center gap-3 pt-6">
           <Button
             variant="outline"
             size="sm"

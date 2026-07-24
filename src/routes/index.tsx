@@ -29,8 +29,12 @@ const Favorites = lazy(() => import('@/pages/investor/Favorites'));
 // Partner pages
 const PartnerDashboard = lazy(() => import('@/pages/partner/PartnerDashboard'));
 const PartnerProperties = lazy(() => import('@/pages/partner/PartnerProperties'));
-const Commissions = lazy(() => import('@/pages/partner/Commissions'));
-const PartnerWallet = lazy(() => import('@/pages/partner/PartnerWallet'));
+const PartnerShare = lazy(() => import('@/pages/partner/Share'));
+const CommissionEarnings = lazy(() => import('@/pages/partner/CommissionEarnings'));
+const CommissionWallet = lazy(() => import('@/pages/partner/CommissionWallet'));
+const PartnerFavorites = lazy(() => import('@/pages/partner/Favorites'));
+const PartnerPropertyDetail = lazy(() => import('@/pages/partner/PartnerPropertyDetail'));
+const PartnerKYCPage = lazy(() => import('@/pages/partner/KYCPage'));
 
 // Shared pages
 const Notifications = lazy(() => import('@/pages/shared/Notifications'));
@@ -100,8 +104,13 @@ export const router = createBrowserRouter([
         children: [
           { path: '/partner/dashboard', element: withSuspense(PartnerDashboard) },
           { path: '/partner/properties', element: withSuspense(PartnerProperties) },
-          { path: '/partner/commissions', element: withSuspense(Commissions) },
-          { path: '/partner/wallet', element: withSuspense(PartnerWallet) },
+          { path: '/partner/properties/:slug', element: withSuspense(PartnerPropertyDetail) },
+          { path: '/partner/share', element: withSuspense(PartnerShare) },
+          { path: '/partner/commission-earnings', element: withSuspense(CommissionEarnings) },
+          { path: '/partner/wallet', element: withSuspense(CommissionWallet) },
+          { path: '/partner/kyc', element: withSuspense(PartnerKYCPage) },
+          { path: '/partner/add-bank-account', element: withSuspense(AddBankAccount) },
+          { path: '/partner/favorites', element: withSuspense(PartnerFavorites) },
           { path: '/partner/notifications', element: withSuspense(Notifications) },
           { path: '/partner/support', element: withSuspense(Support) },
           { path: '/partner/settings', element: withSuspense(Settings) },

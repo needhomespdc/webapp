@@ -237,7 +237,7 @@ export default function Marketplace() {
 
       {/* Pagination — only shown when there are multiple pages */}
       {pagination && pagination.totalPages > 1 && properties.length > 0 && (
-        <div className="flex items-center justify-center gap-3 pt-2">
+        <div className="flex items-center justify-center gap-3 pt-6">
           <Button variant="outline" size="sm" disabled={!hasPrevPage} onClick={() => setPage((p) => p - 1)}>
             Previous
           </Button>

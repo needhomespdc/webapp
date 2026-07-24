@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import {
   RiShieldCheckLine,
@@ -14,30 +14,18 @@ import {
   RiShieldLine,
   RiIdCardLine,
   RiImageLine,
-  RiUploadCloud2Line,
   RiLockLine,
 } from 'react-icons/ri';
-import { mediaApi } from '@/api/media.api';
 import { useAuth } from '@/hooks/useAuth';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
-import {
-  useKYCStatus,
-  useVerifyNIN,
-  useVerifyLiveness,
-  useSubmitKYC,  // used by CorporateKYCFlow
-  useCorporateVerifyAccountManager,
-  useCorporateSubmitCAC,
-} from '@/hooks/useKYC';
+import { useKYCStatus, useVerifyNIN, useVerifyLiveness } from '@/hooks/useKYC';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const SECURITY_POINTS = [
   'Your NIN and selfie are encrypted during verification.',
@@ -60,7 +48,7 @@ const WHAT_YOU_NEED = [
   },
 ];
 
-// ─── Centered flow wrapper (desktop card) ─────────────────────────────────────
+// ─── Centered flow wrapper ────────────────────────────────────────────────────
 
 function FlowCard({ children }: { children: React.ReactNode }) {
   return (
@@ -71,8 +59,6 @@ function FlowCard({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-// ─── Shared step header ───────────────────────────────────────────────────────
 
 function StepHeader({ onBack, stepLabel }: { onBack: () => void; stepLabel?: string }) {
   return (
@@ -92,7 +78,7 @@ function StepHeader({ onBack, stepLabel }: { onBack: () => void; stepLabel?: str
   );
 }
 
-// ─── Selfie step (WebRTC) ─────────────────────────────────────────────────────
+// ─── Selfie step ──────────────────────────────────────────────────────────────
 
 function SelfieStep({
   nin,
@@ -164,7 +150,7 @@ function SelfieStep({
     verifyMutation.mutate(
       { nin, photoBase64: capturedBase64, firstname, lastname },
       {
-        onSuccess: () => onVerified(capturedBase64),
+        onSuccess: () => onVerified(capturedBase64!),
         onError: (err) =>
           toast.error(err instanceof ApiError ? err.message : 'Liveness check failed. Please retake your selfie.'),
       }
@@ -181,7 +167,6 @@ function SelfieStep({
         </p>
       </div>
 
-      {/* Camera / photo area — capped to feel natural on desktop */}
       <div
         onClick={!cameraActive && !capturedImg && !cameraError ? startCamera : undefined}
         className={cn(
@@ -198,9 +183,7 @@ function SelfieStep({
         {cameraError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center gap-3">
             <p className="text-red-400 text-sm">{cameraError}</p>
-            <button onClick={startCamera} className="text-accent text-sm font-medium">
-              Try again
-            </button>
+            <button onClick={startCamera} className="text-accent text-sm font-medium">Try again</button>
           </div>
         )}
         {cameraActive && (
@@ -249,12 +232,13 @@ function SelfieStep({
 
 // ─── Individual KYC flow ──────────────────────────────────────────────────────
 
-type IndividualStep = 'nin' | 'selfie' | 'success';
+type FlowStep = 'nin' | 'selfie' | 'success';
 
-function IndividualFlow({ onClose }: { onClose: () => void }) {
+function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [step, setStep] = useState<IndividualStep>('nin');
+  const queryClient = useQueryClient();
+  const [step, setStep] = useState<FlowStep>('nin');
   const [nin, setNin] = useState('');
   const [firstname, setFirstname] = useState(user?.firstName ?? '');
   const [lastname, setLastname] = useState(user?.lastName ?? '');
@@ -275,14 +259,11 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
     );
   };
 
-  const queryClient = useQueryClient();
-
-  const handleLivenessVerified = () => {
+  const handleLivenessVerified = (_photoBase64: string) => {
     setStep('success');
     queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
   };
 
-  // ── NIN step ──
   if (step === 'nin') {
     return (
       <FlowCard>
@@ -369,7 +350,6 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // ── Selfie step ──
   if (step === 'selfie') {
     return (
       <FlowCard>
@@ -382,66 +362,64 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-
-  // ── Success step ──
-  if (step === 'success') {
-    return (
-      <FlowCard>
-        <div className="space-y-6 text-center pt-4">
-          <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center mx-auto">
-            <RiCheckLine className="h-12 w-12 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Identity verification complete</h2>
-            <p className="text-foreground/50 text-sm mt-2 leading-relaxed">
-              Your verification is complete. You can now invest, fund your wallet, and withdraw.
-            </p>
-          </div>
-
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
-            <p className="text-foreground font-semibold text-sm mb-1">You can now</p>
-            {['Invest in properties', 'Fund your wallet', 'Withdraw to your bank account'].map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
-                <span className="text-foreground/70 text-sm">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
-            <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
-            <span className="text-foreground/50 text-sm">Powered by QoreID</span>
-          </div>
-
-          <Button
-            className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
-            onClick={() => navigate('/investor/dashboard')}
-          >
-            Go to Dashboard
-          </Button>
+  return (
+    <FlowCard>
+      <div className="space-y-6 text-center pt-4">
+        <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center mx-auto">
+          <RiCheckLine className="h-12 w-12 text-white" />
         </div>
-      </FlowCard>
-    );
-  }
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Identity verification complete</h2>
+          <p className="text-foreground/50 text-sm mt-2 leading-relaxed">
+            Your verification is under review. You'll be notified once it's approved.
+          </p>
+        </div>
 
-  return null;
+        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
+          <p className="text-foreground font-semibold text-sm mb-1">Once approved you can</p>
+          {['Withdraw your commission earnings', 'Request payout to your bank account', 'Access all partner features'].map((item) => (
+            <div key={item} className="flex items-center gap-3">
+              <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
+              <span className="text-foreground/70 text-sm">{item}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
+          <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
+          <span className="text-foreground/50 text-sm">Powered by QoreID</span>
+        </div>
+
+        <Button
+          className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
+          onClick={() => navigate('/partner/dashboard')}
+        >
+          Go to Dashboard
+        </Button>
+      </div>
+    </FlowCard>
+  );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function KYCPage() {
+export default function PartnerKYCPage() {
   const { user } = useAuth();
   const { status, isLoading } = useKYCStatus();
   const [flowActive, setFlowActive] = useState(false);
 
+  useEffect(() => {
+    if (flowActive) {
+      document.querySelector('main')?.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }
+  }, [flowActive]);
+
   if (isLoading) return <Loader fullPage={false} />;
 
   const kycStatus = status?.status ?? user?.kycStatus ?? 'not_submitted';
-  const isCorporate = user?.role === 'investor' && user?.investorType === 'corporate';
-  const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
 
-  if (flowActive && !isCorporate) {
-    return <IndividualFlow onClose={() => setFlowActive(false)} />;
+  if (flowActive) {
+    return <PartnerKYCFlow onClose={() => setFlowActive(false)} />;
   }
 
   const ctaConfig = {
@@ -452,22 +430,21 @@ export default function KYCPage() {
   } as const;
   const cta = ctaConfig[kycStatus as keyof typeof ctaConfig] ?? ctaConfig.not_submitted;
 
-  const shieldStyle = {
+  const statusStyle = {
     approved: { bg: 'bg-green-500/15', icon: 'text-green-400' },
     rejected: { bg: 'bg-red-500/10', icon: 'text-red-400' },
     pending: { bg: 'bg-amber-500/10', icon: 'text-amber-400' },
     not_submitted: { bg: 'bg-accent/10', icon: 'text-accent' },
   }[kycStatus] ?? { bg: 'bg-accent/10', icon: 'text-accent' };
 
-  // Reusable hero block
   const Hero = ({ align }: { align: 'center' | 'left' }) => (
     <div className={cn('flex flex-col pt-2 pb-2', align === 'center' ? 'items-center text-center' : 'items-start text-left')}>
-      <div className={cn('w-20 h-20 rounded-full flex items-center justify-center mb-4', shieldStyle.bg)}>
-        <RiShieldCheckLine className={cn('h-10 w-10', shieldStyle.icon)} />
+      <div className={cn('w-20 h-20 rounded-full flex items-center justify-center mb-4', statusStyle.bg)}>
+        <RiShieldCheckLine className={cn('h-10 w-10', statusStyle.icon)} />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Identity Verification (KYC)</h1>
       <p className="text-foreground/50 text-sm mt-2 leading-relaxed max-w-sm">
-        Verify your identity to unlock investing, wallet funding, and withdrawals on NeedHomes.
+        Verify your identity to unlock commission withdrawals and payouts on NeedHomes.
       </p>
     </div>
   );
@@ -487,8 +464,7 @@ export default function KYCPage() {
   ) : null;
 
   const WhatYouNeed = () => {
-    if (kycStatus === 'approved') return;
-
+    if (kycStatus === 'approved') return null;
     return (
       <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="px-4 pt-4 pb-3">
@@ -507,7 +483,7 @@ export default function KYCPage() {
         ))}
       </div>
     );
-  }
+  };
 
   const SecurityPrivacy = () => (
     <div className="bg-primary rounded-2xl p-4">
@@ -526,7 +502,7 @@ export default function KYCPage() {
     </div>
   );
 
-  const CtaButton = ({ fullWidth }: { fullWidth?: boolean }) => !isCorporate ? (
+  const CtaButton = ({ fullWidth }: { fullWidth?: boolean }) => (
     <Button
       className={cn(
         'h-12 rounded-2xl font-semibold',
@@ -534,17 +510,17 @@ export default function KYCPage() {
         cta.active ? 'bg-accent hover:bg-accent/90 text-white' : 'bg-foreground/8 text-foreground/30 cursor-default'
       )}
       disabled={!cta.active}
-      onClick={() => cta.active && setFlowActive(true)}
+      onClick={() => setFlowActive(true)}
     >
       {cta.label}
     </Button>
-  ) : null;
+  );
 
   const DesktopStatusNotice = () => {
     if (kycStatus === 'approved') return (
       <div className="bg-green-500/8 border border-green-500/20 rounded-2xl px-4 py-4 space-y-2.5">
         <p className="text-green-400 font-semibold text-sm">Your identity is verified</p>
-        {['Invest in properties', 'Fund your wallet', 'Withdraw to your bank account'].map((item) => (
+        {['Withdraw commission earnings', 'Request payout to your bank account', 'Access all partner features'].map((item) => (
           <div key={item} className="flex items-center gap-2.5">
             <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
             <span className="text-foreground/70 text-sm">{item}</span>
@@ -565,24 +541,19 @@ export default function KYCPage() {
 
   return (
     <div className="pb-4 md:pb-8">
-
-      {/* ── Mobile layout: original order ─────────────────────────────────── */}
+      {/* Mobile */}
       <div className="md:hidden space-y-6">
         <Hero align="center" />
         <StatusRow />
         <RejectionBanner />
-        {}
         <WhatYouNeed />
         <SecurityPrivacy />
         <p className="text-center text-foreground/30 text-xs">Powered by QoreID</p>
         <CtaButton fullWidth />
-        {canStart && isCorporate && <CorporateKYCFlow />}
       </div>
 
-      {/* ── Desktop layout: two-column ─────────────────────────────────────── */}
+      {/* Desktop two-column */}
       <div className="hidden md:grid md:grid-cols-[1fr_340px] md:gap-10 md:items-start md:pt-4 max-w-4xl mx-auto">
-
-        {/* Left: hero + status + notices + CTA */}
         <div className="space-y-6">
           <Hero align="left" />
           <StatusRow />
@@ -590,8 +561,6 @@ export default function KYCPage() {
           <DesktopStatusNotice />
           <CtaButton />
         </div>
-
-        {/* Right: info cards */}
         <div className="flex flex-col gap-4">
           <WhatYouNeed />
           <SecurityPrivacy />
@@ -599,110 +568,8 @@ export default function KYCPage() {
             <RiLockLine className="text-foreground/30 h-3 w-3 shrink-0" />
             <span className="text-foreground/40 text-xs">Powered by QoreID</span>
           </div>
-          {canStart && isCorporate && <CorporateKYCFlow />}
         </div>
       </div>
-    </div>
-  );
-}
-
-// ─── Corporate KYC flow (unchanged) ──────────────────────────────────────────
-
-function CorporateKYCFlow() {
-  const [step, setStep] = useState<'manager' | 'cac'>('manager');
-  const [nin, setNin] = useState('');
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [cacNumber, setCacNumber] = useState('');
-  const [cacFile, setCacFile] = useState<File | null>(null);
-
-  const verifyManagerMutation = useCorporateVerifyAccountManager();
-  const submitCacMutation = useCorporateSubmitCAC();
-  const submitKYCMutation = useSubmitKYC();
-  const uploadMutation = useMutation({ mutationFn: (file: File) => mediaApi.upload(file) });
-
-  const handleVerifyManager = () => {
-    if (!nin || !firstname || !lastname) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-    verifyManagerMutation.mutate(
-      { nin, firstname, lastname },
-      {
-        onSuccess: () => { toast.success('Account manager verified'); setStep('cac'); },
-        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Verification failed'),
-      }
-    );
-  };
-
-  const handleSubmitCac = async () => {
-    if (!cacNumber || !cacFile) {
-      toast.error('Please provide CAC number and document');
-      return;
-    }
-    try {
-      const uploadRes = await uploadMutation.mutateAsync(cacFile);
-      await submitCacMutation.mutateAsync({ cacNumber, cacDocumentUrl: uploadRes.data.url });
-      await submitKYCMutation.mutateAsync();
-      toast.success('Corporate verification submitted for review');
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Failed to submit CAC document');
-    }
-  };
-
-  if (step === 'manager') {
-    return (
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-5 space-y-4">
-        <p className="text-foreground font-semibold text-sm">Step 1: Verify Account Manager</p>
-        <div className="space-y-2">
-          <Label>National Identification Number (NIN)</Label>
-          <Input value={nin} onChange={(e) => setNin(e.target.value.replace(/\D/g, ''))} maxLength={11} placeholder="Enter 11-digit NIN" />
-        </div>
-        <div className="space-y-2">
-          <Label>First Name</Label>
-          <Input value={firstname} onChange={(e) => setFirstname(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label>Last Name</Label>
-          <Input value={lastname} onChange={(e) => setLastname(e.target.value)} />
-        </div>
-        <Button className="w-full bg-accent hover:bg-accent/90 text-white" onClick={handleVerifyManager} disabled={verifyManagerMutation.isPending}>
-          {verifyManagerMutation.isPending ? 'Verifying...' : 'Verify & Continue'}
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-5 space-y-4">
-      <p className="text-foreground font-semibold text-sm">Step 2: Submit CAC Document</p>
-      <div className="space-y-2">
-        <Label>CAC Registration Number</Label>
-        <Input value={cacNumber} onChange={(e) => setCacNumber(e.target.value)} placeholder="RC123456" />
-      </div>
-      <div className="space-y-2">
-        <Label>CAC Certificate</Label>
-        <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-foreground/20 rounded-xl p-6 cursor-pointer hover:border-accent/40 transition-colors">
-          <RiUploadCloud2Line className="h-8 w-8 text-foreground/40" />
-          <span className="text-foreground/50 text-sm text-center">
-            {cacFile ? (
-              <span className="flex items-center gap-1 text-foreground">
-                <RiFileTextLine className="h-4 w-4" />{cacFile.name}
-              </span>
-            ) : (
-              'Click to upload PDF or image'
-            )}
-          </span>
-          <input type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => setCacFile(e.target.files?.[0] ?? null)} />
-        </label>
-      </div>
-      <Button
-        className="w-full bg-accent hover:bg-accent/90 text-white"
-        onClick={handleSubmitCac}
-        disabled={uploadMutation.isPending || submitCacMutation.isPending || submitKYCMutation.isPending}
-      >
-        {uploadMutation.isPending || submitCacMutation.isPending ? 'Uploading...' : submitKYCMutation.isPending ? 'Submitting...' : 'Submit for Review'}
-      </Button>
     </div>
   );
 }
