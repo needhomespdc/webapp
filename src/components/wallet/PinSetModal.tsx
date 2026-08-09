@@ -85,7 +85,8 @@ export function PinSetModal({ open, onOpenChange, mode }: PinSetModalProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: () => walletApi.setPin({ pin: newPin }),
+    mutationFn: () =>
+      walletApi.setPin(mode === 'change' ? { pin: newPin, currentPin } : { pin: newPin }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.pinStatus });

@@ -14,6 +14,7 @@ import {
   RiQuestionLine,
   RiKeyLine,
   RiFingerprint2Line,
+  RiRepeat2Line,
   RiEyeLine,
   RiEyeOffLine,
   RiPencilLine,
@@ -293,50 +294,93 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
-        {/* Security — col 1 row 1 on desktop, first on mobile */}
-        <MenuSection title="Security">
-          <MenuItem
-            icon={<RiLockPasswordLine />}
-            iconBg="bg-purple-500/15"
-            iconColor="text-purple-400"
-            label="Change Password"
-            desc="Update your account password"
-            onClick={() => setPwOpen(true)}
-          />
-          <MenuItem
-            icon={<RiKeyLine />}
-            iconBg="bg-blue-500/15"
-            iconColor="text-blue-400"
-            label="Security Questions"
-            desc={sqStatus?.isSet ? 'Questions are set' : 'Set up security questions'}
-            onClick={() => {
-              setQuestionOne(sqStatus?.questionOne ?? '');
-              setQuestionTwo(sqStatus?.questionTwo ?? '');
-              setAnswerOne('');
-              setAnswerTwo('');
-              setSqOpen(true);
-            }}
-          />
-          <MenuItem
-            icon={<RiFingerprint2Line />}
-            iconBg="bg-accent/15"
-            iconColor="text-accent"
-            label={wallet?.hasTransactionPin ? 'Update Transaction PIN' : 'Set Transaction PIN'}
-            desc={wallet?.hasTransactionPin ? 'Change your 4-digit wallet transaction PIN' : 'Create a PIN to secure your transactions'}
-            onClick={() => setPinModalOpen(true)}
-          />
-          <MenuItem
-            icon={<RiShieldCheckLine />}
-            iconBg="bg-green-500/15"
-            iconColor="text-green-400"
-            label="KYC Verification"
-            desc={`Status: ${(user.kycStatus ?? 'not_started').replace('_', ' ')}`}
-            onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
-          />
-        </MenuSection>
+        {/* Col 1: Security + Account */}
+        <div className="space-y-5">
+          <MenuSection title="Security">
+            <MenuItem
+              icon={<RiLockPasswordLine />}
+              iconBg="bg-purple-500/15"
+              iconColor="text-purple-400"
+              label="Change Password"
+              desc="Update your account password"
+              onClick={() => setPwOpen(true)}
+            />
+            <MenuItem
+              icon={<RiKeyLine />}
+              iconBg="bg-blue-500/15"
+              iconColor="text-blue-400"
+              label="Security Questions"
+              desc={sqStatus?.isSet ? 'Questions are set' : 'Set up security questions'}
+              onClick={() => {
+                setQuestionOne(sqStatus?.questionOne ?? '');
+                setQuestionTwo(sqStatus?.questionTwo ?? '');
+                setAnswerOne('');
+                setAnswerTwo('');
+                setSqOpen(true);
+              }}
+            />
+            <MenuItem
+              icon={<RiFingerprint2Line />}
+              iconBg="bg-accent/15"
+              iconColor="text-accent"
+              label={wallet?.hasTransactionPin ? 'Update Transaction PIN' : 'Set Transaction PIN'}
+              desc={wallet?.hasTransactionPin ? 'Change your 4-digit wallet transaction PIN' : 'Create a PIN to secure your transactions'}
+              onClick={() => setPinModalOpen(true)}
+            />
+            <MenuItem
+              icon={<RiShieldCheckLine />}
+              iconBg="bg-green-500/15"
+              iconColor="text-green-400"
+              label="KYC Verification"
+              desc={`Status: ${(user.kycStatus ?? 'not_started').replace('_', ' ')}`}
+              onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
+            />
+          </MenuSection>
 
-        {/* Support & Information — spans both rows on desktop (col 2), second on mobile */}
-        <div className="md:row-span-2">
+          <MenuSection title="Account">
+            <MenuItem
+              icon={<RiAlertLine />}
+              iconBg="bg-amber-500/15"
+              iconColor="text-amber-500"
+              label="Deactivate Account"
+              desc="Temporarily disable your NeedHomes account"
+              onClick={() => setDeactivateOpen(true)}
+            />
+            <MenuItem
+              icon={<RiDeleteBin6Line />}
+              iconBg="bg-red-500/15"
+              iconColor="text-red-400"
+              label="Delete Account"
+              desc="Permanently delete your account and data"
+              labelClass="text-red-400"
+              onClick={() => setDeleteOpen(true)}
+            />
+            <MenuItem
+              icon={<RiLogoutBoxLine />}
+              iconBg="bg-foreground/10"
+              iconColor="text-foreground/50"
+              label="Log Out"
+              desc="Sign out of your NeedHomes account"
+              onClick={() => setLogoutOpen(true)}
+            />
+          </MenuSection>
+        </div>
+
+        {/* Col 2: Investments (investor only) + Support & Information */}
+        <div className="space-y-5">
+          {isInvestor && (
+            <MenuSection title="Investments">
+              <MenuItem
+                icon={<RiRepeat2Line />}
+                iconBg="bg-green-500/15"
+                iconColor="text-green-400"
+                label="Exit & Resale"
+                desc="Manage your exits and resale requests"
+                onClick={() => navigate('/investor/exits-and-resales')}
+              />
+            </MenuSection>
+          )}
+
           <MenuSection title="Support & Information">
             <MenuItem
               icon={<RiHeadphoneLine />}
@@ -372,35 +416,6 @@ export default function Profile() {
             />
           </MenuSection>
         </div>
-
-        {/* Account — col 1 row 2 on desktop, last on mobile */}
-        <MenuSection title="Account">
-          <MenuItem
-            icon={<RiAlertLine />}
-            iconBg="bg-amber-500/15"
-            iconColor="text-amber-500"
-            label="Deactivate Account"
-            desc="Temporarily disable your NeedHomes account"
-            onClick={() => setDeactivateOpen(true)}
-          />
-          <MenuItem
-            icon={<RiDeleteBin6Line />}
-            iconBg="bg-red-500/15"
-            iconColor="text-red-400"
-            label="Delete Account"
-            desc="Permanently delete your account and data"
-            labelClass="text-red-400"
-            onClick={() => setDeleteOpen(true)}
-          />
-          <MenuItem
-            icon={<RiLogoutBoxLine />}
-            iconBg="bg-foreground/10"
-            iconColor="text-foreground/50"
-            label="Log Out"
-            desc="Sign out of your NeedHomes account"
-            onClick={() => setLogoutOpen(true)}
-          />
-        </MenuSection>
 
       </div>
 

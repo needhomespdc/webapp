@@ -70,6 +70,6 @@ export const walletApi = {
   getPinStatus: (): Promise<import('@/types').TransactionPinStatus> =>
     api.get('/wallet/transaction-pin/status'),
 
-  setPin: (payload: { pin: string }): Promise<ApiResponse<null>> =>
+  setPin: (payload: { pin: string; currentPin?: string }): Promise<ApiResponse<null>> =>
     api.post('/wallet/transaction-pin', payload),
 };
