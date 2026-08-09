@@ -13,6 +13,7 @@ import {
   RiShieldLine,
   RiQuestionLine,
   RiKeyLine,
+  RiFingerprint2Line,
   RiEyeLine,
   RiEyeOffLine,
   RiPencilLine,
@@ -25,6 +26,8 @@ import { mediaApi } from '@/api/media.api';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import { SelectDropdown, type SelectOption } from '@/components/shared/SelectDropdown';
 import { useAuth } from '@/hooks/useAuth';
+import { useWallet } from '@/hooks/useWallet';
+import { PinSetModal } from '@/components/wallet/PinSetModal';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { Button } from '@/components/ui/button';
@@ -63,6 +66,7 @@ const SECURITY_QUESTIONS = [
 
 export default function Profile() {
   const { user, logout, updateProfile } = useAuth();
+  const { wallet } = useWallet();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 639px)');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +110,7 @@ export default function Profile() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
 
   const { data: sqStatus } = useQuery({
     queryKey: ['auth', 'security-questions'],
@@ -313,9 +318,17 @@ export default function Profile() {
             }}
           />
           <MenuItem
-            icon={<RiShieldCheckLine />}
+            icon={<RiFingerprint2Line />}
             iconBg="bg-accent/15"
             iconColor="text-accent"
+            label={wallet?.hasTransactionPin ? 'Update Transaction PIN' : 'Set Transaction PIN'}
+            desc={wallet?.hasTransactionPin ? 'Change your 4-digit wallet transaction PIN' : 'Create a PIN to secure your transactions'}
+            onClick={() => setPinModalOpen(true)}
+          />
+          <MenuItem
+            icon={<RiShieldCheckLine />}
+            iconBg="bg-green-500/15"
+            iconColor="text-green-400"
             label="KYC Verification"
             desc={`Status: ${(user.kycStatus ?? 'not_started').replace('_', ' ')}`}
             onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
@@ -574,6 +587,13 @@ export default function Profile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Transaction PIN */}
+      <PinSetModal
+        open={pinModalOpen}
+        onOpenChange={setPinModalOpen}
+        mode={wallet?.hasTransactionPin ? 'change' : 'set'}
+      />
     </div>
   );
 }

@@ -49,6 +49,7 @@ import { toast } from '@/hooks/useToast';
 import { OutrightAcquireSheet } from '@/components/investment/OutrightAcquireSheet';
 import { CoDevelopmentJoinSheet } from '@/components/investment/CoDevelopmentJoinSheet';
 import { LandBankingReserveSheet } from '@/components/investment/LandBankingReserveSheet';
+import { SaveToOwnSheet } from '@/components/investment/SaveToOwnSheet';
 import { InvestmentSuccessModal } from '@/components/investment/InvestmentSuccessModal';
 import type { Property, Milestone, Investment } from '@/types';
 
@@ -955,6 +956,16 @@ export default function PropertyDetail() {
       {/* ── Land banking reserve sheet ──────────────────────────────────────── */}
       {property.investmentModelType === 'land_banking' && (
         <LandBankingReserveSheet
+          open={acquireOpen}
+          onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
+          property={property}
+          onSuccess={(investment) => setSuccessInvestment(investment)}
+        />
+      )}
+
+      {/* ── Save-to-Own sheet ───────────────────────────────────────────────── */}
+      {property.investmentModelType === 'save_to_own' && (
+        <SaveToOwnSheet
           open={acquireOpen}
           onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
           property={property}
