@@ -19,6 +19,7 @@ export function AppShell({ navItems }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     mainRef.current?.scrollTo(0, 0);
   }, [pathname]);
 
