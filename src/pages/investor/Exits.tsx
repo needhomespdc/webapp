@@ -355,45 +355,37 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
 // ─── Exit card ─────────────────────────────────────────────────────────────────
 
 function ExitCard({ exit }: { exit: ExitRequest }) {
-  const isCompleted = exit.status === 'completed';
-  const isPending = exit.status === 'pending';
-
-  const col1Label = isCompleted ? 'Exited On' : 'Requested On';
-  const col2Label = isCompleted ? 'Shares Exited' : 'Shares to Exit';
-  const col3Label = isCompleted ? 'Amount Received' : 'Est. Payout';
-  const col3Value = exit.finalPayout > 0 ? formatCurrency(exit.finalPayout) : formatCurrency(exit.principalAmount);
-
   return (
     <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3">
       {/* Top row */}
       <div className="flex items-start gap-3">
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
-          {exit.investment?.propertyImageUrl
-            ? <img src={exit.investment.propertyImageUrl} alt={exit.investment.title} className="w-full h-full object-cover" />
+          {exit.propertyImageUrl
+            ? <img src={exit.propertyImageUrl} alt={exit.title} className="w-full h-full object-cover" />
             : <div className="w-full h-full flex items-center justify-center"><RiBuildingLine className="h-6 w-6 text-foreground/30" /></div>
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-foreground font-bold text-sm line-clamp-1">{exit.investment?.title ?? 'Investment'}</p>
-          <p className="text-foreground/50 text-xs mt-0.5">{exit.investment?.location ?? '—'}</p>
+          <p className="text-foreground font-bold text-sm line-clamp-1">{exit.title}</p>
+          <p className="text-foreground/50 text-xs mt-0.5">{exit.location}</p>
         </div>
         <StatusBadge status={exit.status} />
       </div>
 
-      {/* 3-col grid */}
+      {/* 3-col grid — labels/values come from server */}
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
-          <p className="text-foreground/40">{col1Label}</p>
-          <p className="text-foreground font-medium mt-0.5">{formatDate(exit.createdAt)}</p>
+          <p className="text-foreground/40">Date</p>
+          <p className="text-foreground font-medium mt-0.5">{exit.dateLabel}</p>
         </div>
         <div>
-          <p className="text-foreground/40">{col2Label}</p>
-          <p className="text-foreground font-medium mt-0.5">{exit.investment?.unitsOwnedLabel ?? '—'}</p>
+          <p className="text-foreground/40">Shares</p>
+          <p className="text-foreground font-medium mt-0.5">{exit.sharesLabel}</p>
         </div>
         <div>
-          <p className="text-foreground/40">{col3Label}</p>
-          <p className={cn('font-semibold mt-0.5', isCompleted ? 'text-green-400' : 'text-foreground')}>
-            {col3Value}
+          <p className="text-foreground/40">{exit.amountLabel}</p>
+          <p className={cn('font-semibold mt-0.5', exit.isAmountReceived ? 'text-green-400' : 'text-foreground')}>
+            {formatCurrency(exit.amount)}
           </p>
         </div>
       </div>
@@ -404,10 +396,6 @@ function ExitCard({ exit }: { exit: ExitRequest }) {
           <RiArrowRightSLine className="h-4 w-4" />
         </div>
       </div>
-
-      {exit.rejectionReason && (
-        <p className="text-red-400 text-xs bg-red-500/10 rounded-lg px-3 py-2">{exit.rejectionReason}</p>
-      )}
     </div>
   );
 }
@@ -422,15 +410,15 @@ export default function Exits() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const { eligible, isLoading: eligibleLoading } = useEligibleExits();
-  const { exits, isLoading } = useExitList('history');
+  const { exits, summary, isLoading } = useExitList('history');
 
-  const totalExits = exits.length;
-  const pendingCount = exits.filter((e) => e.status === 'pending').length;
+  const totalExits = summary.completedCount + summary.pendingCount;
+  const pendingCount = summary.pendingCount;
 
   const filtered = (() => {
-    if (tab === 'pending') return exits.filter((e) => e.status === 'pending');
+    if (tab === 'pending') return exits.filter((e) => e.status === 'pending' || e.status === 'under_review');
     if (tab === 'cancelled') return exits.filter((e) => e.status === 'cancelled' || e.status === 'rejected');
-    return exits.filter((e) => e.status !== 'cancelled' && e.status !== 'rejected');
+    return exits;
   })();
 
   return (

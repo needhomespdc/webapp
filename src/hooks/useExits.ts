@@ -17,7 +17,11 @@ export function useExitList(filter = 'history') {
     queryFn: () => exitsApi.list(filter),
   });
 
-  return { exits: query.data?.data ?? [], isLoading: query.isLoading };
+  return {
+    exits: query.data?.data ?? [],
+    summary: query.data?.summary ?? { completedCount: 0, pendingCount: 0 },
+    isLoading: query.isLoading,
+  };
 }
 
 export function useExitDetail(exitId: string | undefined) {

@@ -1,5 +1,5 @@
 import { api } from '@/lib/fetchClient';
-import type { ExitRequest, EligibleInvestment, PaginatedResponse, ApiResponse } from '@/types';
+import type { ExitRequest, ExitsListResponse, EligibleInvestment, ApiResponse } from '@/types';
 
 export const exitsApi = {
   getEligible: (): Promise<EligibleInvestment[]> =>
@@ -10,8 +10,8 @@ export const exitsApi = {
     termsAccepted: boolean;
   }): Promise<ApiResponse<ExitRequest>> => api.post<ApiResponse<ExitRequest>>('/exits', payload),
 
-  list: (filter = 'history'): Promise<PaginatedResponse<ExitRequest>> =>
-    api.get<PaginatedResponse<ExitRequest>>(`/exits/me?filter=${filter}`),
+  list: (filter = 'history'): Promise<ExitsListResponse> =>
+    api.get<ExitsListResponse>(`/exits/me?filter=${filter}`),
 
   getById: (exitId: string): Promise<ApiResponse<ExitRequest>> =>
     api.get<ApiResponse<ExitRequest>>(`/exits/${exitId}`),

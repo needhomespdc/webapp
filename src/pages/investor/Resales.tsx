@@ -580,10 +580,10 @@ export default function Resales() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { eligible, isLoading: eligibleLoading } = useEligibleResales();
-  const { resales, isLoading } = useMyResales();
+  const { resales, summary, isLoading } = useMyResales();
 
-  const totalListings = resales.length;
-  const pendingCount = resales.filter((r) => r.status === 'pending').length;
+  const totalListings = summary.liveCount + summary.pendingCount;
+  const pendingCount = summary.pendingCount;
 
   const filtered = (() => {
     if (tab === 'pending') return resales.filter((r) => r.status === 'pending');
