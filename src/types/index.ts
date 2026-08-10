@@ -202,6 +202,25 @@ export interface PropertyInvestmentModelConfig {
 }
 
 
+// ─── Eligible Investment (exits/eligible & resales/eligible response shape) ────
+
+export interface EligibleInvestment {
+  investmentId: string;
+  title: string;
+  location: string;
+  propertyImageUrl: string | null;
+  investmentType: InvestmentModelType;
+  investmentTypeLabel: string;
+  quantityOwned: number;
+  quantityLabel: string;
+  investedAmount: number;
+  currentValue: number;
+  maturityDate: string | null;
+  reservationEndsAt: string | null;
+  isEligible: boolean;
+  ineligibilityReason: string | null;
+}
+
 // ─── Investment ────────────────────────────────────────────────────────────────
 // Shape confirmed from a live /investments/me list response.
 

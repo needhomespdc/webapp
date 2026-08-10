@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export function useEligibleExits() {
   const query = useQuery({
     queryKey: queryKeys.exits.eligible,
-    queryFn: () => exitsApi.getEligible().then((r) => r.data),
+    queryFn: () => exitsApi.getEligible(),
   });
 
   return { eligible: query.data ?? [], isLoading: query.isLoading };

@@ -1,9 +1,9 @@
 import { api } from '@/lib/fetchClient';
-import type { ExitRequest, Investment, PaginatedResponse, ApiResponse } from '@/types';
+import type { ExitRequest, EligibleInvestment, PaginatedResponse, ApiResponse } from '@/types';
 
 export const exitsApi = {
-  getEligible: (): Promise<ApiResponse<Investment[]>> =>
-    api.get<ApiResponse<Investment[]>>('/exits/eligible'),
+  getEligible: (): Promise<EligibleInvestment[]> =>
+    api.get<EligibleInvestment[]>('/exits/eligible'),
 
   create: (payload: {
     investmentId: string;

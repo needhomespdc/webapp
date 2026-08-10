@@ -1,5 +1,5 @@
 import { api } from '@/lib/fetchClient';
-import type { ResaleListing, Investment, PaginatedResponse, ApiResponse } from '@/types';
+import type { ResaleListing, EligibleInvestment, PaginatedResponse, ApiResponse } from '@/types';
 
 export const resalesApi = {
   getPublicList: (page = 1, limit = 10): Promise<PaginatedResponse<ResaleListing>> =>
@@ -8,8 +8,8 @@ export const resalesApi = {
   getPublicById: (resaleListingId: string): Promise<ApiResponse<ResaleListing>> =>
     api.get<ApiResponse<ResaleListing>>(`/resales/${resaleListingId}`),
 
-  getEligible: (): Promise<ApiResponse<Investment[]>> =>
-    api.get<ApiResponse<Investment[]>>('/resales/eligible'),
+  getEligible: (): Promise<EligibleInvestment[]> =>
+    api.get<EligibleInvestment[]>('/resales/eligible'),
 
   create: (payload: {
     investmentId: string;

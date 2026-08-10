@@ -9,6 +9,8 @@ import {
   RiLogoutCircleRLine,
   RiTimeLine,
   RiAddLine,
+  RiBook2Line,
+  RiBuildingLine,
 } from 'react-icons/ri';
 import { useEligibleExits, useExitList, useCreateExit } from '@/hooks/useExits';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -22,7 +24,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
-import type { ExitRequest, Investment } from '@/types';
+import type { ExitRequest, EligibleInvestment } from '@/types';
 
 // ─── Stepper ──────────────────────────────────────────────────────────────────
 
@@ -81,51 +83,68 @@ function Stepper({ step }: { step: Step }) {
 
 // ─── Investment selection card ─────────────────────────────────────────────────
 
-function InvCard({ inv, selected, onSelect }: { inv: Investment; selected?: boolean; onSelect?: () => void }) {
+function InvCard({ inv, selected, onSelect }: { inv: EligibleInvestment; selected?: boolean; onSelect?: () => void }) {
+  const selectable = onSelect !== undefined && inv.isEligible;
   return (
     <div
-      onClick={onSelect}
+      onClick={selectable ? onSelect : undefined}
       className={cn(
-        'border rounded-2xl p-3 space-y-3 transition-colors',
-        onSelect ? 'cursor-pointer' : '',
-        selected ? 'border-accent bg-accent/5' : 'border-foreground/10 bg-foreground/5 hover:border-foreground/20',
+        'border rounded-2xl p-4 transition-colors',
+        selectable ? 'cursor-pointer' : 'cursor-default',
+        !inv.isEligible ? 'opacity-60' : '',
+        selected ? 'border-accent bg-accent/5' : 'border-foreground/10 bg-foreground/5',
+        selectable && !selected ? 'hover:border-foreground/20' : '',
       )}
     >
+      {/* Header row */}
       <div className="flex items-start gap-3">
-        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
+        <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-foreground/10">
           {inv.propertyImageUrl
             ? <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center text-xl">🏠</div>
+            : <div className="w-full h-full flex items-center justify-center"><RiBuildingLine className="h-6 w-6 text-foreground/30" /></div>
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-foreground font-bold text-sm uppercase leading-tight line-clamp-1">{inv.title}</p>
-          <p className="text-foreground/50 text-xs mt-0.5">{inv.location}</p>
+          <p className="text-foreground font-bold text-sm leading-tight line-clamp-2">{inv.title}</p>
+          <p className="text-foreground/50 text-xs mt-1">{inv.location}</p>
         </div>
         {onSelect !== undefined && (
-          <div className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5', selected ? 'border-accent' : 'border-foreground/25')}>
-            {selected && <div className="w-2.5 h-2.5 rounded-full bg-accent" />}
+          <div className={cn(
+            'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0',
+            selected ? 'border-accent' : 'border-foreground/25',
+          )}>
+            {selected && <div className="w-3 h-3 rounded-full bg-accent" />}
           </div>
         )}
       </div>
-      <div className="grid grid-cols-4 gap-2">
+
+      {/* Data grid */}
+      <div className="border-t border-foreground/10 mt-3.5 pt-3.5 grid grid-cols-4 gap-2">
         <div>
-          <p className="text-foreground/40 text-[10px]">Units</p>
-          <p className="text-foreground text-xs font-semibold mt-0.5">{inv.unitsOwnedLabel}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Ownership</p>
+          <p className="text-foreground text-xs font-semibold leading-tight">{inv.quantityLabel}</p>
         </div>
         <div>
-          <p className="text-foreground/40 text-[10px]">Type</p>
-          <p className="text-foreground text-xs font-semibold mt-0.5">{inv.typeLabel}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Type</p>
+          <p className="text-foreground text-xs font-semibold leading-tight truncate">{inv.investmentTypeLabel}</p>
         </div>
         <div>
-          <p className="text-foreground/40 text-[10px]">Invested</p>
-          <p className="text-foreground text-xs font-semibold mt-0.5">{formatCurrency(inv.totalInvested)}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Invested</p>
+          <p className="text-foreground text-xs font-semibold leading-tight">{formatCurrency(inv.investedAmount)}</p>
         </div>
         <div>
-          <p className="text-foreground/40 text-[10px]">Current Value</p>
-          <p className="text-accent text-xs font-semibold mt-0.5">{formatCurrency(inv.currentValue)}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Current Value</p>
+          <p className="text-accent text-xs font-semibold leading-tight">{formatCurrency(inv.currentValue)}</p>
         </div>
       </div>
+
+      {/* Ineligibility reason */}
+      {!inv.isEligible && inv.ineligibilityReason && (
+        <div className="mt-3 flex items-start gap-2 bg-foreground/5 rounded-xl px-3 py-2">
+          <RiInformationLine className="h-3.5 w-3.5 text-foreground/40 mt-0.5 shrink-0" />
+          <p className="text-foreground/50 text-[11px] leading-relaxed">{inv.ineligibilityReason}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -135,14 +154,14 @@ function InvCard({ inv, selected, onSelect }: { inv: Investment; selected?: bool
 interface ExitRequestSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  eligible: Investment[];
+  eligible: EligibleInvestment[];
   eligibleLoading: boolean;
 }
 
 function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: ExitRequestSheetProps) {
   const isMobile = useMediaQuery('(max-width: 639px)');
   const [step, setStep] = useState<Step>('select');
-  const [selectedInv, setSelectedInv] = useState<Investment | null>(null);
+  const [selectedInv, setSelectedInv] = useState<EligibleInvestment | null>(null);
   const [agreed, setAgreed] = useState(false);
   const createMutation = useCreateExit();
 
@@ -165,7 +184,7 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
   const handleSubmit = () => {
     if (!selectedInv || !agreed) { toast.error('Please accept the exit terms'); return; }
     createMutation.mutate(
-      { investmentId: selectedInv.id, termsAccepted: true },
+      { investmentId: selectedInv.investmentId, termsAccepted: true },
       {
         onSuccess: () => {
           toast.success('Exit request submitted successfully');
@@ -213,7 +232,7 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
             ) : (
               <div className="space-y-3">
                 {eligible.map((inv) => (
-                  <InvCard key={inv.id} inv={inv} selected={selectedInv?.id === inv.id} onSelect={() => setSelectedInv(inv)} />
+                  <InvCard key={inv.investmentId} inv={inv} selected={selectedInv?.investmentId === inv.investmentId} onSelect={() => setSelectedInv(inv)} />
                 ))}
               </div>
             )}
@@ -269,7 +288,7 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-foreground/60">Amount Invested</span>
-                  <span className="text-foreground font-medium">{formatCurrency(selectedInv.totalInvested)}</span>
+                  <span className="text-foreground font-medium">{formatCurrency(selectedInv.investedAmount)}</span>
                 </div>
                 <div className="border-t border-dashed border-foreground/15 pt-3 flex items-center justify-between text-sm">
                   <span className="text-foreground/60">Exit Fee</span>
@@ -351,7 +370,7 @@ function ExitCard({ exit }: { exit: ExitRequest }) {
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
           {exit.investment?.propertyImageUrl
             ? <img src={exit.investment.propertyImageUrl} alt={exit.investment.title} className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center text-xl">🏠</div>
+            : <div className="w-full h-full flex items-center justify-center"><RiBuildingLine className="h-6 w-6 text-foreground/30" /></div>
           }
         </div>
         <div className="flex-1 min-w-0">
@@ -488,7 +507,7 @@ export default function Exits() {
           {isLoading ? (
             <div className="space-y-3">{[1, 2].map((i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}</div>
           ) : !filtered.length ? (
-            <EmptyState icon={<RiLogoutCircleRLine />} title="No exit requests" description="Your exit history will appear here." />
+            <EmptyState icon={<RiBook2Line />} title="No exit requests" description="Your exit history will appear here." />
           ) : (
             <div className="space-y-3">
               {filtered.map((exit) => <ExitCard key={exit.id} exit={exit} />)}

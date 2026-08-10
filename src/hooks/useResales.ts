@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export function useEligibleResales() {
   const query = useQuery({
     queryKey: queryKeys.resales.eligible,
-    queryFn: () => resalesApi.getEligible().then((r) => r.data),
+    queryFn: () => resalesApi.getEligible(),
   });
 
   return { eligible: query.data ?? [], isLoading: query.isLoading };

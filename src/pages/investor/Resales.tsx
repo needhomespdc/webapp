@@ -11,6 +11,8 @@ import {
   RiPieChart2Line,
   RiArchiveLine,
   RiSubtractLine,
+  RiBook2Line,
+  RiBuildingLine,
 } from 'react-icons/ri';
 import {
   useEligibleResales,
@@ -30,7 +32,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
-import type { ResaleListing, Investment } from '@/types';
+import type { ResaleListing, EligibleInvestment } from '@/types';
 
 // ─── 3-step sheet ─────────────────────────────────────────────────────────────
 
@@ -96,64 +98,71 @@ function Stepper({ step }: { step: Step }) {
 
 // ─── Investment summary card (used in all 3 steps) ────────────────────────────
 
-function InvCard({ inv, selected, onSelect }: { inv: Investment; selected?: boolean; onSelect?: () => void }) {
-  const card = (
+function InvCard({ inv, selected, onSelect }: { inv: EligibleInvestment; selected?: boolean; onSelect?: () => void }) {
+  const selectable = onSelect !== undefined && inv.isEligible;
+  return (
     <div
+      onClick={selectable ? onSelect : undefined}
       className={cn(
-        'border rounded-2xl p-3 space-y-3 transition-colors',
-        onSelect ? 'cursor-pointer' : '',
-        selected
-          ? 'border-accent bg-accent/5'
-          : 'border-foreground/10 bg-foreground/5 hover:border-foreground/20',
+        'border rounded-2xl p-4 transition-colors',
+        selectable ? 'cursor-pointer' : 'cursor-default',
+        !inv.isEligible ? 'opacity-60' : '',
+        selected ? 'border-accent bg-accent/5' : 'border-foreground/10 bg-foreground/5',
+        selectable && !selected ? 'hover:border-foreground/20' : '',
       )}
-      onClick={onSelect}
     >
+      {/* Header row */}
       <div className="flex items-start gap-3">
-        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
+        <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-foreground/10">
           {inv.propertyImageUrl ? (
             <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-xl">🏠</div>
+            <div className="w-full h-full flex items-center justify-center"><RiBuildingLine className="h-6 w-6 text-foreground/30" /></div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-foreground font-bold text-sm uppercase leading-tight tracking-wide line-clamp-1">
-            {inv.title}
-          </p>
-          <p className="text-foreground/50 text-xs mt-0.5">{inv.location}</p>
+          <p className="text-foreground font-bold text-sm leading-tight line-clamp-2">{inv.title}</p>
+          <p className="text-foreground/50 text-xs mt-1">{inv.location}</p>
         </div>
         {onSelect !== undefined && (
-          <div
-            className={cn(
-              'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5',
-              selected ? 'border-accent' : 'border-foreground/25',
-            )}
-          >
-            {selected && <div className="w-2.5 h-2.5 rounded-full bg-accent" />}
+          <div className={cn(
+            'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0',
+            selected ? 'border-accent' : 'border-foreground/25',
+          )}>
+            {selected && <div className="w-3 h-3 rounded-full bg-accent" />}
           </div>
         )}
       </div>
-      <div className="grid grid-cols-4 gap-2">
+
+      {/* Data grid */}
+      <div className="border-t border-foreground/10 mt-3.5 pt-3.5 grid grid-cols-4 gap-2">
         <div>
-          <p className="text-foreground/40 text-[10px]">Units Owned</p>
-          <p className="text-foreground text-xs font-semibold mt-0.5">{inv.unitsOwnedLabel}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Ownership</p>
+          <p className="text-foreground text-xs font-semibold leading-tight">{inv.quantityLabel}</p>
         </div>
         <div>
-          <p className="text-foreground/40 text-[10px]">Type</p>
-          <p className="text-foreground text-xs font-semibold mt-0.5">{inv.typeLabel}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Type</p>
+          <p className="text-foreground text-xs font-semibold leading-tight truncate">{inv.investmentTypeLabel}</p>
         </div>
         <div>
-          <p className="text-foreground/40 text-[10px]">Invested Amount</p>
-          <p className="text-foreground text-xs font-semibold mt-0.5">{formatCurrency(inv.totalInvested)}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Invested</p>
+          <p className="text-foreground text-xs font-semibold leading-tight">{formatCurrency(inv.investedAmount)}</p>
         </div>
         <div>
-          <p className="text-foreground/40 text-[10px]">Current Value</p>
-          <p className="text-accent text-xs font-semibold mt-0.5">{formatCurrency(inv.currentValue)}</p>
+          <p className="text-foreground/40 text-[10px] mb-0.5">Current Value</p>
+          <p className="text-accent text-xs font-semibold leading-tight">{formatCurrency(inv.currentValue)}</p>
         </div>
       </div>
+
+      {/* Ineligibility reason */}
+      {!inv.isEligible && inv.ineligibilityReason && (
+        <div className="mt-3 flex items-start gap-2 bg-foreground/5 rounded-xl px-3 py-2">
+          <RiInformationLine className="h-3.5 w-3.5 text-foreground/40 mt-0.5 shrink-0" />
+          <p className="text-foreground/50 text-[11px] leading-relaxed">{inv.ineligibilityReason}</p>
+        </div>
+      )}
     </div>
   );
-  return card;
 }
 
 // ─── Sheet content ─────────────────────────────────────────────────────────────
@@ -161,14 +170,14 @@ function InvCard({ inv, selected, onSelect }: { inv: Investment; selected?: bool
 interface CreateResaleSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  eligible: Investment[];
+  eligible: EligibleInvestment[];
   eligibleLoading: boolean;
 }
 
 function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: CreateResaleSheetProps) {
   const isMobile = useMediaQuery('(max-width: 639px)');
   const [step, setStep] = useState<Step>('select');
-  const [selectedInv, setSelectedInv] = useState<Investment | null>(null);
+  const [selectedInv, setSelectedInv] = useState<EligibleInvestment | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -215,7 +224,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
     const min = parseFloat(minPrice);
     const max = parseFloat(maxPrice);
     createMutation.mutate(
-      { investmentId: selectedInv.id, quantity, minPricePerUnit: min, maxPricePerUnit: max, termsAccepted: true },
+      { investmentId: selectedInv.investmentId, quantity, minPricePerUnit: min, maxPricePerUnit: max, termsAccepted: true },
       {
         onSuccess: () => { toast.success('Resale listing submitted for review'); handleClose(false); },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to create listing'),
@@ -223,7 +232,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
     );
   };
 
-  const ownedQty = selectedInv ? (parseInt(selectedInv.unitsOwnedLabel) || 1) : 1;
+  const ownedQty = selectedInv ? selectedInv.quantityOwned : 1;
   const pricePerUnitHint = selectedInv ? formatCurrency(selectedInv.currentValue / Math.max(ownedQty, 1)) : '';
   const priceRangeDisplay = minPrice && maxPrice
     ? (minPrice === maxPrice ? `${formatCurrency(parseFloat(minPrice))} per unit` : `${formatCurrency(parseFloat(minPrice))} – ${formatCurrency(parseFloat(maxPrice))} per unit`)
@@ -271,9 +280,9 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
               <div className="space-y-3">
                 {eligible.map((inv) => (
                   <InvCard
-                    key={inv.id}
+                    key={inv.investmentId}
                     inv={inv}
-                    selected={selectedInv?.id === inv.id}
+                    selected={selectedInv?.investmentId === inv.investmentId}
                     onSelect={() => setSelectedInv(inv)}
                   />
                 ))}
@@ -418,7 +427,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
                   {
                     icon: <RiInformationLine className="h-5 w-5 text-foreground/60" />,
                     label: 'Investment Type',
-                    value: selectedInv.typeLabel,
+                    value: selectedInv.investmentTypeLabel,
                   },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center gap-3">
@@ -659,7 +668,9 @@ export default function Resales() {
             </div>
           ) : !filtered.length ? (
             <div className="bg-foreground/5 border border-foreground/10 rounded-2xl py-10 px-4 flex flex-col items-center text-center gap-3">
-              <div className="text-5xl">📋</div>
+              <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-foreground/5">
+                <RiBook2Line className="h-7 w-7 text-foreground/30" />
+              </div>
               <p className="text-foreground font-semibold text-sm">No resale listings yet</p>
               <p className="text-foreground/40 text-xs">
                 When you list a property for resale, your listings will show here.

@@ -5,7 +5,6 @@ import {
   RiShieldCheckLine,
   RiLockPasswordLine,
   RiLogoutBoxLine,
-  RiDeleteBin6Line,
   RiAlertLine,
   RiArrowRightLine,
   RiHeadphoneLine,
@@ -110,7 +109,6 @@ export default function Profile() {
 
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
 
   const { data: sqStatus } = useQuery({
@@ -181,16 +179,6 @@ export default function Profile() {
       navigate('/login');
     },
     onError: () => toast.error('Failed to deactivate account'),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: authApi.deleteAccount,
-    onSuccess: async () => {
-      toast.success('Account deleted');
-      await logout();
-      navigate('/login');
-    },
-    onError: () => toast.error('Failed to delete account'),
   });
 
   if (!user) return null;
@@ -345,15 +333,6 @@ export default function Profile() {
               label="Deactivate Account"
               desc="Temporarily disable your NeedHomes account"
               onClick={() => setDeactivateOpen(true)}
-            />
-            <MenuItem
-              icon={<RiDeleteBin6Line />}
-              iconBg="bg-red-500/15"
-              iconColor="text-red-400"
-              label="Delete Account"
-              desc="Permanently delete your account and data"
-              labelClass="text-red-400"
-              onClick={() => setDeleteOpen(true)}
             />
             <MenuItem
               icon={<RiLogoutBoxLine />}
@@ -580,28 +559,6 @@ export default function Profile() {
         variant="default"
         onConfirm={async () => { await logout(); navigate('/login'); }}
       />
-
-      {/* Delete dialog */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Account</DialogTitle>
-            <DialogDescription>
-              This action is permanent and cannot be undone. All your data will be erased.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button
-              className="bg-red-500 hover:bg-red-600"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete Permanently'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Transaction PIN */}
       <PinSetModal
