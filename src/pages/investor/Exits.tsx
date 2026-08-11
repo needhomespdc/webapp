@@ -13,7 +13,7 @@ import {
   RiBuildingLine,
 } from 'react-icons/ri';
 import { useEligibleExits, useExitList, useCreateExit } from '@/hooks/useExits';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';

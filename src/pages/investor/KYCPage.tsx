@@ -33,7 +33,6 @@ import {
 } from '@/hooks/useKYC';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
 import { toast } from '@/hooks/useToast';
@@ -720,7 +719,7 @@ export default function KYCPage() {
 
   const kycStatus = status?.status ?? user?.kycStatus ?? 'not_submitted';
   const isCorporate = user?.role === 'investor' && user?.investorType === 'corporate';
-  const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
+  // const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
 
   if (flowActive && !isCorporate) {
     return <IndividualFlow onClose={() => setFlowActive(false)} />;

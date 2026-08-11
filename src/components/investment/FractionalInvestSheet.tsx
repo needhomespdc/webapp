@@ -8,7 +8,6 @@ import {
   RiBankCardLine,
   RiArrowRightSLine,
   RiFingerprint2Line,
-  RiShieldCheckLine,
   RiInformationLine,
   RiTimeLine,
 } from 'react-icons/ri';
