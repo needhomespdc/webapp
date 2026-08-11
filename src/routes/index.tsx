@@ -22,7 +22,8 @@ const Portfolio = lazy(() => import('@/pages/investor/Portfolio'));
 const InvestmentDetail = lazy(() => import('@/pages/investor/InvestmentDetail'));
 const InvestorWallet = lazy(() => import('@/pages/investor/Wallet'));
 const KYCPage = lazy(() => import('@/pages/investor/KYCPage'));
-const Exits = lazy(() => import('@/pages/investor/Exits'));
+const ExitsAndResales = lazy(() => import('@/pages/investor/ExitsAndResales'));
+const ExitsList = lazy(() => import('@/pages/investor/Exits'));
 const Resales = lazy(() => import('@/pages/investor/Resales'));
 const Favorites = lazy(() => import('@/pages/investor/Favorites'));
 
@@ -86,8 +87,10 @@ export const router = createBrowserRouter([
           { path: '/investor/portfolio', element: withSuspense(Portfolio) },
           { path: '/investor/portfolio/:investmentId', element: withSuspense(InvestmentDetail) },
           { path: '/investor/wallet', element: withSuspense(InvestorWallet) },
+          { path: '/wallet/paystack/callback', element: withSuspense(InvestorWallet) },
           { path: '/investor/kyc', element: withSuspense(KYCPage) },
-          { path: '/investor/exits', element: withSuspense(Exits) },
+          { path: '/investor/exits-and-resales', element: withSuspense(ExitsAndResales) },
+          { path: '/investor/exits', element: withSuspense(ExitsList) },
           { path: '/investor/resales', element: withSuspense(Resales) },
           { path: '/investor/favorites', element: withSuspense(Favorites) },
           { path: '/investor/add-bank-account', element: withSuspense(AddBankAccount) },

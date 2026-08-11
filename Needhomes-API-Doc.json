@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "79aac8d6-35c4-4e4c-9ce2-a8e43bfa8911",
+    "_postman_id": "a4b092ed-80e9-423d-8f49-0323d084534a",
     "name": "Needhomes API Doc",
     "description": "NeedHomes backend API. Import into a Postman workspace named \"Needhomes API Doc\".\n\nFolders: Public —, Account —, Investor —, Partner —, Admin —, Shared —\n\n1. Import the environment file and select it.\n2. Run Account — Authentication > Login to set accessToken.\n3. Partner routes: login with a partner account.\n4. Admin routes: login with an admin account.\n5. Real-time notifications: see Shared — Realtime (Socket.IO) (use a Socket.IO client; Postman HTTP requests cannot subscribe).\n\nBase URL: {{baseUrl}} (default http://localhost:3000)\nWebSocket base: {{wsBaseUrl}}\nAPI prefix: /api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -80,6 +80,14 @@
     },
     {
       "key": "resaleListingId",
+      "value": ""
+    },
+    {
+      "key": "buybackId",
+      "value": ""
+    },
+    {
+      "key": "extensionId",
       "value": ""
     },
     {
@@ -786,7 +794,7 @@
                 "reset-password"
               ]
             },
-            "description": "",
+            "description": "Sets a new password using resetToken. Returns 400 if the new password matches the current password.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"password\": \"NewPassword1\",\n  \"confirmPassword\": \"NewPassword1\"\n}",
@@ -950,7 +958,7 @@
                 "change-password"
               ]
             },
-            "description": "",
+            "description": "Returns 400 if newPassword matches currentPassword; revokes all refresh sessions on success.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -963,7 +971,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"currentPassword\": \"Password1\",\n  \"newPassword\": \"NewPassword1\",\n  \"confirmPassword\": \"NewPassword1\"\n}",
+              "raw": "{\n  \"currentPassword\": \"Password1\",\n  \"newPassword\": \"NewPassword2\",\n  \"confirmPassword\": \"NewPassword2\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2098,7 +2106,7 @@
     },
     {
       "name": "Investor — Exits & Resales",
-      "description": "Exit requests and resale listings",
+      "description": "Exit requests and resale listings (see eligibility in API.md)",
       "item": [
         {
           "name": "List Eligible Exits",
@@ -2116,7 +2124,7 @@
                 "eligible"
               ]
             },
-            "description": "",
+            "description": "Eligible types: fractional, land_banking, save_to_own (with model-specific rules).",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2295,7 +2303,7 @@
                 "eligible"
               ]
             },
-            "description": "",
+            "description": "Eligible types: co_development, land_banking, save_to_own, outright (not fractional).",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2485,6 +2493,352 @@
       ]
     },
     {
+      "name": "Investor — Buybacks",
+      "description": "Save-to-Own company buy-back requests",
+      "item": [
+        {
+          "name": "List Eligible Buybacks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buybacks/eligible",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buybacks",
+                "eligible"
+              ]
+            },
+            "description": "Save-to-own only: hasBuyBackOption, fully paid, schedule ended, no open exit/resale/buyback.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Buyback Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/buybacks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buybacks"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"investmentId\": \"{{investmentId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.id) pm.collectionVariables.set(\"buybackId\", data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Buybacks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buybacks/me?filter=pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buybacks",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Buyback Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buybacks/{{buybackId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buybacks",
+                "{{buybackId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Buyback Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/buybacks/{{buybackId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "buybacks",
+                "{{buybackId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Investor — Extensions",
+      "description": "Save-to-Own schedule extensions (immediate apply)",
+      "item": [
+        {
+          "name": "Get Extension Eligibility",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/extensions/eligibility/{{investmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "extensions",
+                "eligibility",
+                "{{investmentId}}"
+              ]
+            },
+            "description": "Fees: 1%/2%/3% for 1/2/3 months. Enabled months from platform settings.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apply Extension",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/extensions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "extensions"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"investmentId\": \"{{investmentId}}\",\n  \"months\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.id) pm.collectionVariables.set(\"extensionId\", data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Extensions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/extensions/me?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "extensions",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Extension Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/extensions/{{extensionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "extensions",
+                "{{extensionId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Investor — Portfolio",
       "description": "Checkout, portfolio, installments. Outright checkout returns status completed; list/detail include propertyImageUrl.",
       "item": [
@@ -2590,7 +2944,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/investments/me/performance?period=1y",
+              "raw": "{{baseUrl}}/api/investments/me/performance?period=this_month",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2603,11 +2957,11 @@
               "query": [
                 {
                   "key": "period",
-                  "value": "1y"
+                  "value": "this_month"
                 }
               ]
             },
-            "description": "",
+            "description": "period: today | this_week | this_month | past_6_months",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2637,6 +2991,36 @@
               ]
             },
             "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Property Growth History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/{{investmentId}}/property-growth-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "investments",
+                "{{investmentId}}",
+                "property-growth-history"
+              ]
+            },
+            "description": "Value growth history for outright / co-development / land banking holdings.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2842,52 +3226,10 @@
                 {
                   "key": "limit",
                   "value": "10"
-                },
-                {
-                  "key": "type",
-                  "value": "wallet_top_up",
-                  "description": "investment_return | wallet_top_up | referral_bonus | investment_in | withdrawal | admin_credit | admin_debit",
-                  "disabled": true
-                },
-                {
-                  "key": "status",
-                  "value": "completed",
-                  "description": "completed | pending | failed",
-                  "disabled": true
-                },
-                {
-                  "key": "direction",
-                  "value": "money_in",
-                  "description": "money_in | money_out",
-                  "disabled": true
-                },
-                {
-                  "key": "dateRange",
-                  "value": "last_30_days",
-                  "description": "today | last_7_days | last_30_days | last_3_months",
-                  "disabled": true
-                },
-                {
-                  "key": "startDate",
-                  "value": "2026-07-01",
-                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
-                  "disabled": true
-                },
-                {
-                  "key": "endDate",
-                  "value": "2026-07-10",
-                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
-                  "disabled": true
-                },
-                {
-                  "key": "search",
-                  "value": "",
-                  "description": "Matches reference, title, or subtitle",
-                  "disabled": true
                 }
               ]
             },
-            "description": "List the authenticated user's wallet transactions. Supports filtering by type, status, direction (money in/out), date presets, custom date range, and search.",
+            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -5372,7 +5714,7 @@
                 "properties"
               ]
             },
-            "description": "",
+            "description": "Create returnType must be capital_appreciation or rental_yield (income_generating rejected on create).",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -6937,6 +7279,242 @@
       ]
     },
     {
+      "name": "Admin — Buybacks",
+      "description": "Save-to-Own buyback moderation",
+      "item": [
+        {
+          "name": "List Buyback Queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/buybacks?filter=pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "buybacks"
+              ],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Buyback by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/buybacks/{{buybackId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "buybacks",
+                "{{buybackId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Accept Buyback",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/buybacks/{{buybackId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "buybacks",
+                "{{buybackId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"accept\",\n  \"buybackAmount\": 1500000,\n  \"adminNote\": \"Approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reject Buyback",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/buybacks/{{buybackId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "buybacks",
+                "{{buybackId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"reject\",\n  \"rejectionReason\": \"Documentation incomplete\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Extensions",
+      "description": "Read-only views of save-to-own extensions",
+      "item": [
+        {
+          "name": "List Extensions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/extensions?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "extensions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Extension by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/extensions/{{extensionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "extensions",
+                "{{extensionId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Admin — Marketplace Settings",
       "description": "Exit and resale marketplace fee configuration",
       "item": [
@@ -7617,7 +8195,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/wallets/{{userId}}/transactions?page=1&limit=10",
+              "raw": "{{baseUrl}}/api/admin/wallets/{{userId}}/transactions",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -7627,61 +8205,9 @@
                 "wallets",
                 "{{userId}}",
                 "transactions"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                },
-                {
-                  "key": "type",
-                  "value": "wallet_top_up",
-                  "description": "investment_return | wallet_top_up | referral_bonus | investment_in | withdrawal | admin_credit | admin_debit",
-                  "disabled": true
-                },
-                {
-                  "key": "status",
-                  "value": "completed",
-                  "description": "completed | pending | failed",
-                  "disabled": true
-                },
-                {
-                  "key": "direction",
-                  "value": "money_in",
-                  "description": "money_in | money_out",
-                  "disabled": true
-                },
-                {
-                  "key": "dateRange",
-                  "value": "last_30_days",
-                  "description": "today | last_7_days | last_30_days | last_3_months",
-                  "disabled": true
-                },
-                {
-                  "key": "startDate",
-                  "value": "2026-07-01",
-                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
-                  "disabled": true
-                },
-                {
-                  "key": "endDate",
-                  "value": "2026-07-10",
-                  "description": "YYYY-MM-DD. Takes precedence over dateRange when provided.",
-                  "disabled": true
-                },
-                {
-                  "key": "search",
-                  "value": "",
-                  "description": "Matches reference, title, or subtitle",
-                  "disabled": true
-                }
               ]
             },
-            "description": "List wallet transactions for a specific user. Supports the same filters as the user-facing transactions endpoint.",
+            "description": "",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -8209,7 +8735,7 @@
                 "fractional"
               ]
             },
-            "description": "",
+            "description": "Fractional settings use duration/payout option arrays — not paymentSchedule.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -8222,7 +8748,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"settings\": {\n    \"paymentSchedule\": {\n      \"defaultFrequency\": \"monthly\",\n      \"frequencies\": {\n        \"daily\": {\n          \"enabled\": true,\n          \"options\": [\n            {\n              \"value\": 30,\n              \"label\": \"30 Days\",\n              \"enabled\": true\n            }\n          ]\n        },\n        \"weekly\": {\n          \"enabled\": true,\n          \"options\": [\n            {\n              \"value\": 4,\n              \"label\": \"4 Weeks\",\n              \"enabled\": true\n            }\n          ]\n        },\n        \"monthly\": {\n          \"enabled\": true,\n          \"options\": [\n            {\n              \"value\": 6,\n              \"label\": \"6 Months\",\n              \"enabled\": true\n            }\n          ]\n        }\n      }\n    }\n  }\n}",
+              "raw": "{\n  \"settings\": {\n    \"investmentWindowDurationOptions\": [\n      {\n        \"value\": 14,\n        \"label\": \"14 days\",\n        \"enabled\": true\n      },\n      {\n        \"value\": 30,\n        \"label\": \"30 days\",\n        \"enabled\": true\n      },\n      {\n        \"value\": 60,\n        \"label\": \"60 days\",\n        \"enabled\": true\n      }\n    ],\n    \"investmentDurationOptions\": [\n      {\n        \"value\": 12,\n        \"label\": \"12 months\",\n        \"enabled\": true\n      },\n      {\n        \"value\": 24,\n        \"label\": \"24 months\",\n        \"enabled\": true\n      },\n      {\n        \"value\": 36,\n        \"label\": \"36 months\",\n        \"enabled\": true\n      }\n    ],\n    \"holdingPeriodOptions\": [\n      {\n        \"value\": 3,\n        \"label\": \"3 months\",\n        \"enabled\": true\n      },\n      {\n        \"value\": 6,\n        \"label\": \"6 months\",\n        \"enabled\": true\n      },\n      {\n        \"value\": 12,\n        \"label\": \"12 months\",\n        \"enabled\": true\n      }\n    ],\n    \"payoutCycleOptions\": [\n      {\n        \"value\": \"weekly\",\n        \"label\": \"Weekly\",\n        \"enabled\": true\n      },\n      {\n        \"value\": \"monthly\",\n        \"label\": \"Monthly\",\n        \"enabled\": true\n      },\n      {\n        \"value\": \"quarterly\",\n        \"label\": \"Quarterly\",\n        \"enabled\": true\n      },\n      {\n        \"value\": \"biannual\",\n        \"label\": \"Biannual\",\n        \"enabled\": true\n      },\n      {\n        \"value\": \"annual\",\n        \"label\": \"Annual\",\n        \"enabled\": true\n      },\n      {\n        \"value\": \"at_maturity\",\n        \"label\": \"At maturity\",\n        \"enabled\": true\n      }\n    ],\n    \"defaultExpectedReturnPercent\": 8,\n    \"minCapitalAppreciationDurationMonths\": 12,\n    \"defaultAllowEarlyExit\": true\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -8267,7 +8793,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"settings\": {\n    \"paymentSchedule\": {\n      \"defaultFrequency\": \"monthly\",\n      \"frequencies\": {\n        \"monthly\": {\n          \"enabled\": true,\n          \"options\": [\n            {\n              \"value\": 12,\n              \"label\": \"12 Months\",\n              \"enabled\": true\n            }\n          ]\n        }\n      }\n    }\n  }\n}",
+              "raw": "{\n  \"settings\": {\n    \"paymentSchedule\": {\n      \"defaultFrequency\": \"monthly\",\n      \"frequencies\": {\n        \"monthly\": {\n          \"enabled\": true,\n          \"options\": [\n            {\n              \"value\": 12,\n              \"label\": \"12 Months\",\n              \"enabled\": true\n            }\n          ]\n        }\n      }\n    },\n    \"durationExtension\": {\n      \"enabledMonths\": [\n        1,\n        2,\n        3\n      ]\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"

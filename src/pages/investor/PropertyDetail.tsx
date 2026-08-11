@@ -49,6 +49,8 @@ import { toast } from '@/hooks/useToast';
 import { OutrightAcquireSheet } from '@/components/investment/OutrightAcquireSheet';
 import { CoDevelopmentJoinSheet } from '@/components/investment/CoDevelopmentJoinSheet';
 import { LandBankingReserveSheet } from '@/components/investment/LandBankingReserveSheet';
+import { SaveToOwnSheet } from '@/components/investment/SaveToOwnSheet';
+import { FractionalInvestSheet } from '@/components/investment/FractionalInvestSheet';
 import { InvestmentSuccessModal } from '@/components/investment/InvestmentSuccessModal';
 import type { Property, Milestone, Investment } from '@/types';
 
@@ -907,13 +909,7 @@ export default function PropertyDetail() {
             </Button>
           ) : (
             <Button
-              onClick={
-                property.investmentModelType === 'outright' ||
-                property.investmentModelType === 'co_development' ||
-                property.investmentModelType === 'land_banking'
-                  ? () => { setAcquireOpen(true); setSearchParams((p) => { p.set('invest', 'true'); return p; }, { replace: true }); }
-                  : undefined
-              }
+              onClick={() => { setAcquireOpen(true); setSearchParams((p) => { p.set('invest', 'true'); return p; }, { replace: true }); }}
               className={cn('rounded-full px-6 shrink-0', ctaConfig.btnClass)}
             >
               {ctaConfig.btnText}
@@ -955,6 +951,26 @@ export default function PropertyDetail() {
       {/* ── Land banking reserve sheet ──────────────────────────────────────── */}
       {property.investmentModelType === 'land_banking' && (
         <LandBankingReserveSheet
+          open={acquireOpen}
+          onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
+          property={property}
+          onSuccess={(investment) => setSuccessInvestment(investment)}
+        />
+      )}
+
+      {/* ── Save-to-Own sheet ───────────────────────────────────────────────── */}
+      {property.investmentModelType === 'save_to_own' && (
+        <SaveToOwnSheet
+          open={acquireOpen}
+          onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
+          property={property}
+          onSuccess={(investment) => setSuccessInvestment(investment)}
+        />
+      )}
+
+      {/* ── Fractional invest sheet ─────────────────────────────────────────── */}
+      {property.investmentModelType === 'fractional' && (
+        <FractionalInvestSheet
           open={acquireOpen}
           onOpenChange={(v) => { setAcquireOpen(v); if (!v) setSearchParams((p) => { p.delete('invest'); return p; }, { replace: true }); }}
           property={property}

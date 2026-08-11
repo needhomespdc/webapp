@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export function useEligibleResales() {
   const query = useQuery({
     queryKey: queryKeys.resales.eligible,
-    queryFn: () => resalesApi.getEligible().then((r) => r.data),
+    queryFn: () => resalesApi.getEligible(),
   });
 
   return { eligible: query.data ?? [], isLoading: query.isLoading };
@@ -14,10 +14,14 @@ export function useEligibleResales() {
 export function useMyResales() {
   const query = useQuery({
     queryKey: queryKeys.resales.mine,
-    queryFn: () => resalesApi.listMine().then((r) => r.data),
+    queryFn: () => resalesApi.listMine(),
   });
 
-  return { resales: query.data ?? [], isLoading: query.isLoading };
+  return {
+    resales: query.data?.data ?? [],
+    summary: query.data?.summary ?? { pendingCount: 0, liveCount: 0 },
+    isLoading: query.isLoading,
+  };
 }
 
 export function useCreateResale() {

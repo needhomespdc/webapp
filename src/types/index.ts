@@ -202,6 +202,25 @@ export interface PropertyInvestmentModelConfig {
 }
 
 
+// ─── Eligible Investment (exits/eligible & resales/eligible response shape) ────
+
+export interface EligibleInvestment {
+  investmentId: string;
+  title: string;
+  location: string;
+  propertyImageUrl: string | null;
+  investmentType: InvestmentModelType;
+  investmentTypeLabel: string;
+  quantityOwned: number;
+  quantityLabel: string;
+  investedAmount: number;
+  currentValue: number;
+  maturityDate: string | null;
+  reservationEndsAt: string | null;
+  isEligible: boolean;
+  ineligibilityReason: string | null;
+}
+
 // ─── Investment ────────────────────────────────────────────────────────────────
 // Shape confirmed from a live /investments/me list response.
 
@@ -388,20 +407,31 @@ export interface BankAccount {
 
 // ─── Exit & Resale ─────────────────────────────────────────────────────────────
 
-export type ExitStatus = 'pending' | 'completed' | 'rejected' | 'cancelled';
+export type ExitStatus = 'pending' | 'under_review' | 'completed' | 'rejected' | 'cancelled';
 
 export interface ExitRequest {
   id: string;
-  investmentId: string;
-  investment?: Investment;
-  principalAmount: number;
-  penaltyPercent: number;
-  penaltyAmount: number;
-  finalPayout: number;
+  reference: string;
+  title: string;
+  location: string;
+  propertyImageUrl: string | null;
   status: ExitStatus;
-  termsAccepted: boolean;
-  rejectionReason?: string;
-  createdAt: string;
+  statusLabel: string;
+  dateLabel: string;
+  sharesLabel: string;
+  amount: number;
+  amountLabel: string;
+  isAmountReceived: boolean;
+  requestedAt: string;
+  processingEligibleAt: string | null;
+  investmentId: string;
+  propertyId: string;
+}
+
+export interface ExitsListResponse {
+  data: ExitRequest[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+  summary: { completedCount: number; pendingCount: number };
 }
 
 export type ResaleStatus = 'pending' | 'approved' | 'rejected' | 'sold' | 'cancelled';
@@ -416,6 +446,12 @@ export interface ResaleListing {
   status: ResaleStatus;
   rejectionReason?: string;
   createdAt: string;
+}
+
+export interface ResalesListResponse {
+  data: ResaleListing[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+  summary: { pendingCount: number; liveCount: number };
 }
 
 // ─── KYC ──────────────────────────────────────────────────────────────────────

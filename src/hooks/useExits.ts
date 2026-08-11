@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export function useEligibleExits() {
   const query = useQuery({
     queryKey: queryKeys.exits.eligible,
-    queryFn: () => exitsApi.getEligible().then((r) => r.data),
+    queryFn: () => exitsApi.getEligible(),
   });
 
   return { eligible: query.data ?? [], isLoading: query.isLoading };
@@ -17,7 +17,11 @@ export function useExitList(filter = 'history') {
     queryFn: () => exitsApi.list(filter),
   });
 
-  return { exits: query.data?.data ?? [], isLoading: query.isLoading };
+  return {
+    exits: query.data?.data ?? [],
+    summary: query.data?.summary ?? { completedCount: 0, pendingCount: 0 },
+    isLoading: query.isLoading,
+  };
 }
 
 export function useExitDetail(exitId: string | undefined) {

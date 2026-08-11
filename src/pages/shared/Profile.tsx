@@ -5,7 +5,6 @@ import {
   RiShieldCheckLine,
   RiLockPasswordLine,
   RiLogoutBoxLine,
-  RiDeleteBin6Line,
   RiAlertLine,
   RiArrowRightLine,
   RiHeadphoneLine,
@@ -13,6 +12,8 @@ import {
   RiShieldLine,
   RiQuestionLine,
   RiKeyLine,
+  RiFingerprint2Line,
+  RiRepeat2Line,
   RiEyeLine,
   RiEyeOffLine,
   RiPencilLine,
@@ -25,6 +26,8 @@ import { mediaApi } from '@/api/media.api';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import { SelectDropdown, type SelectOption } from '@/components/shared/SelectDropdown';
 import { useAuth } from '@/hooks/useAuth';
+import { useWallet } from '@/hooks/useWallet';
+import { PinSetModal } from '@/components/wallet/PinSetModal';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { Button } from '@/components/ui/button';
@@ -63,6 +66,7 @@ const SECURITY_QUESTIONS = [
 
 export default function Profile() {
   const { user, logout, updateProfile } = useAuth();
+  const { wallet } = useWallet();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 639px)');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +109,7 @@ export default function Profile() {
 
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
 
   const { data: sqStatus } = useQuery({
     queryKey: ['auth', 'security-questions'],
@@ -175,16 +179,6 @@ export default function Profile() {
       navigate('/login');
     },
     onError: () => toast.error('Failed to deactivate account'),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: authApi.deleteAccount,
-    onSuccess: async () => {
-      toast.success('Account deleted');
-      await logout();
-      navigate('/login');
-    },
-    onError: () => toast.error('Failed to delete account'),
   });
 
   if (!user) return null;
@@ -288,42 +282,84 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
-        {/* Security — col 1 row 1 on desktop, first on mobile */}
-        <MenuSection title="Security">
-          <MenuItem
-            icon={<RiLockPasswordLine />}
-            iconBg="bg-purple-500/15"
-            iconColor="text-purple-400"
-            label="Change Password"
-            desc="Update your account password"
-            onClick={() => setPwOpen(true)}
-          />
-          <MenuItem
-            icon={<RiKeyLine />}
-            iconBg="bg-blue-500/15"
-            iconColor="text-blue-400"
-            label="Security Questions"
-            desc={sqStatus?.isSet ? 'Questions are set' : 'Set up security questions'}
-            onClick={() => {
-              setQuestionOne(sqStatus?.questionOne ?? '');
-              setQuestionTwo(sqStatus?.questionTwo ?? '');
-              setAnswerOne('');
-              setAnswerTwo('');
-              setSqOpen(true);
-            }}
-          />
-          <MenuItem
-            icon={<RiShieldCheckLine />}
-            iconBg="bg-accent/15"
-            iconColor="text-accent"
-            label="KYC Verification"
-            desc={`Status: ${(user.kycStatus ?? 'not_started').replace('_', ' ')}`}
-            onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
-          />
-        </MenuSection>
+        {/* Col 1: Security + Account */}
+        <div className="space-y-5">
+          <MenuSection title="Security">
+            <MenuItem
+              icon={<RiLockPasswordLine />}
+              iconBg="bg-purple-500/15"
+              iconColor="text-purple-400"
+              label="Change Password"
+              desc="Update your account password"
+              onClick={() => setPwOpen(true)}
+            />
+            <MenuItem
+              icon={<RiKeyLine />}
+              iconBg="bg-blue-500/15"
+              iconColor="text-blue-400"
+              label="Security Questions"
+              desc={sqStatus?.isSet ? 'Questions are set' : 'Set up security questions'}
+              onClick={() => {
+                setQuestionOne(sqStatus?.questionOne ?? '');
+                setQuestionTwo(sqStatus?.questionTwo ?? '');
+                setAnswerOne('');
+                setAnswerTwo('');
+                setSqOpen(true);
+              }}
+            />
+            <MenuItem
+              icon={<RiFingerprint2Line />}
+              iconBg="bg-accent/15"
+              iconColor="text-accent"
+              label={wallet?.hasTransactionPin ? 'Update Transaction PIN' : 'Set Transaction PIN'}
+              desc={wallet?.hasTransactionPin ? 'Change your 4-digit wallet transaction PIN' : 'Create a PIN to secure your transactions'}
+              onClick={() => setPinModalOpen(true)}
+            />
+            <MenuItem
+              icon={<RiShieldCheckLine />}
+              iconBg="bg-green-500/15"
+              iconColor="text-green-400"
+              label="KYC Verification"
+              desc={`Status: ${(user.kycStatus ?? 'not_started').replace('_', ' ')}`}
+              onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
+            />
+          </MenuSection>
 
-        {/* Support & Information — spans both rows on desktop (col 2), second on mobile */}
-        <div className="md:row-span-2">
+          <MenuSection title="Account">
+            <MenuItem
+              icon={<RiAlertLine />}
+              iconBg="bg-amber-500/15"
+              iconColor="text-amber-500"
+              label="Deactivate Account"
+              desc="Temporarily disable your NeedHomes account"
+              onClick={() => setDeactivateOpen(true)}
+            />
+            <MenuItem
+              icon={<RiLogoutBoxLine />}
+              iconBg="bg-foreground/10"
+              iconColor="text-foreground/50"
+              label="Log Out"
+              desc="Sign out of your NeedHomes account"
+              onClick={() => setLogoutOpen(true)}
+            />
+          </MenuSection>
+        </div>
+
+        {/* Col 2: Investments (investor only) + Support & Information */}
+        <div className="space-y-5">
+          {isInvestor && (
+            <MenuSection title="Investments">
+              <MenuItem
+                icon={<RiRepeat2Line />}
+                iconBg="bg-green-500/15"
+                iconColor="text-green-400"
+                label="Exit & Resale"
+                desc="Manage your exits and resale requests"
+                onClick={() => navigate('/investor/exits-and-resales')}
+              />
+            </MenuSection>
+          )}
+
           <MenuSection title="Support & Information">
             <MenuItem
               icon={<RiHeadphoneLine />}
@@ -359,35 +395,6 @@ export default function Profile() {
             />
           </MenuSection>
         </div>
-
-        {/* Account — col 1 row 2 on desktop, last on mobile */}
-        <MenuSection title="Account">
-          <MenuItem
-            icon={<RiAlertLine />}
-            iconBg="bg-amber-500/15"
-            iconColor="text-amber-500"
-            label="Deactivate Account"
-            desc="Temporarily disable your NeedHomes account"
-            onClick={() => setDeactivateOpen(true)}
-          />
-          <MenuItem
-            icon={<RiDeleteBin6Line />}
-            iconBg="bg-red-500/15"
-            iconColor="text-red-400"
-            label="Delete Account"
-            desc="Permanently delete your account and data"
-            labelClass="text-red-400"
-            onClick={() => setDeleteOpen(true)}
-          />
-          <MenuItem
-            icon={<RiLogoutBoxLine />}
-            iconBg="bg-foreground/10"
-            iconColor="text-foreground/50"
-            label="Log Out"
-            desc="Sign out of your NeedHomes account"
-            onClick={() => setLogoutOpen(true)}
-          />
-        </MenuSection>
 
       </div>
 
@@ -553,27 +560,12 @@ export default function Profile() {
         onConfirm={async () => { await logout(); navigate('/login'); }}
       />
 
-      {/* Delete dialog */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Account</DialogTitle>
-            <DialogDescription>
-              This action is permanent and cannot be undone. All your data will be erased.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button
-              className="bg-red-500 hover:bg-red-600"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete Permanently'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Transaction PIN */}
+      <PinSetModal
+        open={pinModalOpen}
+        onOpenChange={setPinModalOpen}
+        mode={wallet?.hasTransactionPin ? 'change' : 'set'}
+      />
     </div>
   );
 }
@@ -650,9 +642,9 @@ function EditProfileForm({
         <div className="space-y-2">
           <Label>Country</Label>
           <SelectDropdown<SelectOption>
-            options={Country.getAllCountries().map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))}
+            options={Country.getAllCountries().map((c) => ({ value: c.isoCode, label: c.name }))}
             value={Country.getAllCountries()
-              .map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))
+              .map((c) => ({ value: c.isoCode, label: c.name }))
               .find((o) => o.value === fields.country) ?? null}
             onChange={(opt) => {
               fields.setCountry((opt as SelectOption | null)?.value ?? '');
@@ -660,6 +652,22 @@ function EditProfileForm({
             }}
             placeholder="Select country"
             isSearchable
+            formatOptionLabel={(opt) => {
+              const o = opt as SelectOption;
+              return (
+                <div className="flex items-center gap-2">
+                  <img
+                    src={`https://flagcdn.com/w20/${o.value.toLowerCase()}.png`}
+                    width={20}
+                    height={14}
+                    alt=""
+                    className="rounded-sm shrink-0 object-cover"
+                    style={{ width: 20, height: 14 }}
+                  />
+                  <span>{o.label}</span>
+                </div>
+              );
+            }}
           />
         </div>
 

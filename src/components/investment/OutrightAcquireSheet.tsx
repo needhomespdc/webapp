@@ -22,6 +22,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
+import { PinSetModal } from '@/components/wallet/PinSetModal';
 import type { Property, Investment } from '@/types';
 
 type Step = 'quantity' | 'payment' | 'pin' | 'processing';
@@ -99,6 +100,7 @@ export function OutrightAcquireSheet({
   const [pin, setPin] = useState('');
   const [loaderData, setLoaderData] = useState<object | null>(null);
   const [cardLoading, setCardLoading] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
 
   const queryClient = useQueryClient();
   const { wallet } = useWallet();
@@ -436,20 +438,42 @@ export function OutrightAcquireSheet({
 
         <PinInput value={pin} onChange={setPin} />
 
-        <p className="text-foreground/30 text-xs mt-6 text-center">
-          Your PIN is encrypted and never stored on this device.
-        </p>
+        {wallet?.hasTransactionPin ? (
+          <p className="text-foreground/30 text-xs mt-6 text-center">
+            Your PIN is encrypted and never stored on this device.
+          </p>
+        ) : (
+          <>
+            <p className="text-foreground/40 text-xs mt-6 text-center">
+              You haven't set a transaction PIN yet.
+            </p>
+            <button
+              onClick={() => setShowPinModal(true)}
+              className="text-accent text-xs font-semibold mt-2 hover:underline"
+            >
+              Set PIN
+            </button>
+          </>
+        )}
       </div>
 
       <div className="px-5 py-4 border-t border-foreground/10 shrink-0">
         <Button
           className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
           onClick={handleConfirmPin}
-          disabled={!pinReady || checkoutMutation.isPending}
+          disabled={!pinReady || checkoutMutation.isPending || !wallet?.hasTransactionPin}
         >
           Confirm payment
         </Button>
       </div>
+
+      {!wallet?.hasTransactionPin && (
+        <PinSetModal
+          open={showPinModal}
+          onOpenChange={setShowPinModal}
+          mode="set"
+        />
+      )}
     </>
   );
 

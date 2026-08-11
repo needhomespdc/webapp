@@ -9,9 +9,10 @@ import {
   RiArrowRightSLine,
   RiFingerprint2Line,
   RiShieldCheckLine,
-  RiToolsLine,
+  RiInformationLine,
 } from 'react-icons/ri';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
 import { api, ApiError } from '@/lib/fetchClient';
@@ -23,20 +24,35 @@ import { toast } from '@/hooks/useToast';
 import { PinSetModal } from '@/components/wallet/PinSetModal';
 import type { Property, Investment, ApiResponse } from '@/types';
 
-type Step = 'slots' | 'payment' | 'pin' | 'processing';
+type Step = 'savings' | 'terms' | 'payment' | 'pin' | 'processing';
 type PayFrequency = 'daily' | 'weekly' | 'monthly';
 
-const FREQUENCY_INTERVALS: Record<PayFrequency, number[]> = {
-  daily: [7, 14, 30],
-  weekly: [3, 6, 12],
-  monthly: [3, 6, 12],
-};
-
-const INTERVAL_LABEL: Record<PayFrequency, (n: number) => string> = {
-  daily: (n) => `${n} Days`,
-  weekly: (n) => `${n} Weeks`,
-  monthly: (n) => `${n} Months`,
-};
+const TERMS_SECTIONS = [
+  {
+    title: '1. Ownership',
+    body: 'Property ownership documents will be issued upon completion of all scheduled payments. You are entitled to the property only after the full purchase price and fees have been received and confirmed.',
+  },
+  {
+    title: '2. Resale',
+    body: "Investors may list their savings position for resale only after full payment has been completed, through the platform's Secondary Market. Partial resale of an in-progress Save-to-Own plan is not permitted.",
+  },
+  {
+    title: '3. Buy-Back Option',
+    body: 'A buy-back option allows an investor to sell their investment back to the company under applicable buy-back terms. Contact support to initiate a buy-back request.',
+  },
+  {
+    title: '4. Payment Duration Extension',
+    body: 'Investors who need additional time to complete their payment may request a duration extension through the app. An administrative fee may apply, and all extensions are subject to approval.',
+  },
+  {
+    title: '5. Payment Schedule',
+    body: 'You are required to adhere to the payment frequency and amount you select at the time of investment. Failure to maintain the agreed schedule may result in plan suspension.',
+  },
+  {
+    title: '6. Default',
+    body: 'Late or missed payments may incur penalty charges and could result in forfeiture of accrued units if the account remains delinquent beyond the grace period outlined in your investment terms.',
+  },
+];
 
 // ─── 4-box PIN input ──────────────────────────────────────────────────────────
 
@@ -81,7 +97,7 @@ function PinInput({ value, onChange }: { value: string; onChange: (v: string) =>
           onKeyDown={(e) => handleKeyDown(i, e)}
           className={cn(
             'w-14 h-14 text-center text-2xl rounded-xl border-2 bg-foreground/5 focus:outline-none transition-colors',
-            value[i]?.trim() ? 'border-accent' : 'border-foreground/20 focus:border-accent/60'
+            value[i]?.trim() ? 'border-blue-500' : 'border-foreground/20 focus:border-blue-500/60'
           )}
           autoComplete="off"
         />
@@ -92,58 +108,64 @@ function PinInput({ value, onChange }: { value: string; onChange: (v: string) =>
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
-interface CoDevelopmentJoinSheetProps {
+interface SaveToOwnSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   property: Property;
   onSuccess: (investment: Investment) => void;
 }
 
-export function CoDevelopmentJoinSheet({
+export function SaveToOwnSheet({
   open,
   onOpenChange,
   property,
   onSuccess,
-}: CoDevelopmentJoinSheetProps) {
+}: SaveToOwnSheetProps) {
   const isMobile = useMediaQuery('(max-width: 639px)');
   const queryClient = useQueryClient();
 
-  const [step, setStep] = useState<Step>('slots');
-  const [slots, setSlots] = useState(1);
-  const [slotsInput, setSlotsInput] = useState('1');
-  const [payInstallmentally, setPayInstallmentally] = useState(false);
-  const [frequency, setFrequency] = useState<PayFrequency>('weekly');
-  const [payInterval, setPayInterval] = useState(6);
+  const [step, setStep] = useState<Step>('savings');
+  const [savingsAmountInput, setSavingsAmountInput] = useState('');
+  const [frequency, setFrequency] = useState<PayFrequency>('monthly');
+  const [selectedDuration, setSelectedDuration] = useState(6);
+  const [termsAgreed, setTermsAgreed] = useState(false);
   const [pin, setPin] = useState('');
   const [loaderData, setLoaderData] = useState<object | null>(null);
   const [cardLoading, setCardLoading] = useState(false);
+  const [showMoreInfoSheet, setShowMoreInfoSheet] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
   const { wallet } = useWallet();
 
-  // Co-dev config fields
   const config = (property.investmentModelConfig?.config ?? {}) as Record<string, unknown>;
-  const pricePerSlot = (config.pricePerSlot as number | undefined) ?? property.minInvestment;
-  const availableSlots = property.inventoryAvailable;
-  const feesAndLegal = property.managementFees?.total ?? 0;
-  const minInstallmentPct = (config.minInstallmentPercent as number | undefined) ?? 30;
+  const pricePerUnit =
+    (config.pricePerUnit as number | undefined) ?? property.totalPrice ?? property.minInvestment;
+  const legalFee =
+    (config.legalFee as number | undefined) ?? (property.managementFees?.total ?? 0);
+  const legalFeeLabel =
+    property.managementFees?.items?.[0]?.label ?? 'Legal Fee';
+  const durationOptions =
+    (config.durationOptions as number[] | undefined) ??
+    (config.reservationDurations as number[] | undefined) ??
+    [3, 6, 12];
 
-  // Current milestone (in-progress stage)
-  const currentMilestone = property.milestones?.find(
-    (ms) => ms.isCurrentStage || ms.status === 'in_progress'
+  useEffect(() => {
+    if (durationOptions.length > 0) {
+      setSelectedDuration(durationOptions[Math.floor(durationOptions.length / 2)] ?? durationOptions[0]);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const totalPayable = pricePerUnit + legalFee;
+  const savingsAmount = Math.min(
+    Math.max(0, parseFloat(savingsAmountInput.replace(/,/g, '')) || 0),
+    totalPayable
   );
-
-  // Derived amounts — no preview API for co-dev; amounts come from property config
-  const initialCommitment = pricePerSlot * slots;
-  const firstPayment = Math.round((initialCommitment * minInstallmentPct) / 100);
-  const remainingAfterFirst = initialCommitment - firstPayment;
-  const paymentPerInterval = payInterval > 0 ? Math.round(remainingAfterFirst / payInterval) : 0;
-  const chargedNow = payInstallmentally
-    ? firstPayment + feesAndLegal
-    : initialCommitment + feesAndLegal;
+  const remaining = totalPayable - savingsAmount;
+  const intervalCount = selectedDuration;
+  const paymentPerInterval = intervalCount > 0 ? Math.round(remaining / intervalCount) : 0;
+  const chargedNow = savingsAmount;
   const displayTotal = formatCurrency(chargedNow);
 
-  // Preload Lottie loader
   useEffect(() => {
     if (step === 'processing' && !loaderData) {
       fetch('/lottie-gif/loader.json')
@@ -153,16 +175,14 @@ export function CoDevelopmentJoinSheet({
     }
   }, [step, loaderData]);
 
-  // Reset interval to middle option when frequency changes
-  useEffect(() => {
-    setPayInterval(FREQUENCY_INTERVALS[frequency][1]);
-  }, [frequency]);
-
   const checkoutMutation = useMutation({
     mutationFn: (payload: {
       propertyId: string;
       quantity: number;
       transactionPin: string;
+      savingsAmount?: number;
+      paymentFrequency?: string;
+      paymentDurationMonths?: number;
     }) => api.post<ApiResponse<Investment>>('/investments', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
@@ -171,14 +191,13 @@ export function CoDevelopmentJoinSheet({
   });
 
   const resetState = useCallback(() => {
-    setStep('slots');
-    setSlots(1);
-    setSlotsInput('1');
-    setPayInstallmentally(false);
-    setFrequency('weekly');
-    setPayInterval(6);
+    setStep('savings');
+    setSavingsAmountInput('');
+    setFrequency('monthly');
+    setSelectedDuration(durationOptions[Math.floor(durationOptions.length / 2)] ?? durationOptions[0] ?? 6);
+    setTermsAgreed(false);
     setPin('');
-  }, []);
+  }, [durationOptions]);
 
   const handleOpenChange = useCallback(
     (v: boolean) => {
@@ -190,26 +209,19 @@ export function CoDevelopmentJoinSheet({
   );
 
   const handleBack = () => {
-    if (step === 'payment') setStep('slots');
+    if (step === 'terms') { setTermsAgreed(false); setStep('savings'); }
+    else if (step === 'payment') setStep('terms');
     else if (step === 'pin') setStep('payment');
     else handleOpenChange(false);
   };
 
-  const handleSlotsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '');
-    setSlotsInput(raw);
-    const num = parseInt(raw, 10);
-    if (!isNaN(num) && num >= 1 && num <= availableSlots) setSlots(num);
-  };
-
-  const handleSlotsBlur = () => {
-    const num = parseInt(slotsInput, 10);
-    if (isNaN(num) || num < 1) { setSlots(1); setSlotsInput('1'); }
-    else if (num > availableSlots) { setSlots(availableSlots); setSlotsInput(String(availableSlots)); }
-    else { setSlots(num); setSlotsInput(String(num)); }
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9.]/g, '');
+    setSavingsAmountInput(raw);
   };
 
   const handleCardTransfer = async () => {
+    if (chargedNow <= 0) { toast.error('Please enter an amount to save now.'); return; }
     setCardLoading(true);
     try {
       const res = await walletApi.topUp({ amount: chargedNow, paymentMethod: 'card' });
@@ -229,8 +241,11 @@ export function CoDevelopmentJoinSheet({
     checkoutMutation.mutate(
       {
         propertyId: property.id,
-        quantity: slots,
+        quantity: 1,
         transactionPin: pin.replace(/\s/g, ''),
+        savingsAmount: chargedNow > 0 ? chargedNow : undefined,
+        paymentFrequency: frequency,
+        paymentDurationMonths: selectedDuration,
       },
       {
         onSuccess: (res) => {
@@ -249,111 +264,117 @@ export function CoDevelopmentJoinSheet({
     );
   };
 
-  // ─── Step: Slots ──────────────────────────────────────────────────────────────
+  // ─── Step: Savings ────────────────────────────────────────────────────────────
 
-  const slotsContent = (
+  const savingsContent = (
     <>
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
         {/* Property card */}
-        <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-2xl p-3">
+        <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-2xl p-3">
           <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
             {property.primaryImageUrl ? (
               <img src={property.primaryImageUrl} alt={property.title} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-2xl">🏗️</div>
+              <div className="w-full h-full flex items-center justify-center text-2xl">🏡</div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-foreground font-semibold text-sm line-clamp-2 leading-snug">{property.title}</p>
+            <p className="text-foreground font-semibold text-sm line-clamp-2 leading-snug">
+              {property.title}
+            </p>
             <div className="flex items-center gap-1 mt-1 text-foreground/50 text-xs">
               <RiMapPinLine className="h-3 w-3 shrink-0" />
               <span className="truncate">{property.location}</span>
             </div>
             <p className="text-foreground/50 text-xs mt-1">
-              Price Per Slot:{' '}
-              <span className="text-emerald-400 font-semibold">{formatCurrency(pricePerSlot)}</span>
+              Price per unit:{' '}
+              <span className="text-blue-500 font-semibold">{formatCurrency(pricePerUnit)}</span>
             </p>
           </div>
         </div>
 
-        {/* Slots input */}
+        {/* Amount input */}
         <div>
           <p className="text-foreground font-medium text-sm mb-2">
-            How many slots do you want to invest in?
+            How much do you want to save now?
           </p>
           <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/15 rounded-2xl px-4 py-3">
+            <span className="text-foreground/50 text-lg font-semibold shrink-0">₦</span>
             <input
               type="text"
-              inputMode="numeric"
-              value={slotsInput}
-              onChange={handleSlotsChange}
-              onBlur={handleSlotsBlur}
+              inputMode="decimal"
+              value={savingsAmountInput}
+              onChange={handleAmountChange}
+              placeholder="0"
               className="flex-1 bg-transparent text-foreground font-bold text-2xl focus:outline-none min-w-0"
-              placeholder="1"
             />
-            <span className="text-foreground/40 text-sm font-medium shrink-0">slots</span>
           </div>
-          <p className="text-foreground/40 text-xs mt-1.5 px-1">
-            {availableSlots} slot{availableSlots !== 1 ? 's' : ''} available · min. 1
-          </p>
-        </div>
-
-        {/* Price summary */}
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-3 space-y-1.5">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-foreground/50">Price per slot</span>
-            <span className="text-foreground font-medium">{formatCurrency(pricePerSlot)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-foreground/50">
-              {slots} slot{slots !== 1 ? 's' : ''} × {formatCurrency(pricePerSlot)}
-            </span>
-            <span className="text-emerald-400 font-bold">{formatCurrency(initialCommitment)}</span>
+          <div className="flex items-center justify-between mt-1.5 px-1">
+            <p className="text-foreground/40 text-xs">Up to {formatCurrency(totalPayable)}</p>
+            <button
+              onClick={() => setShowMoreInfoSheet(true)}
+              className="flex items-center gap-1 text-blue-500 text-xs font-semibold"
+            >
+              <RiInformationLine className="h-3.5 w-3.5" />
+              Can I save more than this?
+            </button>
           </div>
         </div>
 
-        {/* Current milestone banner */}
-        {currentMilestone && (
-          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl px-4 py-3 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <RiToolsLine className="text-emerald-400 h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-emerald-400 font-semibold text-sm">
-                Current milestone: {currentMilestone.title}
-              </p>
-              <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">
-                Remaining balance is held until the next milestone.
-              </p>
-            </div>
+        {/* Frequency selector */}
+        <div>
+          <p className="text-foreground font-medium text-sm mb-2">How often do you want to pay?</p>
+          <div className="flex items-center gap-2">
+            {(['daily', 'weekly', 'monthly'] as PayFrequency[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFrequency(f)}
+                className={cn(
+                  'flex-1 py-2.5 rounded-full text-sm font-medium border transition-colors',
+                  frequency === f
+                    ? 'border-blue-500 text-blue-500 bg-blue-500/10'
+                    : 'border-foreground/20 text-foreground/50 hover:border-foreground/40'
+                )}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Duration selector */}
+        <div>
+          <p className="text-foreground font-medium text-sm mb-2">Select savings duration</p>
+          <div className="flex items-center gap-2">
+            {durationOptions.map((months) => (
+              <button
+                key={months}
+                onClick={() => setSelectedDuration(months)}
+                className={cn(
+                  'flex-1 py-2.5 rounded-full text-sm font-semibold border transition-colors',
+                  selectedDuration === months
+                    ? 'border-blue-500 bg-blue-500 text-white'
+                    : 'border-foreground/20 text-foreground/50 hover:border-foreground/40'
+                )}
+              >
+                {months} Months
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* After-first-payment info */}
+        {remaining > 0 && (
+          <div className="bg-blue-500/8 border border-blue-500/20 rounded-xl px-4 py-3">
+            <p className="text-foreground/70 text-xs leading-relaxed">
+              After your first payment, you will pay{' '}
+              <span className="text-blue-500 font-bold">
+                {formatCurrency(paymentPerInterval)} {frequency}
+              </span>{' '}
+              for {selectedDuration} months.
+            </p>
           </div>
         )}
-
-        {/* Pay installmentally toggle */}
-        <button
-          onClick={() => setPayInstallmentally((v) => !v)}
-          className="flex items-center gap-3 w-full py-1"
-        >
-          <div className={cn(
-            'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-            payInstallmentally
-              ? 'bg-emerald-500 border-emerald-500'
-              : 'border-foreground/30 bg-transparent'
-          )}>
-            {payInstallmentally && (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
-                <polyline
-                  points="2 6 5 9 10 3"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-          </div>
-          <span className="text-foreground text-sm font-medium">Pay installmentally</span>
-        </button>
 
         {/* Breakdown */}
         <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
@@ -361,112 +382,28 @@ export function CoDevelopmentJoinSheet({
             <p className="text-foreground font-semibold text-sm">Breakdown</p>
           </div>
           <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-            <span className="text-foreground/60">
-              {payInstallmentally ? 'First payment' : 'Initial commitment'}
-            </span>
-            <span className="text-foreground font-medium">
-              {formatCurrency(payInstallmentally ? firstPayment : initialCommitment)}
-            </span>
+            <span className="text-foreground/60">Price per unit</span>
+            <span className="text-foreground font-medium">{formatCurrency(pricePerUnit)}</span>
           </div>
-          {feesAndLegal > 0 && (
+          {legalFee > 0 && (
             <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-              <span className="text-foreground/60">Fees & legal processing</span>
-              <span className="text-foreground font-medium">{formatCurrency(feesAndLegal)}</span>
+              <span className="text-foreground/60">{legalFeeLabel}</span>
+              <span className="text-foreground font-medium">{formatCurrency(legalFee)}</span>
             </div>
           )}
+          <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
+            <span className="text-foreground/60">Total payable</span>
+            <span className="text-foreground font-semibold">{formatCurrency(totalPayable)}</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
+            <span className="text-foreground/60">First payment</span>
+            <span className="text-foreground font-medium">{formatCurrency(savingsAmount)}</span>
+          </div>
           <div className="flex items-center justify-between px-4 py-3 text-sm">
-            <span className="text-foreground font-semibold">Total amount to be charged</span>
-            <span className="text-accent font-bold">{formatCurrency(chargedNow)}</span>
+            <span className="text-foreground font-bold">Amount to pay now</span>
+            <span className="text-blue-500 font-bold text-base">{formatCurrency(savingsAmount)}</span>
           </div>
         </div>
-
-        {/* Installment options — only when checkbox is on */}
-        {payInstallmentally && (
-          <div className="space-y-4">
-            {/* How much now */}
-            <div>
-              <p className="text-foreground font-medium text-sm mb-2">
-                How much do you want to pay now?
-              </p>
-              <div className="bg-foreground/5 border border-foreground/15 rounded-2xl px-4 py-3 flex items-center justify-between">
-                <span className="text-foreground font-bold text-lg">{formatCurrency(firstPayment)}</span>
-                <button className="text-emerald-400 text-sm font-semibold">Pay minimum</button>
-              </div>
-              <p className="text-foreground/40 text-xs mt-1.5 px-1 leading-relaxed">
-                Only the minimum {minInstallmentPct}% of your commitment can be paid upfront when
-                paying installmentally.
-              </p>
-            </div>
-
-            {/* Frequency selector */}
-            <div>
-              <p className="text-foreground font-medium text-sm mb-2">
-                How often do you want to pay?
-              </p>
-              <div className="flex items-center gap-2">
-                {(['daily', 'weekly', 'monthly'] as PayFrequency[]).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFrequency(f)}
-                    className={cn(
-                      'flex-1 py-2.5 rounded-full text-sm font-medium border transition-colors',
-                      frequency === f
-                        ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
-                        : 'border-foreground/20 text-foreground/50 hover:border-foreground/40'
-                    )}
-                  >
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Interval selector */}
-            <div>
-              <p className="text-foreground font-medium text-sm mb-2">
-                What is your payment interval?
-              </p>
-              <div className="flex items-center gap-2">
-                {FREQUENCY_INTERVALS[frequency].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setPayInterval(n)}
-                    className={cn(
-                      'flex-1 py-2.5 rounded-full text-sm font-medium border transition-colors',
-                      payInterval === n
-                        ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
-                        : 'border-foreground/20 text-foreground/50 hover:border-foreground/40'
-                    )}
-                  >
-                    {INTERVAL_LABEL[frequency](n)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Payment summary */}
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-              <p className="text-foreground/70 text-xs leading-relaxed">
-                After your first payment, you will pay{' '}
-                <span className="text-emerald-400 font-bold">
-                  {formatCurrency(paymentPerInterval)} {frequency}
-                </span>
-                .
-              </p>
-            </div>
-
-            {/* Co-dev info note */}
-            <div className="bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3 flex items-start gap-2.5">
-              <div className="w-5 h-5 rounded-full border border-foreground/30 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-foreground/50 text-[10px] font-bold leading-none">i</span>
-              </div>
-              <p className="text-foreground/50 text-xs leading-relaxed">
-                Co-development payments are released per milestone. You only fund construction
-                stages as they are verified.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Security note */}
         <div className="flex items-center gap-3 bg-foreground/5 rounded-xl p-3">
@@ -474,20 +411,88 @@ export function CoDevelopmentJoinSheet({
             <RiShieldCheckLine className="text-green-400 h-4 w-4" />
           </div>
           <p className="text-foreground/50 text-xs leading-relaxed">
-            This is a legally binding co-development agreement. Review all documents before
-            proceeding.
+            This is a legally binding Save-to-Own commitment. Review all property documents before proceeding.
           </p>
         </div>
       </div>
 
       <div className="px-5 py-4 border-t border-foreground/10 shrink-0">
         <Button
-          className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl"
-          onClick={() => setStep('payment')}
-          disabled={slots < 1 || slots > availableSlots}
+          className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
+          onClick={() => setStep('terms')}
+          disabled={savingsAmount <= 0}
         >
-          Join project
+          Start saving
           <RiArrowRightSLine className="h-5 w-5 ml-1" />
+        </Button>
+      </div>
+
+      {/* "Can I save more?" info dialog */}
+      <Dialog open={showMoreInfoSheet} onOpenChange={setShowMoreInfoSheet}>
+        <DialogContent className="max-w-sm rounded-2xl p-6 flex flex-col items-center text-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
+            <RiInformationLine className="text-blue-500 h-7 w-7" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-foreground font-bold text-base">Can I save more than this?</p>
+            <p className="text-foreground/60 text-sm leading-relaxed">
+              Yes, absolutely! You can save any amount up to the total payable ({formatCurrency(totalPayable)},
+              which covers the unit price and all applicable fees). Anything extra you pay now goes toward
+              your plan and reduces future payments.
+            </p>
+          </div>
+          <Button
+            className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
+            onClick={() => setShowMoreInfoSheet(false)}
+          >
+            Got it
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+
+  // ─── Step: Terms & Conditions ─────────────────────────────────────────────────
+
+  const termsContent = (
+    <>
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+        {TERMS_SECTIONS.map((s) => (
+          <div key={s.title}>
+            <p className="text-foreground font-semibold text-sm mb-1">{s.title}</p>
+            <p className="text-foreground/60 text-sm leading-relaxed">{s.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="px-5 py-4 border-t border-foreground/10 shrink-0 space-y-4">
+        <button
+          onClick={() => setTermsAgreed((v) => !v)}
+          className="flex items-start gap-3 w-full text-left"
+        >
+          <div
+            className={cn(
+              'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors',
+              termsAgreed ? 'bg-blue-500 border-blue-500' : 'border-foreground/30 bg-transparent'
+            )}
+          >
+            {termsAgreed && (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+                <polyline points="2 6 5 9 10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+          <span className="text-foreground text-sm leading-relaxed">
+            I have read and agree to these Terms &amp; Conditions.
+          </span>
+        </button>
+
+        <Button
+          className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl disabled:opacity-40"
+          disabled={!termsAgreed}
+          onClick={() => setStep('payment')}
+        >
+          Accept &amp; Continue
         </Button>
       </div>
     </>
@@ -497,26 +502,23 @@ export function CoDevelopmentJoinSheet({
 
   const paymentContent = (
     <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-3">
-      <div className="bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3 flex items-center justify-between mb-1">
+      <div className="bg-blue-500/8 border border-blue-500/20 rounded-xl px-4 py-3 flex items-center justify-between mb-1">
         <span className="text-foreground/50 text-sm">Amount due</span>
-        <span className="text-foreground font-bold text-base">{displayTotal}</span>
+        <span className="text-blue-500 font-bold text-base">{displayTotal}</span>
       </div>
 
       <button
         onClick={() => setStep('pin')}
-        className="w-full flex items-center gap-4 p-4 rounded-2xl border border-foreground/15 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-colors text-left"
+        className="w-full flex items-center gap-4 p-4 rounded-2xl border border-foreground/15 hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors text-left"
       >
-        <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center shrink-0">
-          <RiWalletLine className="text-emerald-400 h-6 w-6" />
+        <div className="w-12 h-12 rounded-2xl bg-blue-500/15 flex items-center justify-center shrink-0">
+          <RiWalletLine className="text-blue-500 h-6 w-6" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-foreground font-semibold text-sm">From my wallet</p>
           <p className="text-foreground/50 text-xs mt-0.5">
             Balance:{' '}
-            <span className={cn(
-              'font-semibold',
-              (wallet?.availableBalance ?? 0) >= chargedNow ? 'text-green-400' : 'text-red-400'
-            )}>
+            <span className={cn('font-semibold', (wallet?.availableBalance ?? 0) >= chargedNow ? 'text-green-400' : 'text-red-400')}>
               {formatCurrency(wallet?.availableBalance ?? 0)}
             </span>
           </p>
@@ -550,15 +552,17 @@ export function CoDevelopmentJoinSheet({
   const pinContent = (
     <>
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-8 flex flex-col items-center">
-        <div className="w-20 h-20 rounded-full bg-accent/15 flex items-center justify-center mb-5 shrink-0">
-          <RiFingerprint2Line className="text-accent h-10 w-10" />
+        <div className="w-20 h-20 rounded-full bg-blue-500/15 flex items-center justify-center mb-5 shrink-0">
+          <RiFingerprint2Line className="text-blue-500 h-10 w-10" />
         </div>
-        <h3 className="text-foreground font-bold text-xl mb-2">Confirm Investment</h3>
+        <h3 className="text-foreground font-bold text-xl mb-2">Confirm Payment</h3>
         <p className="text-foreground/50 text-sm text-center mb-1">
           Enter your 4-digit transaction PIN to pay from wallet.
         </p>
-        <p className="text-accent font-bold text-lg mb-8">{displayTotal}</p>
+        <p className="text-blue-500 font-bold text-lg mb-8">{displayTotal}</p>
+
         <PinInput value={pin} onChange={setPin} />
+
         {wallet?.hasTransactionPin ? (
           <p className="text-foreground/30 text-xs mt-6 text-center">
             Your PIN is encrypted and never stored on this device.
@@ -570,16 +574,17 @@ export function CoDevelopmentJoinSheet({
             </p>
             <button
               onClick={() => setShowPinModal(true)}
-              className="text-accent text-xs font-semibold mt-2 hover:underline"
+              className="text-blue-500 text-xs font-semibold mt-2 hover:underline"
             >
               Set PIN
             </button>
           </>
         )}
       </div>
+
       <div className="px-5 py-4 border-t border-foreground/10 shrink-0">
         <Button
-          className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
+          className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
           onClick={handleConfirmPin}
           disabled={!pinReady || checkoutMutation.isPending || !wallet?.hasTransactionPin}
         >
@@ -588,11 +593,7 @@ export function CoDevelopmentJoinSheet({
       </div>
 
       {!wallet?.hasTransactionPin && (
-        <PinSetModal
-          open={showPinModal}
-          onOpenChange={setShowPinModal}
-          mode="set"
-        />
+        <PinSetModal open={showPinModal} onOpenChange={setShowPinModal} mode="set" />
       )}
     </>
   );
@@ -604,7 +605,7 @@ export function CoDevelopmentJoinSheet({
       {loaderData ? (
         <Lottie animationData={loaderData} loop className="w-44 h-44" />
       ) : (
-        <div className="w-16 h-16 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mb-6" />
+        <div className="w-16 h-16 rounded-full border-4 border-blue-500 border-t-transparent animate-spin mb-6" />
       )}
       <p className="text-foreground font-semibold text-base mt-2">Processing your investment…</p>
       <p className="text-foreground/40 text-sm mt-1 text-center">Please don't close this window</p>
@@ -614,9 +615,10 @@ export function CoDevelopmentJoinSheet({
   // ─── Assemble ─────────────────────────────────────────────────────────────────
 
   const STEP_TITLES: Record<Step, string> = {
-    slots: 'Join Project',
+    savings: 'Save to Own',
+    terms: 'Terms & Conditions',
     payment: 'How would you want to pay?',
-    pin: 'Confirm Investment',
+    pin: 'Confirm Payment',
     processing: 'Processing…',
   };
 
@@ -646,7 +648,8 @@ export function CoDevelopmentJoinSheet({
             </div>
           )}
 
-          {step === 'slots' && slotsContent}
+          {step === 'savings' && savingsContent}
+          {step === 'terms' && termsContent}
           {step === 'payment' && paymentContent}
           {step === 'pin' && pinContent}
           {step === 'processing' && processingContent}
