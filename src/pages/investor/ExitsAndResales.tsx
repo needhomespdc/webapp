@@ -43,7 +43,7 @@ export default function ExitsAndResales() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {cards.map((card) => (
           <button
             key={card.key}

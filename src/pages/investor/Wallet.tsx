@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -36,14 +36,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from '@/hooks/useToast';
+import { ApiError } from '@/lib/fetchClient';
 import { walletApi } from '@/api/wallet.api';
 import { queryKeys } from '@/lib/queryKeys';
-import { ApiError } from '@/lib/fetchClient';
 import { TopUpSheet } from '@/components/wallet/TopUpSheet';
+import { TopUpSuccessSheet } from '@/components/wallet/TopUpSuccessSheet';
 import { WithdrawSheet } from '@/components/wallet/WithdrawSheet';
 import { TransactionDetailModal } from '@/components/wallet/TransactionDetailModal';
 import { TransactionFilterSheet } from '@/components/wallet/TransactionFilterSheet';
-import type { BankAccount, TxFilterState } from '@/types';
+import type { BankAccount, Transaction, TxFilterState } from '@/types';
 import { EMPTY_TX_FILTERS } from '@/types';
 import type { TxApiFilters } from '@/api/wallet.api';
 
@@ -67,19 +68,46 @@ function computeApiFilters(f: TxFilterState): TxApiFilters {
 export default function InvestorWallet() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const { wallet, isLoading: walletLoading } = useWallet();
   const { bankAccounts, isLoading: banksLoading } = useBankAccounts();
   const { isPinSet } = useTransactionPinStatus();
 
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const [topUpSuccessOpen, setTopUpSuccessOpen] = useState(false);
+  const [topUpSuccessTx, setTopUpSuccessTx] = useState<Transaction | null>(null);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const [showBalance, setShowBalance] = useState(true);
   const [activeFilters, setActiveFilters] = useState<TxFilterState>(EMPTY_TX_FILTERS);
+
+  const hasVerified = useRef(false);
+
+  // Verify top-up when Paystack redirects here with ?reference=
+  useEffect(() => {
+    const reference = searchParams.get('reference');
+    if (!reference || hasVerified.current) return;
+    hasVerified.current = true;
+    // Clean URL without remounting (avoids navigate() causing a full re-render)
+    window.history.replaceState({}, '', '/investor/wallet');
+    walletApi.verifyTopUp(reference)
+      .then((res) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
+        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsFeedBase });
+        // Handle both { data: Transaction } envelope and flat Transaction shapes
+        const raw = res as unknown as Record<string, unknown>;
+        const tx = (raw.data ?? raw) as Transaction;
+        setTopUpSuccessTx(tx);
+        setTopUpSuccessOpen(true);
+      })
+      .catch((err) => {
+        console.error('[TopUp verify]', err);
+        toast.error(err instanceof ApiError ? err.message : 'Could not verify payment. Contact support if funds were deducted.');
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const apiFilters = useMemo(() => computeApiFilters(activeFilters), [activeFilters]);
 
@@ -102,25 +130,6 @@ export default function InvestorWallet() {
     !!activeFilters.status,
     !!activeFilters.type,
   ].filter(Boolean).length;
-
-  // Verify top-up on redirect back from Paystack
-  useEffect(() => {
-    const reference = searchParams.get('reference');
-    if (!reference) return;
-    walletApi.verifyTopUp(reference)
-      .then(() => {
-        toast.success('Wallet funded successfully');
-        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
-        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsBase });
-        queryClient.invalidateQueries({ queryKey: queryKeys.wallet.transactionsFeedBase });
-      })
-      .catch(() => {
-        toast.error('Could not verify payment. Contact support if funds were deducted.');
-      })
-      .finally(() => {
-        setSearchParams({}, { replace: true });
-      });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-5">
@@ -382,6 +391,14 @@ export default function InvestorWallet() {
         wallet={wallet ?? null}
         recentTransactions={transactions}
       />
+
+      {topUpSuccessTx && (
+        <TopUpSuccessSheet
+          open={topUpSuccessOpen}
+          onOpenChange={(v) => { setTopUpSuccessOpen(v); if (!v) setTopUpSuccessTx(null); }}
+          transaction={topUpSuccessTx}
+        />
+      )}
 
       <WithdrawSheet
         open={withdrawOpen}

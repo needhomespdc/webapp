@@ -642,9 +642,9 @@ function EditProfileForm({
         <div className="space-y-2">
           <Label>Country</Label>
           <SelectDropdown<SelectOption>
-            options={Country.getAllCountries().map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))}
+            options={Country.getAllCountries().map((c) => ({ value: c.isoCode, label: c.name }))}
             value={Country.getAllCountries()
-              .map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))
+              .map((c) => ({ value: c.isoCode, label: c.name }))
               .find((o) => o.value === fields.country) ?? null}
             onChange={(opt) => {
               fields.setCountry((opt as SelectOption | null)?.value ?? '');
@@ -652,6 +652,22 @@ function EditProfileForm({
             }}
             placeholder="Select country"
             isSearchable
+            formatOptionLabel={(opt) => {
+              const o = opt as SelectOption;
+              return (
+                <div className="flex items-center gap-2">
+                  <img
+                    src={`https://flagcdn.com/w20/${o.value.toLowerCase()}.png`}
+                    width={20}
+                    height={14}
+                    alt=""
+                    className="rounded-sm shrink-0 object-cover"
+                    style={{ width: 20, height: 14 }}
+                  />
+                  <span>{o.label}</span>
+                </div>
+              );
+            }}
           />
         </div>
 

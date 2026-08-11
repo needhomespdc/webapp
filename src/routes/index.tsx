@@ -87,6 +87,7 @@ export const router = createBrowserRouter([
           { path: '/investor/portfolio', element: withSuspense(Portfolio) },
           { path: '/investor/portfolio/:investmentId', element: withSuspense(InvestmentDetail) },
           { path: '/investor/wallet', element: withSuspense(InvestorWallet) },
+          { path: '/wallet/paystack/callback', element: withSuspense(InvestorWallet) },
           { path: '/investor/kyc', element: withSuspense(KYCPage) },
           { path: '/investor/exits-and-resales', element: withSuspense(ExitsAndResales) },
           { path: '/investor/exits', element: withSuspense(ExitsList) },
