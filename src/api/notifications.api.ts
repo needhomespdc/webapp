@@ -1,9 +1,20 @@
 import { api } from '@/lib/fetchClient';
-import type { Notification, PaginatedResponse, ApiResponse } from '@/types';
+import type { Notification, ApiResponse } from '@/types';
+
+export interface NotificationsResponse {
+  data: Notification[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    unreadCount: number;
+  };
+}
 
 export const notificationsApi = {
-  list: (status = 'all', page = 1, limit = 20): Promise<PaginatedResponse<Notification>> =>
-    api.get<PaginatedResponse<Notification>>(
+  list: (status = 'all', page = 1, limit = 20): Promise<NotificationsResponse> =>
+    api.get<NotificationsResponse>(
       `/notifications?status=${status}&page=${page}&limit=${limit}`
     ),
 
