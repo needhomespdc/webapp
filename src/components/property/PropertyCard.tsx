@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { RiHeartLine, RiHeartFill, RiMapPinLine, RiArrowRightLine } from 'react-icons/ri';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import type { Property } from '@/types';
 
 function getPriceLabel(type?: string): string {
@@ -43,28 +43,39 @@ interface PropertyCardProps {
 export function PropertyCard({ property, isFavorited, onToggleFavorite, basePath = '/investor/marketplace' }: PropertyCardProps) {
   const listingStats = property.listingStats ?? [];
   const hasStatBoxes = listingStats.length >= 2;
+  const isSoldOut = property.inventoryAvailable === 0 || property.status === 'sold_out';
 
   return (
-    <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden hover:border-foreground/20 transition-all">
+    <div className={cn('rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden transition-all', isSoldOut ? 'opacity-80' : 'hover:border-foreground/20')}>
       {/* Image */}
       <Link to={`${basePath}/${property.slug}`} className="block relative h-44 bg-foreground/5 overflow-hidden">
         {property.primaryImageUrl ? (
           <img
             src={property.primaryImageUrl}
             alt={property.title}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            className={cn('w-full h-full object-cover transition-transform duration-300', isSoldOut ? 'grayscale-40' : 'hover:scale-105')}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-foreground/20 text-4xl">🏠</div>
         )}
+
+        {/* Sold Out overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-black/45 flex items-center justify-center pointer-events-none">
+            <span className="rotate-[-22deg] border-[3px] border-red-500 text-red-500 text-lg font-black tracking-widest px-3 py-1 rounded-md opacity-90 select-none">
+              SOLD OUT
+            </span>
+          </div>
+        )}
+
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
           <span className={`${modelBadgeColor(property.investmentModelTypeLabel, property.investmentModelType)} text-white text-[10px] font-semibold px-2 py-1 rounded-xl`}>
             {property.investmentModelTypeLabel === 'Co-development' ? 'Co-Dev' : property.investmentModelTypeLabel}
           </span>
-          {property.isNewListing && (
+          {!isSoldOut && property.isNewListing && (
             <span className="bg-white text-accent text-[10px] font-semibold px-2 py-1 rounded-xl">New</span>
           )}
-          {property.isHotSelling && (
+          {!isSoldOut && property.isHotSelling && (
             <span className="bg-red-500 text-white text-[10px] font-semibold px-2 py-1 rounded-xl">🔥 Hot</span>
           )}
         </div>

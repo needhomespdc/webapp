@@ -190,6 +190,7 @@ export default function Portfolio() {
         </button> */}
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {/* Hero — Total Portfolio Value */}
       <div className="relative rounded-2xl overflow-hidden bg-primary p-5 min-h-[170px] flex flex-col justify-between">
         <div className="flex flex-row justify-between">
@@ -293,6 +294,7 @@ export default function Portfolio() {
             </div>
           </>
         )}
+      </div>
       </div>
 
       {/* My Investments list */}

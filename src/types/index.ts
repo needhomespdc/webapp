@@ -258,6 +258,33 @@ export interface Investment {
   milestones?: InvestmentMilestone[];
   handoverDetails?: HandoverDetails;
   createdAt: string;
+  // Extended detail-only fields returned by GET /investments/:id
+  description?: string | null;
+  aboutLabel?: string | null;
+  documents?: InvestmentDocument[];
+  projectManagerName?: string | null;
+  projectManagerContact?: string | null;
+  projectManagerImageUrl?: string | null;
+  paymentPlan?: string | null;
+  paymentFrequency?: string | null;
+  nextPaymentDate?: string | null;
+  nextPaymentAmount?: number | null;
+  remainingInstallmentsLabel?: string | null;
+  plotSize?: string | null;
+  plotSizeLabel?: string | null;
+  numberOfPlots?: number | null;
+  projectProgressPercent?: number | null;
+  projectEndDate?: string | null;
+  projectDurationLabel?: string | null;
+  initialPropertyValue?: number | null;
+  currentValueNote?: string | null;
+  ownershipLabel?: string | null;
+  currentDevelopmentStageTitle?: string | null;
+  currentDevelopmentStageDate?: string | null;
+  lastUpdatedAt?: string | null;
+  progressTimeline?: InvestmentProgressStep[];
+  progressInfoText?: string | null;
+  currentValueChangePercent?: number | null;
 }
 
 export interface InvestmentMilestone {
@@ -270,6 +297,21 @@ export interface InvestmentMilestone {
 export interface HandoverDetails {
   handoverDate?: string;
   notes?: string;
+}
+
+export interface InvestmentDocument {
+  id?: string;
+  name: string;
+  url: string;
+  type?: string;
+  sizeLabel?: string;
+}
+
+export interface InvestmentProgressStep {
+  title: string;
+  status: 'completed' | 'current' | 'upcoming';
+  date?: string | null;
+  subtitle?: string | null;
 }
 
 // Shape confirmed from a live /investments/me/performance response.
@@ -434,6 +476,61 @@ export interface ExitsListResponse {
   summary: { completedCount: number; pendingCount: number };
 }
 
+export interface ExitTimelineStep {
+  title: string;
+  status: 'completed' | 'current' | 'upcoming';
+  timestamp: string;
+  subtitle?: string;
+}
+
+export interface ExitDetailFinancials {
+  totalInvested: number;
+  currentValue: number;
+  gainBeforeFee: number;
+  gainPercent: number;
+  exitFee: number;
+  exitFeeRate: number;
+  payoutAmount: number;
+}
+
+export interface ExitDetailDocument {
+  id?: string;
+  name: string;
+  url: string;
+  type?: string;
+  sizeLabel?: string;
+}
+
+export interface ExitDetail {
+  id: string;
+  reference: string;
+  investmentId: string;
+  propertyId?: string;
+  title: string;
+  location: string;
+  propertyImageUrl: string | null;
+  propertyType?: string;
+  status: ExitStatus;
+  statusLabel: string;
+  dateLabel?: string;
+  sharesLabel?: string;
+  amount?: number;
+  amountLabel?: string;
+  isAmountReceived?: boolean;
+  ownershipLabel?: string;
+  investedOnLabel?: string;
+  statusDateLabel?: string;
+  requestedAt: string;
+  completedAt?: string | null;
+  processingEligibleAt?: string | null;
+  canComplete?: boolean;
+  financials?: ExitDetailFinancials;
+  timeline?: ExitTimelineStep[];
+  documents?: ExitDetailDocument[];
+  rejectionReason?: string | null;
+  adminNote?: string | null;
+}
+
 export type ResaleStatus = 'pending' | 'approved' | 'rejected' | 'sold' | 'cancelled';
 
 export interface ResaleListing {
@@ -452,6 +549,36 @@ export interface ResalesListResponse {
   data: ResaleListing[];
   meta: { page: number; limit: number; total: number; totalPages: number };
   summary: { pendingCount: number; liveCount: number };
+}
+
+export interface ResaleDetailFinancials {
+  grossAmount: number;
+  listingFee: number;
+  listingFeeRate?: number;
+  processingFee: number;
+  processingFeeRate?: number;
+  netPayout: number;
+}
+
+export interface ResaleDetail {
+  id: string;
+  reference: string;
+  investmentId: string;
+  title: string;
+  location: string;
+  propertyImageUrl: string | null;
+  investmentType?: string;
+  investmentTypeLabel?: string;
+  status: ResaleStatus;
+  statusLabel: string;
+  quantity: number;
+  quantityLabel?: string;
+  minPricePerUnit: number;
+  maxPricePerUnit: number;
+  financials?: ResaleDetailFinancials;
+  rejectionReason?: string | null;
+  listedAt?: string | null;
+  createdAt: string;
 }
 
 // ─── KYC ──────────────────────────────────────────────────────────────────────

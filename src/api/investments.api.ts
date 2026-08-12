@@ -1,4 +1,4 @@
-import { api } from '@/lib/fetchClient';
+import { api, unwrapEnvelope } from '@/lib/fetchClient';
 import type { Investment, PortfolioPerformance, PaginatedResponse, ApiResponse } from '@/types';
 
 export const investmentsApi = {
@@ -18,8 +18,8 @@ export const investmentsApi = {
   getPerformance: (period = 'past_6_months'): Promise<PortfolioPerformance> =>
     api.get<PortfolioPerformance>(`/investments/me/performance?period=${period}`),
 
-  getById: (investmentId: string): Promise<ApiResponse<Investment>> =>
-    api.get<ApiResponse<Investment>>(`/investments/${investmentId}`),
+  getById: (investmentId: string): Promise<Investment> =>
+    api.get<unknown>(`/investments/${investmentId}`).then(unwrapEnvelope<Investment>),
 
   getReceipt: (investmentId: string): Promise<Blob> =>
     api.getBlob(`/investments/${investmentId}/receipt`),

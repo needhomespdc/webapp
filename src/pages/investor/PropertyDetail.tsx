@@ -600,7 +600,18 @@ export default function PropertyDetail() {
 
   const config = (property.investmentModelConfig?.config ?? {}) as Record<string, unknown>;
   const kycApproved = user?.kycStatus === 'approved';
-  const isAvailable = property.status === 'published' && property.inventoryAvailable > 0;
+
+  const windowClosingDate = (() => {
+    const raw =
+      config.closingDate ??
+      config.windowClosesAt ??
+      config.investmentWindowEnd ??
+      config.reservationEndsAt;
+    return raw ? new Date(raw as string) : null;
+  })();
+  const isWindowClosed = windowClosingDate != null && Date.now() > windowClosingDate.getTime();
+
+  const isAvailable = property.status === 'published' && property.inventoryAvailable > 0 && !isWindowClosed;
   const ctaConfig = MODEL_CTA[property.investmentModelType] ?? MODEL_CTA.fractional;
 
   const ctaPrice = (() => {
@@ -890,7 +901,7 @@ export default function PropertyDetail() {
       </div>
 
       {/* ── Sticky CTA bar ─────────────────────────────────────────────────── */}
-      {property.inventoryAvailable > 0 && <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
+      {(property.inventoryAvailable > 0 || property.status === 'sold_out' || property.status === 'closed' || isWindowClosed) && <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
         <div className="max-w-screen-sm mx-auto flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-foreground/50 text-xs truncate">{ctaConfig.priceLabel}</p>

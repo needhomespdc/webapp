@@ -195,8 +195,10 @@ export function CoDevelopmentJoinSheet({
     else handleOpenChange(false);
   };
 
+  const displaySlotsInput = slotsInput ? parseInt(slotsInput, 10).toLocaleString('en-NG') : '';
+
   const handleSlotsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '');
+    const raw = e.target.value.replace(/,/g, '').replace(/\D/g, '');
     setSlotsInput(raw);
     const num = parseInt(raw, 10);
     if (!isNaN(num) && num >= 1 && num <= availableSlots) setSlots(num);
@@ -285,7 +287,7 @@ export function CoDevelopmentJoinSheet({
             <input
               type="text"
               inputMode="numeric"
-              value={slotsInput}
+              value={displaySlotsInput}
               onChange={handleSlotsChange}
               onBlur={handleSlotsBlur}
               className="flex-1 bg-transparent text-foreground font-bold text-2xl focus:outline-none min-w-0"

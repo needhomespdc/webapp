@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/queryKeys';
 export function useSupportTickets() {
   const query = useQuery({
     queryKey: queryKeys.support.list,
-    queryFn: () => supportApi.listTickets().then((r) => r.data),
+    queryFn: () => supportApi.listTickets(),
   });
 
   return { tickets: query.data ?? [], isLoading: query.isLoading };
@@ -14,7 +14,7 @@ export function useSupportTickets() {
 export function useSupportTicket(ticketId: string | undefined) {
   const query = useQuery({
     queryKey: queryKeys.support.detail(ticketId ?? ''),
-    queryFn: () => supportApi.getTicket(ticketId!).then((r) => r.data),
+    queryFn: () => supportApi.getTicket(ticketId!),
     enabled: !!ticketId,
   });
 

@@ -235,6 +235,7 @@ export function FractionalInvestSheet({
   };
 
   const canProceed = quantity >= minShares && availableShares > 0;
+  const displayShares = sharesInput ? parseInt(sharesInput, 10).toLocaleString('en-NG') : '';
 
   // ─── Step: Details ────────────────────────────────────────────────────────────
 
@@ -268,12 +269,10 @@ export function FractionalInvestSheet({
           <p className="text-foreground font-medium text-sm mb-2">How long do you want to invest?</p>
           <div className="flex items-center bg-foreground/5 border border-foreground/10 rounded-xl overflow-hidden">
             <input
-              type="number"
+              type="text"
               inputMode="numeric"
-              min={minShares}
-              max={availableShares}
-              value={sharesInput}
-              onChange={(e) => setSharesInput(e.target.value)}
+              value={displayShares}
+              onChange={(e) => setSharesInput(e.target.value.replace(/,/g, '').replace(/\D/g, ''))}
               onBlur={() => {
                 const v = parseInt(sharesInput, 10);
                 if (isNaN(v) || v < minShares) setSharesInput(String(minShares));
