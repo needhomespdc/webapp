@@ -16,7 +16,7 @@ function SupportAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
       style={{ backgroundColor: '#362319' }}
     >
       <img
-        src="/public/logo/logo-hero-white.png"
+        src="/logo/logo-hero-white.png"
         alt="NH"
         className={`${iconDim} object-contain`}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}

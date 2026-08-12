@@ -14,7 +14,6 @@ import { useInvestmentDetail } from '@/hooks/useInvestment';
 import { investmentsApi } from '@/api/investments.api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { Loader } from '@/components/shared/Loader';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/useToast';
