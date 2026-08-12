@@ -63,12 +63,7 @@ export default function SupportNewTicket() {
         </button>
         <SupportAvatar />
         <div className="flex-1 min-w-0">
-          <img
-            src="/assets/logo/needhomes-logo.svg"
-            alt="NeedHomes"
-            className="h-4 w-auto max-w-30"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-          />
+          <p className="text-foreground text-sm font-semibold leading-tight">NeedHomes Support</p>
           <p className="text-foreground/40 text-xs mt-0.5 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
             Online · Typically replies in minutes
