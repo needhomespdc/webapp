@@ -3,19 +3,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { RiArrowLeftLine, RiSendPlaneFill } from 'react-icons/ri';
 import { Input } from '@/components/ui/input';
 import { useCreateSupportTicket } from '@/hooks/useSupport';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
 
-function SupportAvatar() {
+function SupportAvatar({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const dim = size === 'sm' ? 'w-7 h-7' : 'w-10 h-10';
+  const iconDim = size === 'sm' ? 'w-4 h-4' : 'w-6 h-6';
   return (
     <div
-      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+      className={`${dim} rounded-full flex items-center justify-center shrink-0 overflow-hidden`}
       style={{ backgroundColor: '#362319' }}
     >
       <img
         src="/public/logo/logo-hero-white.png"
         alt="NH"
-        className="w-6 h-6 object-contain"
+        className={`${iconDim} object-contain`}
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
       />
     </div>
@@ -28,6 +31,8 @@ export default function SupportNewTicket() {
   const location = useLocation();
   const roleBase = location.pathname.startsWith('/partner') ? '/partner' : '/investor';
   const createMutation = useCreateSupportTicket();
+  const { user } = useAuth();
+  const firstName = user?.firstName ?? 'there';
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -36,7 +41,7 @@ export default function SupportNewTicket() {
       { subject: 'NeedHomes Support Chat', message: trimmed },
       {
         onSuccess: (res) => {
-          navigate(`${roleBase}/support/tickets/${res.data.id}`, { replace: true });
+          navigate(`${roleBase}/support/tickets/${res.id}`, { replace: true });
         },
         onError: (err) =>
           toast.error(err instanceof ApiError ? err.message : 'Failed to start conversation'),
@@ -71,12 +76,23 @@ export default function SupportNewTicket() {
         </div>
       </div>
 
-      {/* Empty area */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center px-6 overflow-y-auto min-h-0">
-        <p className="text-foreground font-semibold text-sm">Hi there! Welcome to NeedHomes Support.</p>
-        <p className="text-foreground/40 text-xs">
-          Type your message below to start a conversation with our team.
-        </p>
+      {/* Welcome messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
+        <div className="space-y-0.5 mt-2">
+          {[
+            `Hi ${firstName}! Welcome to NeedHomes Support. How can we help you today?`,
+            'Our team can assist with investments, wallet, KYC, and account questions.',
+          ].map((text, i) => (
+            <div key={i} className={`flex items-end gap-2 ${i === 0 ? '' : 'mt-0.5'}`}>
+              <div className="w-7 shrink-0 mb-0.5">
+                {i === 1 ? <SupportAvatar size="sm" /> : <div className="w-7" />}
+              </div>
+              <div className="max-w-[75%] px-4 py-2.5 bg-foreground/10 text-foreground rounded-t-2xl rounded-br-2xl rounded-bl-sm">
+                <p className="text-sm leading-relaxed">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Input bar */}

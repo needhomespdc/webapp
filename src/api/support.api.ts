@@ -41,8 +41,8 @@ export const supportApi = {
   createTicket: (payload: {
     subject: string;
     message: string;
-  }): Promise<ApiResponse<SupportTicketDetail>> =>
-    api.post<ApiResponse<SupportTicketDetail>>('/support/tickets', payload),
+  }): Promise<SupportTicketDetail> =>
+    api.post<SupportTicketDetail>('/support/tickets', payload),
 
   getTicket: (supportTicketId: string): Promise<SupportTicketDetail> =>
     api.get<unknown>(`/support/tickets/${supportTicketId}`).then(unwrapEnvelope<SupportTicketDetail>),
