@@ -13,9 +13,9 @@ function SupportAvatar() {
       style={{ backgroundColor: '#362319' }}
     >
       <img
-        src="/public/logo/needhomes-logo.png"
+        src="/public/logo/logo-hero-white.png"
         alt="NH"
-        className="w-6 h-6"
+        className="w-6 h-6 object-contain"
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
       />
     </div>
