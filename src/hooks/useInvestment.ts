@@ -32,7 +32,7 @@ export function useInvestmentListFeed(status?: string) {
 export function useInvestmentDetail(investmentId: string | undefined) {
   const query = useQuery({
     queryKey: queryKeys.investments.detail(investmentId ?? ''),
-    queryFn: () => investmentsApi.getById(investmentId!).then((data) => data),
+    queryFn: () => investmentsApi.getById(investmentId!),
     enabled: !!investmentId,
   });
 

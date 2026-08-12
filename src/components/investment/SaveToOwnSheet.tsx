@@ -156,8 +156,9 @@ export function SaveToOwnSheet({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalPayable = pricePerUnit + legalFee;
+  const displaySavingsAmount = savingsAmountInput ? parseInt(savingsAmountInput, 10).toLocaleString('en-NG') : '';
   const savingsAmount = Math.min(
-    Math.max(0, parseFloat(savingsAmountInput.replace(/,/g, '')) || 0),
+    Math.max(0, parseInt(savingsAmountInput, 10) || 0),
     totalPayable
   );
   const remaining = totalPayable - savingsAmount;
@@ -216,7 +217,7 @@ export function SaveToOwnSheet({
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/[^0-9.]/g, '');
+    const raw = e.target.value.replace(/,/g, '').replace(/\D/g, '');
     setSavingsAmountInput(raw);
   };
 
@@ -302,8 +303,8 @@ export function SaveToOwnSheet({
             <span className="text-foreground/50 text-lg font-semibold shrink-0">₦</span>
             <input
               type="text"
-              inputMode="decimal"
-              value={savingsAmountInput}
+              inputMode="numeric"
+              value={displaySavingsAmount}
               onChange={handleAmountChange}
               placeholder="0"
               className="flex-1 bg-transparent text-foreground font-bold text-2xl focus:outline-none min-w-0"

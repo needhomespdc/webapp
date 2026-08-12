@@ -13,6 +13,7 @@ import {
   RiBuildingLine,
 } from 'react-icons/ri';
 import { useEligibleExits, useExitList, useCreateExit } from '@/hooks/useExits';
+import { ExitDetailSheet } from '@/components/exits/ExitDetailSheet';
 import { formatCurrency } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -344,7 +345,7 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent
         side={isMobile ? 'bottom' : 'right'}
-        className={cn('p-0 flex flex-col overflow-hidden', isMobile ? 'rounded-t-2xl h-[92vh]' : 'h-full sm:max-w-md')}
+        className={cn('p-0 flex flex-col overflow-hidden', isMobile ? 'rounded-t-2xl h-[92vh]' : 'h-full sm:max-w-lg')}
       >
         {content}
       </SheetContent>
@@ -354,9 +355,12 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
 
 // ─── Exit card ─────────────────────────────────────────────────────────────────
 
-function ExitCard({ exit }: { exit: ExitRequest }) {
+function ExitCard({ exit, onClick }: { exit: ExitRequest; onClick: () => void }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3">
+    <div
+      onClick={onClick}
+      className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:border-foreground/20 transition-colors active:scale-[0.99]"
+    >
       {/* Top row */}
       <div className="flex items-start gap-3">
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
@@ -408,6 +412,7 @@ export default function Exits() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedExitId, setSelectedExitId] = useState<string | null>(null);
 
   const { eligible, isLoading: eligibleLoading } = useEligibleExits();
   const { exits, summary, isLoading } = useExitList('history');
@@ -498,7 +503,9 @@ export default function Exits() {
             <EmptyState icon={<RiBook2Line />} title="No exit requests" description="Your exit history will appear here." />
           ) : (
             <div className="space-y-3">
-              {filtered.map((exit) => <ExitCard key={exit.id} exit={exit} />)}
+              {filtered.map((exit) => (
+                <ExitCard key={exit.id} exit={exit} onClick={() => setSelectedExitId(exit.id)} />
+              ))}
             </div>
           )}
         </TabsContent>
@@ -527,12 +534,18 @@ export default function Exits() {
         New Exit Request
       </button>
 
-      {/* Sheet */}
+      {/* New Exit Request sheet */}
       <ExitRequestSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         eligible={eligible}
         eligibleLoading={eligibleLoading}
+      />
+
+      {/* Exit Detail sheet */}
+      <ExitDetailSheet
+        exitId={selectedExitId}
+        onClose={() => setSelectedExitId(null)}
       />
     </div>
   );

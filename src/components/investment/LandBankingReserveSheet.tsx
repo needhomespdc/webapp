@@ -230,8 +230,10 @@ export function LandBankingReserveSheet({
     else handleOpenChange(false);
   };
 
+  const displayPlotsInput = plotsInput ? parseInt(plotsInput, 10).toLocaleString('en-NG') : '';
+
   const handlePlotsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '');
+    const raw = e.target.value.replace(/,/g, '').replace(/\D/g, '');
     setPlotsInput(raw);
     const num = parseInt(raw, 10);
     if (!isNaN(num) && num >= 1 && num <= availablePlots) setPlots(num);
@@ -328,7 +330,7 @@ export function LandBankingReserveSheet({
               ref={plotsInputRef}
               type="text"
               inputMode="numeric"
-              value={plotsInput}
+              value={displayPlotsInput}
               onChange={handlePlotsChange}
               onBlur={handlePlotsBlur}
               className="flex-1 bg-transparent text-foreground font-bold text-2xl focus:outline-none min-w-0"

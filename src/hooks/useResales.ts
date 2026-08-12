@@ -24,6 +24,20 @@ export function useMyResales() {
   };
 }
 
+export function useResaleDetail(resaleId: string | undefined) {
+  const query = useQuery({
+    queryKey: queryKeys.resales.detail(resaleId ?? ''),
+    queryFn: () =>
+      resalesApi.getById(resaleId!).then((r) => {
+        const raw = r as unknown as Record<string, unknown>;
+        return (raw.data ?? raw) as import('@/types').ResaleDetail;
+      }),
+    enabled: !!resaleId,
+  });
+
+  return { resale: query.data, isLoading: query.isLoading };
+}
+
 export function useCreateResale() {
   const queryClient = useQueryClient();
   return useMutation({

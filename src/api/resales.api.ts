@@ -1,13 +1,7 @@
 import { api } from '@/lib/fetchClient';
-import type { ResaleListing, ResalesListResponse, EligibleInvestment, PaginatedResponse, ApiResponse } from '@/types';
+import type { ResaleListing, ResaleDetail, ResalesListResponse, EligibleInvestment, ApiResponse } from '@/types';
 
 export const resalesApi = {
-  getPublicList: (page = 1, limit = 10): Promise<PaginatedResponse<ResaleListing>> =>
-    api.get<PaginatedResponse<ResaleListing>>(`/resales?page=${page}&limit=${limit}`),
-
-  getPublicById: (resaleListingId: string): Promise<ApiResponse<ResaleListing>> =>
-    api.get<ApiResponse<ResaleListing>>(`/resales/${resaleListingId}`),
-
   getEligible: (): Promise<EligibleInvestment[]> =>
     api.get<EligibleInvestment[]>('/resales/eligible'),
 
@@ -22,8 +16,8 @@ export const resalesApi = {
   listMine: (): Promise<ResalesListResponse> =>
     api.get<ResalesListResponse>('/resales/me'),
 
-  getMine: (resaleListingId: string): Promise<ApiResponse<ResaleListing>> =>
-    api.get<ApiResponse<ResaleListing>>(`/resales/me/${resaleListingId}`),
+  getById: (resaleListingId: string): Promise<ApiResponse<ResaleDetail>> =>
+    api.get<ApiResponse<ResaleDetail>>(`/resales/me/${resaleListingId}`),
 
   cancel: (resaleListingId: string): Promise<ApiResponse<null>> =>
     api.patch<ApiResponse<null>>(`/resales/${resaleListingId}`),

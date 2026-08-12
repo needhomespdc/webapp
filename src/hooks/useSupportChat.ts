@@ -25,8 +25,7 @@ export function useSupportChat(ticketId: string | null) {
 
     supportApi
       .getTicket(ticketId)
-      .then((res) => {
-        const ticket = unwrapEnvelope<{ messages?: SupportMessage[] }>(res);
+      .then((ticket) => {
         setMessages(ticket.messages ?? []);
       })
       .catch(() => {})

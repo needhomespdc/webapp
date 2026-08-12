@@ -27,7 +27,10 @@ export function useExitList(filter = 'history') {
 export function useExitDetail(exitId: string | undefined) {
   const query = useQuery({
     queryKey: queryKeys.exits.detail(exitId ?? ''),
-    queryFn: () => exitsApi.getById(exitId!).then((r) => r.data),
+    queryFn: () => exitsApi.getById(exitId!).then((r) => {
+      const raw = r as unknown as Record<string, unknown>;
+      return (raw.data ?? raw) as import('@/types').ExitDetail;
+    }),
     enabled: !!exitId,
   });
 

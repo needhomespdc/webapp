@@ -183,6 +183,27 @@ export default function Profile() {
 
   if (!user) return null;
 
+  const accountMenu = (
+    <MenuSection title="Account">
+      <MenuItem
+        icon={<RiAlertLine />}
+        iconBg="bg-amber-500/15"
+        iconColor="text-amber-500"
+        label="Deactivate Account"
+        desc="Temporarily disable your NeedHomes account"
+        onClick={() => setDeactivateOpen(true)}
+      />
+      <MenuItem
+        icon={<RiLogoutBoxLine />}
+        iconBg="bg-red-500/15"
+        iconColor="text-red-400"
+        label="Log Out"
+        desc="Sign out of your NeedHomes account"
+        onClick={() => setLogoutOpen(true)}
+      />
+    </MenuSection>
+  );
+
   const displayName =
     user.role === 'partner' || (user.role === 'investor' && user.investorType === 'individual')
       ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
@@ -282,7 +303,7 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
-        {/* Col 1: Security + Account */}
+        {/* Col 1: Security + Account (desktop) */}
         <div className="space-y-5">
           <MenuSection title="Security">
             <MenuItem
@@ -324,28 +345,11 @@ export default function Profile() {
               onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
             />
           </MenuSection>
-
-          <MenuSection title="Account">
-            <MenuItem
-              icon={<RiAlertLine />}
-              iconBg="bg-amber-500/15"
-              iconColor="text-amber-500"
-              label="Deactivate Account"
-              desc="Temporarily disable your NeedHomes account"
-              onClick={() => setDeactivateOpen(true)}
-            />
-            <MenuItem
-              icon={<RiLogoutBoxLine />}
-              iconBg="bg-foreground/10"
-              iconColor="text-foreground/50"
-              label="Log Out"
-              desc="Sign out of your NeedHomes account"
-              onClick={() => setLogoutOpen(true)}
-            />
-          </MenuSection>
+          {/* Account shown here on desktop only */}
+          <div className="hidden md:block">{accountMenu}</div>
         </div>
 
-        {/* Col 2: Investments (investor only) + Support & Information */}
+        {/* Col 2: Investments (investor only) + Support */}
         <div className="space-y-5">
           {isInvestor && (
             <MenuSection title="Investments">
@@ -359,7 +363,6 @@ export default function Profile() {
               />
             </MenuSection>
           )}
-
           <MenuSection title="Support & Information">
             <MenuItem
               icon={<RiHeadphoneLine />}
@@ -395,6 +398,9 @@ export default function Profile() {
             />
           </MenuSection>
         </div>
+
+        {/* Account at bottom — mobile only (hidden on desktop) */}
+        <div className="md:hidden">{accountMenu}</div>
 
       </div>
 

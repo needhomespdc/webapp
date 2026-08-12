@@ -6,6 +6,7 @@ import {
   RiTimeLine,
   RiAddLine,
   RiArrowLeftLine,
+  RiArrowRightSLine,
   RiInformationLine,
   RiCheckLine,
   RiPieChart2Line,
@@ -32,6 +33,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
+import { ResaleDetailSheet } from '@/components/resales/ResaleDetailSheet';
 import type { ResaleListing, EligibleInvestment } from '@/types';
 
 // ─── 3-step sheet ─────────────────────────────────────────────────────────────
@@ -205,26 +207,31 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
     else handleClose(false);
   };
 
+  const ownedQty = selectedInv ? selectedInv.quantityOwned : 1;
+  const currentValuePerUnit = selectedInv ? Math.floor(selectedInv.currentValue / Math.max(ownedQty, 1)) : 0;
+
   const handleSelectContinue = () => {
     if (!selectedInv) { toast.error('Please select an investment'); return; }
     setQuantity(1);
+    setMinPrice('');
+    setMaxPrice(String(currentValuePerUnit));
     setStep('set-price');
   };
 
   const handlePriceContinue = () => {
-    const min = parseFloat(minPrice);
-    const max = parseFloat(maxPrice);
-    if (!min || !max) { toast.error('Enter both min and max price'); return; }
-    if (min > max) { toast.error('Min price cannot exceed max price'); return; }
+    if (!numMin || !numMax) { toast.error('Enter both min and max price'); return; }
+    if (numMin > numMax) { toast.error('Min price cannot exceed max price'); return; }
+    if (numMax > currentValuePerUnit) {
+      toast.error(`Max price cannot exceed current value per unit (${formatCurrency(currentValuePerUnit)})`);
+      return;
+    }
     setStep('review');
   };
 
   const handleSubmit = () => {
     if (!selectedInv || !agreed) { toast.error('Please accept the terms'); return; }
-    const min = parseFloat(minPrice);
-    const max = parseFloat(maxPrice);
     createMutation.mutate(
-      { investmentId: selectedInv.investmentId, quantity, minPricePerUnit: min, maxPricePerUnit: max, termsAccepted: true },
+      { investmentId: selectedInv.investmentId, quantity, minPricePerUnit: numMin, maxPricePerUnit: numMax, termsAccepted: true },
       {
         onSuccess: () => { toast.success('Resale listing submitted for review'); handleClose(false); },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to create listing'),
@@ -232,10 +239,17 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
     );
   };
 
-  const ownedQty = selectedInv ? selectedInv.quantityOwned : 1;
-  const pricePerUnitHint = selectedInv ? formatCurrency(selectedInv.currentValue / Math.max(ownedQty, 1)) : '';
+  const pricePerUnitHint = selectedInv ? formatCurrency(currentValuePerUnit) : '';
+
+  const numMin = parseInt(minPrice, 10) || 0;
+  const numMax = parseInt(maxPrice, 10) || 0;
+  const displayMinPrice = minPrice ? numMin.toLocaleString('en-NG') : '';
+  const displayMaxPrice = maxPrice ? numMax.toLocaleString('en-NG') : '';
+  const handleMinInput = (raw: string) => setMinPrice(raw.replace(/\D/g, ''));
+  const handleMaxInput = (raw: string) => setMaxPrice(raw.replace(/\D/g, ''));
+
   const priceRangeDisplay = minPrice && maxPrice
-    ? (minPrice === maxPrice ? `${formatCurrency(parseFloat(minPrice))} per unit` : `${formatCurrency(parseFloat(minPrice))} – ${formatCurrency(parseFloat(maxPrice))} per unit`)
+    ? (minPrice === maxPrice ? `${formatCurrency(numMin)} per unit` : `${formatCurrency(numMin)} – ${formatCurrency(numMax)} per unit`)
     : '—';
 
   const content = (
@@ -346,11 +360,11 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
                   <div className="bg-background border border-foreground/10 rounded-xl flex items-center h-13 px-3 gap-2">
                     <span className="text-foreground/50 text-sm">₦</span>
                     <input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
+                      value={displayMinPrice}
+                      onChange={(e) => handleMinInput(e.target.value.replace(/,/g, ''))}
                       className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder:text-foreground/25"
                     />
                   </div>
@@ -360,21 +374,24 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
                   <div className="bg-background border border-foreground/10 rounded-xl flex items-center h-13 px-3 gap-2">
                     <span className="text-foreground/50 text-sm">₦</span>
                     <input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
+                      value={displayMaxPrice}
+                      onChange={(e) => handleMaxInput(e.target.value.replace(/,/g, ''))}
                       className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder:text-foreground/25"
                     />
                   </div>
                   {pricePerUnitHint && (
                     <p className="text-foreground/40 text-xs mt-2">
-                      Current value per unit: {pricePerUnitHint}
+                      Maximum allowed: {pricePerUnitHint} per unit
                     </p>
                   )}
+                  {maxPrice && numMax > currentValuePerUnit && (
+                    <p className="text-red-400 text-xs mt-1">Max price cannot exceed current value per unit.</p>
+                  )}
                 </div>
-                {minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice) && (
+                {minPrice && maxPrice && numMin > numMax && (
                   <p className="text-red-400 text-xs">Min price cannot exceed max price.</p>
                 )}
               </div>
@@ -384,7 +401,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
             <Button
               className="w-full h-13 bg-accent hover:bg-accent/90 text-white font-bold rounded-2xl text-base flex items-center justify-center gap-2"
               onClick={handlePriceContinue}
-              disabled={!minPrice || !maxPrice || parseFloat(minPrice) > parseFloat(maxPrice)}
+              disabled={!numMin || !numMax || numMin > numMax || numMax > currentValuePerUnit}
             >
               Continue to Review
               <span className="text-lg">›</span>
@@ -503,7 +520,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
         side={isMobile ? 'bottom' : 'right'}
         className={cn(
           'p-0 flex flex-col overflow-hidden',
-          isMobile ? 'rounded-t-2xl h-[92vh]' : 'h-full sm:max-w-md',
+          isMobile ? 'rounded-t-2xl h-[92vh]' : 'h-full sm:max-w-lg',
         )}
       >
         {content}
@@ -514,38 +531,58 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
 
 // ─── Listing card ─────────────────────────────────────────────────────────────
 
-function ResaleListingCard({ listing }: { listing: ResaleListing }) {
+function ResaleListingCard({ listing, onViewDetails }: { listing: ResaleListing; onViewDetails: () => void }) {
   const cancelMutation = useCancelResale();
   const deleteMutation = useDeleteResale();
 
+  const title = listing.investment?.title ?? 'Investment';
+  const location = listing.investment?.location ?? '';
+  const imageUrl = listing.investment?.propertyImageUrl ?? null;
+
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <p className="text-foreground text-sm font-semibold line-clamp-1">
-          {listing.investment?.title ?? 'Investment'}
-        </p>
+    <div
+      onClick={onViewDetails}
+      className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:border-foreground/20 transition-colors active:scale-[0.99]"
+    >
+      {/* Top row */}
+      <div className="flex items-start gap-3">
+        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
+          {imageUrl
+            ? <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+            : <div className="w-full h-full flex items-center justify-center"><RiBuildingLine className="h-6 w-6 text-foreground/30" /></div>
+          }
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-foreground font-bold text-sm line-clamp-1">{title}</p>
+          <p className="text-foreground/50 text-xs mt-0.5">{location}</p>
+        </div>
         <StatusBadge status={listing.status} />
       </div>
+
+      {/* 3-col grid */}
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
+          <p className="text-foreground/40">Date Listed</p>
+          <p className="text-foreground font-medium mt-0.5">{formatDate(listing.createdAt)}</p>
+        </div>
+        <div>
           <p className="text-foreground/40">Quantity</p>
-          <p className="text-foreground font-medium">{listing.quantity} unit{listing.quantity !== 1 ? 's' : ''}</p>
+          <p className="text-foreground font-medium mt-0.5">{listing.quantity} unit{listing.quantity !== 1 ? 's' : ''}</p>
         </div>
         <div>
           <p className="text-foreground/40">Min / Unit</p>
-          <p className="text-foreground font-medium">{formatCurrency(listing.minPricePerUnit)}</p>
-        </div>
-        <div>
-          <p className="text-foreground/40">Max / Unit</p>
-          <p className="text-foreground font-medium">{formatCurrency(listing.maxPricePerUnit)}</p>
+          <p className="text-foreground font-semibold mt-0.5">{formatCurrency(listing.minPricePerUnit)}</p>
         </div>
       </div>
-      <p className="text-foreground/30 text-xs mt-2">Listed {formatDate(listing.createdAt)}</p>
+
+      {/* Rejection reason */}
       {listing.rejectionReason && (
-        <p className="text-red-400 text-xs mt-2 bg-red-500/10 rounded-lg px-3 py-2">{listing.rejectionReason}</p>
+        <p className="text-red-400 text-xs bg-red-500/10 rounded-lg px-3 py-2">{listing.rejectionReason}</p>
       )}
-      {listing.status === 'pending' && (
-        <div className="flex gap-2 mt-3">
+
+      {/* Pending: cancel/delete actions; otherwise: arrow */}
+      {listing.status === 'pending' ? (
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <Button
             variant="outline"
             size="sm"
@@ -565,6 +602,12 @@ function ResaleListingCard({ listing }: { listing: ResaleListing }) {
             Delete
           </Button>
         </div>
+      ) : (
+        <div className="flex justify-end">
+          <div className="w-7 h-7 rounded-full border border-foreground/15 flex items-center justify-center text-foreground/30">
+            <RiArrowRightSLine className="h-4 w-4" />
+          </div>
+        </div>
       )}
     </div>
   );
@@ -578,6 +621,7 @@ export default function Resales() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
+  const [selectedResaleId, setSelectedResaleId] = useState<string | null>(null);
 
   const { eligible, isLoading: eligibleLoading } = useEligibleResales();
   const { resales, summary, isLoading } = useMyResales();
@@ -679,7 +723,11 @@ export default function Resales() {
           ) : (
             <div className="space-y-3">
               {filtered.map((listing) => (
-                <ResaleListingCard key={listing.id} listing={listing} />
+                <ResaleListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onViewDetails={() => setSelectedResaleId(listing.id)}
+                />
               ))}
             </div>
           )}
@@ -709,6 +757,12 @@ export default function Resales() {
         onOpenChange={setCreateOpen}
         eligible={eligible}
         eligibleLoading={eligibleLoading}
+      />
+
+      {/* Resale detail sheet */}
+      <ResaleDetailSheet
+        resaleId={selectedResaleId}
+        onClose={() => setSelectedResaleId(null)}
       />
 
       {/* FAB — desktop only */}
