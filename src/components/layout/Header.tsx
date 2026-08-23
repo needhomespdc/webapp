@@ -98,8 +98,8 @@ export function Header({ navItems }: HeaderProps) {
               <button className="flex items-center gap-2 pl-1 pr-1 lg:pr-2 py-1 rounded-xl hover:bg-foreground/5 transition-colors">
                 <span className="relative shrink-0">
                   <span className="w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center text-sm font-bold overflow-hidden">
-                    {user?.avatarUrl
-                      ? <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                    {user?.profilePictureUrl
+                      ? <img src={user.profilePictureUrl} alt={displayName} className="w-full h-full object-cover" />
                       : initials}
                   </span>
                   {isVerified && (

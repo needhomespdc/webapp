@@ -73,16 +73,28 @@ function sortInvestments(list: Investment[], sort: SortValue): Investment[] {
   }
 }
 
-// ─── Investment card (same layout as dashboard) ────────────────────────────────
+// ─── Model badge colors ────────────────────────────────────────────────────────
+
+const MODEL_BADGE: Record<string, string> = {
+  co_development: 'bg-emerald-500',
+  fractional: 'bg-violet-500',
+  land_banking: 'bg-orange-500',
+  save_to_own: 'bg-blue-500',
+  outright: 'bg-amber-500',
+};
+
+// ─── Investment card ───────────────────────────────────────────────────────────
 
 function InvestmentCard({ inv }: { inv: Investment }) {
+  const badgeCls = MODEL_BADGE[inv.type] ?? 'bg-foreground/30';
+
   return (
     <Link
       to={`/investor/portfolio/${inv.id}`}
-      className="flex items-center gap-3 p-3 rounded-2xl border border-foreground/10 hover:border-foreground/20 bg-card transition-all"
+      className="flex items-center gap-3 p-3 rounded-2xl border border-foreground/10 hover:border-foreground/20 bg-card transition-all active:scale-[0.99]"
     >
       {/* Thumbnail */}
-      <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden shrink-0">
+      <div className="relative w-19 h-19 rounded-xl overflow-hidden shrink-0">
         {inv.propertyImageUrl ? (
           <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
         ) : (
@@ -90,36 +102,38 @@ function InvestmentCard({ inv }: { inv: Investment }) {
             <RiBriefcaseLine className="text-accent h-6 w-6" />
           </div>
         )}
-        <span className="absolute top-1.5 left-1.5 bg-black/55 backdrop-blur text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight">
+        <span className={cn('absolute top-1.5 left-1.5 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap leading-none', badgeCls)}>
           {inv.typeLabel === 'Co-development' ? 'Co-Dev' : inv.typeLabel}
         </span>
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-1 flex-wrap">
-          <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
-          <div className="flex items-center gap-1">
-            <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
-            <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
-          </div>
+        {/* Row 1: title */}
+        <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+
+        {/* Row 2: location */}
+        <div className="flex items-center gap-1 mt-1">
+          <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
+          <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
         </div>
 
-        <div className="flex items-center mt-2 pt-2 border-t border-foreground/5">
+        {/* Row 3: stats */}
+        <div className="flex items-center mt-2 pt-2 border-t border-foreground/8">
           <div className="flex-1 min-w-0">
             <p className="text-foreground/40 text-[10px]">Units Owned</p>
             <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
           </div>
-          <div className="w-px h-6 bg-foreground/10 mx-2" />
+          <div className="w-px h-6 bg-foreground/10 mx-2 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-foreground/40 text-[10px]">Current Value</p>
             <p className="text-foreground text-xs font-bold mt-0.5">{formatCurrency(inv.currentValue)}</p>
           </div>
           {inv.projectMilestoneLabel && (
             <>
-              <div className="hidden sm:block w-px h-6 bg-foreground/10 mx-2" />
+              <div className="hidden sm:block w-px h-6 bg-foreground/10 mx-2 shrink-0" />
               <div className="hidden sm:flex flex-1 min-w-0 flex-col">
-                <p className="text-foreground/40 text-[10px]">Project Milestone</p>
+                <p className="text-foreground/40 text-[10px]">Milestone</p>
                 <p className="text-foreground text-xs font-bold mt-0.5 truncate">{inv.projectMilestoneLabel}</p>
               </div>
             </>

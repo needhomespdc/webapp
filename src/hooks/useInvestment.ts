@@ -59,6 +59,15 @@ export function useCheckoutInvestment() {
   });
 }
 
+export function useInvestmentPayments(investmentId: string | undefined) {
+  const query = useQuery({
+    queryKey: ['investments', investmentId, 'payments'],
+    queryFn: () => investmentsApi.getPayments(investmentId!),
+    enabled: !!investmentId,
+  });
+  return { paymentEntries: query.data ?? [], isLoading: query.isLoading };
+}
+
 export function usePayInstallment(investmentId: string) {
   const queryClient = useQueryClient();
   return useMutation({

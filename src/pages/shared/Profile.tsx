@@ -148,8 +148,8 @@ export default function Profile() {
       const res = await mediaApi.upload(file, 'avatars', 'image');
       const url = (res as { data?: { url: string } }).data?.url ?? (res as { url?: string }).url;
       if (!url) throw new Error('No URL returned');
-      await authApi.updateProfile({ avatarUrl: url });
-      updateProfile({ ...user!, avatarUrl: url });
+      await authApi.updateProfile({ profilePictureUrl: url });
+      updateProfile({ ...user!, profilePictureUrl: url });
       toast.success('Profile photo updated');
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Failed to upload photo');
@@ -228,8 +228,8 @@ export default function Profile() {
           {/* Avatar with pen overlay */}
           <div className="relative shrink-0">
             <div className="w-24 h-24 rounded-full bg-accent/80 ring-4 ring-white/10 flex items-center justify-center text-white text-3xl font-bold shadow-lg overflow-hidden">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+              {user.profilePictureUrl ? (
+                <img src={user.profilePictureUrl} alt={displayName} className="w-full h-full object-cover" />
               ) : isUploadingAvatar ? (
                 <span className="text-sm text-white/60">...</span>
               ) : (

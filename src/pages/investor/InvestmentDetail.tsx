@@ -1,4 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { PaymentsSheet } from '@/components/investment/PaymentsSheet';
+import { PerformanceSheet } from '@/components/investment/PerformanceSheet';
 import {
   RiMapPinLine,
   RiCheckLine,
@@ -32,28 +35,28 @@ interface ModelTheme {
 
 const MODEL_THEME: Record<InvestmentModelType, ModelTheme> = {
   land_banking: {
-    headerBg: 'bg-green-800',
-    accentBg: 'bg-green-500',
-    accentBtn: 'bg-green-600 hover:bg-green-700',
-    accentText: 'text-green-400',
-    lightBg: 'bg-green-500/10',
-    borderLight: 'border-green-500/20',
+    headerBg: 'bg-orange-700',
+    accentBg: 'bg-orange-500',
+    accentBtn: 'bg-orange-600 hover:bg-orange-700',
+    accentText: 'text-orange-400',
+    lightBg: 'bg-orange-500/10',
+    borderLight: 'border-orange-500/20',
   },
   outright: {
-    headerBg: 'bg-orange-700',
-    accentBg: 'bg-accent',
-    accentBtn: 'bg-accent hover:bg-accent/90',
-    accentText: 'text-accent',
-    lightBg: 'bg-accent/10',
-    borderLight: 'border-accent/20',
+    headerBg: 'bg-amber-700',
+    accentBg: 'bg-amber-500',
+    accentBtn: 'bg-amber-500 hover:bg-amber-600',
+    accentText: 'text-amber-400',
+    lightBg: 'bg-amber-500/10',
+    borderLight: 'border-amber-500/20',
   },
   co_development: {
-    headerBg: 'bg-orange-700',
-    accentBg: 'bg-accent',
-    accentBtn: 'bg-accent hover:bg-accent/90',
-    accentText: 'text-accent',
-    lightBg: 'bg-accent/10',
-    borderLight: 'border-accent/20',
+    headerBg: 'bg-emerald-700',
+    accentBg: 'bg-emerald-500',
+    accentBtn: 'bg-emerald-600 hover:bg-emerald-700',
+    accentText: 'text-emerald-400',
+    lightBg: 'bg-emerald-500/10',
+    borderLight: 'border-emerald-500/20',
   },
   fractional: {
     headerBg: 'bg-violet-800',
@@ -280,7 +283,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
 
 // ─── Financial card ────────────────────────────────────────────────────────────
 
-function FinancialCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
+function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: ModelTheme; onPerfOpen: () => void }) {
   const type = inv.type;
   const changePercent = inv.currentValueChangePercent ?? 0;
   const isPositive = changePercent >= 0;
@@ -363,7 +366,10 @@ function FinancialCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
 
       {note && <p className="text-foreground/40 text-xs mt-3">{note}</p>}
 
-      <button className={cn('w-full text-center text-sm font-semibold mt-3 pt-3 border-t border-foreground/10', theme.accentText)}>
+      <button
+        onClick={onPerfOpen}
+        className={cn('w-full text-center text-sm font-semibold mt-3 pt-3 border-t border-foreground/10', theme.accentText)}
+      >
         {perfLink}
       </button>
     </div>
@@ -735,7 +741,7 @@ function DocumentsSection({ inv }: { inv: Investment }) {
 
 // ─── Bottom action bar ─────────────────────────────────────────────────────────
 
-function ActionBar({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
+function ActionBar({ inv, theme, onPaymentsOpen }: { inv: Investment; theme: ModelTheme; onPaymentsOpen: () => void }) {
   const navigate = useNavigate();
   const canResell = !['exited', 'pending_resale', 'pending'].includes(inv.status);
   const hasBuyBack = inv.type === 'land_banking';
@@ -746,7 +752,7 @@ function ActionBar({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
         <Button
           variant="outline"
           className="flex-1 h-12 rounded-xl font-semibold border-foreground/20 text-foreground/60"
-          onClick={() => navigate(`/investor/portfolio/${inv.id}/payments`)}
+          onClick={onPaymentsOpen}
         >
           My Payments
         </Button>
@@ -763,8 +769,8 @@ function ActionBar({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
         <div className="max-w-screen-sm mx-auto">
           <Button
             variant="outline"
-            className="w-full h-12 rounded-xl font-semibold border-foreground/20 text-foreground"
-            onClick={() => navigate('/investor/exits')}
+            disabled
+            className="w-full h-12 rounded-xl font-semibold"
           >
             Buy Back
           </Button>
@@ -779,6 +785,7 @@ function ActionBar({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
 export default function InvestmentDetail() {
   const { investmentId } = useParams<{ investmentId: string }>();
   const { investment: inv, isLoading } = useInvestmentDetail(investmentId);
+  const [openSheet, setOpenSheet] = useState<'payments' | 'performance' | null>(null);
 
   if (isLoading) {
     return (
@@ -810,11 +817,20 @@ export default function InvestmentDetail() {
 
   return (
     <div className="pb-32 space-y-4">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-xs">
+        <Link to="/investor/portfolio" className="text-foreground/40 hover:text-foreground transition-colors">
+          My Portfolio
+        </Link>
+        <RiArrowRightSLine className="h-3.5 w-3.5 text-foreground/30" />
+        <span className="text-foreground/70 font-medium truncate">{inv.title}</span>
+      </div>
+
       {/* Header card */}
       <HeaderCard inv={inv} theme={theme} />
 
       {/* Financial card */}
-      <FinancialCard inv={inv} theme={theme} />
+      <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
 
       {/* Progress timeline (land_banking / fractional) */}
       {(inv.progressTimeline?.length ?? 0) > 0 && (
@@ -852,7 +868,11 @@ export default function InvestmentDetail() {
       )}
 
       {/* Fixed action bar */}
-      <ActionBar inv={inv} theme={theme} />
+      <ActionBar inv={inv} theme={theme} onPaymentsOpen={() => setOpenSheet('payments')} />
+
+      {/* Sheets */}
+      <PaymentsSheet inv={inv} isOpen={openSheet === 'payments'} onClose={() => setOpenSheet(null)} />
+      <PerformanceSheet inv={inv} isOpen={openSheet === 'performance'} onClose={() => setOpenSheet(null)} />
     </div>
   );
 }
