@@ -22,7 +22,7 @@ export interface User {
   city?: string;
   street?: string;
   employmentStatus?: string;
-  avatarUrl?: string;
+  profilePictureUrl?: string;
   nextOfKinName?: string;
   nextOfKinAddress?: string;
   nextOfKinPhone?: string;

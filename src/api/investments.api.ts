@@ -1,6 +1,22 @@
 import { api, unwrapEnvelope } from '@/lib/fetchClient';
 import type { Investment, PortfolioPerformance, PaginatedResponse, ApiResponse } from '@/types';
 
+export interface InstallmentEntry {
+  id: string;
+  label?: string;
+  description?: string;
+  amount: number;
+  balanceDue?: number;
+  paidAmount?: number;
+  status: string;
+  paidAt?: string;
+  dueDate?: string;
+  paymentMethod?: string;
+  planType?: string;
+  reference?: string;
+  type?: string;
+}
+
 export const investmentsApi = {
   checkout: (payload: {
     propertyId: string;
@@ -27,8 +43,13 @@ export const investmentsApi = {
   getCertificate: (investmentId: string): Promise<Blob> =>
     api.getBlob(`/investments/${investmentId}/certificate`),
 
-  getPayments: (investmentId: string): Promise<ApiResponse<unknown[]>> =>
-    api.get(`/investments/${investmentId}/payments`),
+  getPayments: async (investmentId: string): Promise<InstallmentEntry[]> => {
+    const raw = await api.get<unknown>(`/investments/${investmentId}/payments`);
+    if (Array.isArray(raw)) return raw as InstallmentEntry[];
+    const wrapped = raw as Record<string, unknown>;
+    if (Array.isArray(wrapped.data)) return wrapped.data as InstallmentEntry[];
+    return [];
+  },
 
   payInstallment: (
     investmentId: string,
