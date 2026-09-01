@@ -386,7 +386,7 @@ export default function Profile() {
               iconColor="text-purple-400"
               label="Terms & Conditions"
               desc="Read our terms and conditions"
-              onClick={() => {}}
+              onClick={() => window.open('https://needhomespdc.com/terms', '_blank', 'noopener,noreferrer')}
             />
             <MenuItem
               icon={<RiShieldLine />}
@@ -394,7 +394,7 @@ export default function Profile() {
               iconColor="text-accent"
               label="Privacy Policy"
               desc="View our privacy policy"
-              onClick={() => {}}
+              onClick={() => window.open('https://needhomespdc.com/privacy-policy', '_blank', 'noopener,noreferrer')}
             />
           </MenuSection>
         </div>

@@ -318,8 +318,8 @@ export default function PartnerDashboard() {
                   <RiLinksLine className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-foreground text-xs font-semibold">Get Referral Link</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Share your link</p>
+                  <p className="text-foreground text-xs font-semibold">Share property</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Promote listings</p>
                 </div>
               </CardContent>
             </Card>
@@ -332,7 +332,7 @@ export default function PartnerDashboard() {
                 </div>
                 <div>
                   <p className="text-foreground text-xs font-semibold">Browse Properties</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Find to promote</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Find properties to promote</p>
                 </div>
               </CardContent>
             </Card>
