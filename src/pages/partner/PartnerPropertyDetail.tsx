@@ -247,14 +247,22 @@ function SaveToOwnSection({ property, config }: { property: Property; config: Re
 
 // ─── Fractional Investment Details ────────────────────────────────────────────
 
+function monthsFromStart(start: unknown, end: unknown): string {
+  if (!start || !end) return '-';
+  const ms = new Date(end as string).getTime() - new Date(start as string).getTime();
+  const months = Math.round(ms / (1000 * 60 * 60 * 24 * 30.44));
+  return `${months} ${months === 1 ? 'month' : 'months'}`;
+}
+
 function FractionalInvestmentDetails({ property, config }: { property: Property; config: Record<string, unknown> }) {
   const rows: Array<{ label: string; value: string; bold?: boolean }> = [
-    { label: 'Total Shares', value: String(config.totalShares ?? '-') },
-    { label: 'Price Per Share', value: config.pricePerShare ? formatCurrency(config.pricePerShare as number) : '-' },
-    { label: 'Min. Shares', value: String(config.minShares ?? '1') },
-    ...(config.holdingPeriodEnd
-      ? [{ label: 'Holding period ends', value: formatDate(config.holdingPeriodEnd as string) }]
-      : []),
+    { label: 'Total Slots', value: String(config.totalShares ?? '-') },
+    { label: 'Price Per Slot', value: config.pricePerShare ? formatCurrency(config.pricePerShare as number) : '-' },
+    { label: 'Min. Slot', value: String(config.minShares ?? '1') },
+    { label: 'Investment Window', value: config.investmentWindowStart && config.investmentWindowEnd ? `${formatDate(config.investmentWindowStart as string)} – ${formatDate(config.investmentWindowEnd as string)}` : '-' },
+    { label: 'Investment Duration', value: monthsFromStart(config.investmentWindowStart, config.investmentDurationEnd) },
+    { label: 'Holding Period', value: monthsFromStart(config.investmentWindowStart, config.holdingPeriodEnd) },
+    { label: 'Slots Available', value: property.inventoryAvailable != null ? `${property.inventoryAvailable} slots` : '-' },
     { label: 'Status', value: property.statusLabel ?? property.status, bold: true },
   ];
 
@@ -263,7 +271,7 @@ function FractionalInvestmentDetails({ property, config }: { property: Property;
       <div className="px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold text-sm">Investment Details</h2>
       </div>
-      {rows.map((row, i) => (
+      {rows.map((row, i) => row && (
         <div
           key={row.label}
           className={cn('flex items-center justify-between px-4 py-3 text-sm', i < rows.length - 1 && 'border-b border-foreground/10')}
@@ -336,16 +344,21 @@ function CommissionCard({
           </div>
           <div>
             <p className="text-foreground/50 text-xs">Your Commission</p>
-            {property.commissionEarning != null ? (
-              <p className="text-green-400 font-bold text-xl leading-tight">{formatCurrency(property.commissionEarning)}</p>
+            {property.estimatedCommission != null ? (
+              <p className="text-green-400 font-bold text-xl leading-tight">{formatCurrency(property.estimatedCommission)}</p>
             ) : (
               <p className="text-foreground/30 text-sm">—</p>
             )}
           </div>
         </div>
-        <span className="bg-green-500/15 text-green-400 text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0">
-          Per sale
-        </span>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="bg-green-500/15 text-green-400 text-[10px] font-semibold px-2.5 py-1 rounded-full">
+            Per sale
+          </span>
+          {property.commissionRatePercent != null && (
+            <span className="text-foreground/40 text-[10px]">{property.commissionRatePercent}% rate</span>
+          )}
+        </div>
       </div>
 
       <p className="text-foreground/50 text-sm leading-relaxed">
@@ -604,11 +617,14 @@ export default function PartnerPropertyDetail() {
           </div>
         )}
 
-        {/* ── Commission card — full width ─────────────────────────────────── */}
-        <CommissionCard property={property} link={link} onCopy={copy} onShare={() => setShareOpen(true)} />
-
         {/* ── Info grid ────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Commission card — full width inside grid */}
+          {/* <div className="sm:col-span-2"> */}
+          <div className="">
+            <CommissionCard property={property} link={link} onCopy={copy} onShare={() => setShareOpen(true)} />
+          </div>
 
           {/* Property Highlights — always first */}
           {(property.highlights?.length ?? 0) > 0 && (
@@ -750,8 +766,8 @@ export default function PartnerPropertyDetail() {
         <div className="max-w-screen-sm mx-auto flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-foreground/50 text-xs">Your Commission</p>
-            <p className={cn('font-bold text-lg leading-tight', property.commissionEarning != null ? 'text-green-400' : 'text-foreground/30')}>
-              {property.commissionEarning != null ? formatCurrency(property.commissionEarning) : '—'}
+            <p className={cn('font-bold text-lg leading-tight', property.estimatedCommission != null ? 'text-green-400' : 'text-foreground/30')}>
+              {property.estimatedCommission != null ? formatCurrency(property.estimatedCommission) : '—'}
             </p>
           </div>
           <Button

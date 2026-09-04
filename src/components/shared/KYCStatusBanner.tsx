@@ -24,14 +24,16 @@ export function KYCStatusBanner({ kycStatus, kycPath }: KYCStatusBannerProps) {
   return (
     <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
       <RiAlertLine className="text-amber-400 h-5 w-5 mt-0.5 shrink-0" />
-      <p className="text-amber-400 text-sm font-medium flex-1 min-w-0">{message}</p>
-      {showCta && (
-        <Link to={kycPath} className="shrink-0">
-          <Button size="sm" variant="outline" className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10">
-            {ctaLabel}
-          </Button>
-        </Link>
-      )}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+        <p className="text-amber-400 text-sm font-medium flex-1 min-w-0">{message}</p>
+        {showCta && (
+          <Link to={kycPath} className="shrink-0">
+            <Button size="sm" variant="outline" className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 w-full sm:w-auto">
+              {ctaLabel}
+            </Button>
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

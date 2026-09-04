@@ -96,12 +96,14 @@ export interface Property {
   images?: PropertyImage[];
   documents?: PropertyDocument[];
   milestones?: Milestone[];
+  investmentWindowStart: string | null;
+  investmentWindowEnd: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
   // Partner promotable-properties context
-  commissionRate?: number;
-  commissionEarning?: number;
+  commissionRatePercent?: number;
+  estimatedCommission?: number;
   // Detail-view only fields
   video?: PropertyVideo | null;
   highlights?: PropertyHighlight[];
@@ -628,12 +630,34 @@ export interface CommissionEntry {
   processingFee?: number | null;
 }
 
+export interface ReferralAnalyticsTotals {
+  clicks: number;
+  views: number;
+  shares: number;
+  leads: number;
+}
+
+export interface ReferralAnalyticsTrends {
+  clicksPercent: number;
+  viewsPercent: number;
+  sharesPercent: number;
+  leadsPercent: number;
+}
+
+export interface ReferralActivityEvent {
+  id: string;
+  eventType: string;
+  propertyTitle: string | null;
+  channel: string | null;
+  occurredAt: string;
+}
+
 export interface ReferralAnalytics {
-  totalClicks: number;
-  totalShares?: number;
-  totalConversions: number;
-  totalLifetimeEarnings: number;
-  clicksByPeriod: { date: string; clicks: number }[];
+  period: string;
+  totals: ReferralAnalyticsTotals;
+  previousTotals: ReferralAnalyticsTotals;
+  trends: ReferralAnalyticsTrends;
+  recentActivity: ReferralActivityEvent[];
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────────────

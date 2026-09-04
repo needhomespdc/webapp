@@ -144,8 +144,8 @@ function PartnerPropertyCard({ property, isFavorited, onToggleFavorite, onShare 
         <div className="flex items-center justify-between mt-2.5">
           <div>
             <p className="text-foreground/40 text-[10px]">Your Commission</p>
-            {property.commissionEarning != null ? (
-              <p className="text-green-400 text-sm font-bold mt-0.5">{formatCurrency(property.commissionEarning)}</p>
+            {property.estimatedCommission != null ? (
+              <p className="text-green-400 text-sm font-bold mt-0.5">{formatCurrency(property.estimatedCommission)}</p>
             ) : (
               <p className="text-foreground/30 text-xs mt-0.5">—</p>
             )}
