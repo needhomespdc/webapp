@@ -1,39 +1,45 @@
 import { Link } from 'react-router-dom';
-import { RiAlertLine } from 'react-icons/ri';
+import { RiArrowRightLine, RiShieldCheckLine } from 'react-icons/ri';
 import type { KYCStatus } from '@/types';
-import { Button } from '@/components/ui/button';
 
 interface KYCStatusBannerProps {
   kycStatus: KYCStatus;
   kycPath: string;
 }
 
-const MESSAGES: Record<Exclude<KYCStatus, 'approved'>, string> = {
-  pending: 'Your KYC is under review. We\'ll notify you once approved.',
-  rejected: 'Your KYC was rejected. Please re-submit to unlock payouts.',
-  not_submitted: 'Complete KYC verification to unlock withdrawals and payouts.',
+const CONTENT: Record<Exclude<KYCStatus, 'approved'>, { title: string; subtitle: string }> = {
+  not_submitted: {
+    title: 'Complete your KYC',
+    subtitle: 'Verify identity to unlock payouts · Not Submitted',
+  },
+  pending: {
+    title: 'KYC Under Review',
+    subtitle: 'Your verification is being reviewed · Pending',
+  },
+  rejected: {
+    title: 'KYC Verification Failed',
+    subtitle: 'Re-submit your documents to unlock payouts · Rejected',
+  },
 };
 
 export function KYCStatusBanner({ kycStatus, kycPath }: KYCStatusBannerProps) {
   if (kycStatus === 'approved') return null;
 
-  const message = MESSAGES[kycStatus] ?? MESSAGES.not_submitted;
-  const showCta = kycStatus !== 'pending';
-  const ctaLabel = kycStatus === 'rejected' ? 'Re-submit' : 'Complete KYC';
+  const { title, subtitle } = CONTENT[kycStatus] ?? CONTENT.not_submitted;
 
   return (
-    <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-      <RiAlertLine className="text-amber-400 h-5 w-5 mt-0.5 shrink-0" />
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
-        <p className="text-amber-400 text-sm font-medium flex-1 min-w-0">{message}</p>
-        {showCta && (
-          <Link to={kycPath} className="shrink-0">
-            <Button size="sm" variant="outline" className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 w-full sm:w-auto">
-              {ctaLabel}
-            </Button>
-          </Link>
-        )}
+    <Link
+      to={kycPath}
+      className="flex items-center gap-3 bg-accent/10 border border-accent/20 rounded-2xl px-4 py-3.5 hover:bg-accent/15 transition-colors group"
+    >
+      <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
+        <RiShieldCheckLine className="h-5 w-5 text-accent" />
       </div>
-    </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground text-sm font-semibold leading-tight">{title}</p>
+        <p className="text-foreground/50 text-xs mt-0.5 leading-snug">{subtitle}</p>
+      </div>
+      <RiArrowRightLine className="h-5 w-5 text-accent shrink-0 group-hover:translate-x-0.5 transition-transform" />
+    </Link>
   );
 }

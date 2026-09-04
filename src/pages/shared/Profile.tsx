@@ -47,6 +47,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { ApiError, unwrapEnvelope } from '@/lib/fetchClient';
 import type { User } from '@/types';
 import { cn } from '@/lib/utils';
+import { KYCStatusBanner } from '@/components/shared/KYCStatusBanner';
 
 const EMPLOYMENT_STATUSES: SelectOption[] = [
   { value: 'student', label: 'Student' },
@@ -281,24 +282,10 @@ export default function Profile() {
       </div>
 
       {user.kycStatus !== 'approved' && (
-        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-          <RiAlertLine className="text-amber-400 h-5 w-5 mt-0.5 shrink-0" />
-          <p className="text-amber-400 text-sm font-medium flex-1 min-w-0">
-            {user.kycStatus === 'pending'
-              ? "Your KYC is under review. We'll notify you once approved."
-              : user.kycStatus === 'rejected'
-              ? "Your KYC was rejected. Please re-submit to unlock all features."
-              : "Complete KYC verification to unlock withdrawals and payouts."}
-          </p>
-          {user.kycStatus !== 'pending' && (
-            <button
-              onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
-              className="shrink-0 text-xs font-semibold text-amber-400 border border-amber-500/50 rounded-lg px-3 py-1.5 hover:bg-amber-500/10 transition-colors"
-            >
-              {user.kycStatus === 'rejected' ? 'Re-submit' : 'Complete KYC'}
-            </button>
-          )}
-        </div>
+        <KYCStatusBanner
+          kycStatus={user.kycStatus}
+          kycPath={isInvestor ? '/investor/kyc' : '/partner/kyc'}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
