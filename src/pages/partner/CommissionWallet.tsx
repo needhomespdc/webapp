@@ -115,31 +115,13 @@ export default function CommissionWallet() {
           </div>
           <div className="divide-y divide-foreground/10">
             {bankAccounts.map((b: BankAccount) => (
-              <div key={b.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
-                  <RiBankLine className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-foreground text-sm font-medium truncate">
-                      {b.shortName}
-                      <span className="text-foreground/40 font-normal hidden sm:inline"> · {b.accountNumber}</span>
-                    </p>
-                    {b.isPrimary && (
-                      <span className="text-[10px] bg-emerald-600/10 px-2 py-0.5 rounded-full text-emerald-600 font-semibold shrink-0">
-                        Primary
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-foreground/40 text-xs mt-0.5">{b.accountHolderName}</p>
-                </div>
-                <button
-                  className="text-accent text-xs font-semibold flex items-center gap-0.5 hover:opacity-70 transition-opacity shrink-0"
-                  onClick={() => navigate('/partner/add-bank-account')}
-                >
-                  Manage <RiArrowRightLine className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              <BankAccountRow
+                key={b.id}
+                shortName={b.shortName}
+                accountNumber={b.accountNumber}
+                accountHolderName={b.accountHolderName}
+                isPrimary={b.isPrimary}
+              />
             ))}
           </div>
         </>
@@ -186,7 +168,7 @@ export default function CommissionWallet() {
             <button
               key={entry.id}
               onClick={() => setSelectedEntryId(entry.id)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors text-left flex-wrap"
             >
               {entry.propertyImageUrl ? (
                 <img
@@ -281,7 +263,7 @@ export default function CommissionWallet() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 w-full min-w-0">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Commission Wallet</h1>
         <p className="text-foreground/50 text-sm mt-1">
@@ -494,5 +476,46 @@ function PayoutDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function BankAccountRow({
+  shortName,
+  accountNumber,
+  accountHolderName,
+  isPrimary,
+}: {
+  shortName: string;
+  accountNumber: string;
+  accountHolderName: string;
+  isPrimary: boolean;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 flex-wrap">
+      <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
+        <RiBankLine className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="flex items-center gap-2 flex-wrap">
+          <p className="text-foreground text-sm font-medium min-w-0 flex items-center gap-1">
+            <span className="truncate">{shortName}</span>
+            <span className="shrink-0 hidden sm:inline">— {accountNumber}</span>
+          </p>
+          {isPrimary && (
+            <span className="text-xs bg-emerald-700/10 p-1 rounded-xl text-emerald-700 font-medium shrink-0">Primary</span>
+          )}
+        </span>
+        <p className="text-foreground/40 text-xs">{accountHolderName}</p>
+      </div>
+      <button
+        className="p-1.5 text-accent transition-colors flex cursor-pointer items-center"
+        onClick={() => navigate('/partner/add-bank-account')}
+      >
+        <span className="text-xs font-medium">Manage</span>
+        <RiArrowRightLine className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
