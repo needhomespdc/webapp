@@ -2,21 +2,21 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   RiBriefcaseLine,
-  // RiArrowRightLine,
-  // RiDownloadLine,
+  RiArrowRightLine,
   RiEyeLine,
   RiEyeOffLine,
   RiMapPinLine,
   RiSortDesc,
   RiTimeLine,
   RiCheckLine,
-  // RiUserAddLine,
   RiArrowDownSLine,
+  RiPieChart2Line,
+  RiLineChartLine,
+  RiFlashlightLine,
+  RiCheckboxCircleLine,
 } from 'react-icons/ri';
 import { usePortfolioPerformance, useInvestmentListFeed } from '@/hooks/useInvestment';
-// import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-// import { useToast } from '@/hooks/useToast';
 import { formatCurrency, cn } from '@/lib/utils';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -28,7 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import type { Investment } from '@/types';
+import type { Investment, PortfolioPerformance } from '@/types';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ const STATUS_TABS = [
   { value: 'active', label: 'Active' },
   { value: 'completed', label: 'Completed' },
   { value: 'exited', label: 'Exited' },
-  { value: 'pending_resale', label: 'Resales' },
+  { value: 'resales', label: 'Resales' },
 ] as const;
 
 type PeriodValue = (typeof PERIOD_OPTIONS)[number]['value'];
@@ -73,82 +73,197 @@ function sortInvestments(list: Investment[], sort: SortValue): Investment[] {
   }
 }
 
-// ─── Model badge colors ────────────────────────────────────────────────────────
+// ─── Badge maps ────────────────────────────────────────────────────────────────
 
 const MODEL_BADGE: Record<string, string> = {
   co_development: 'bg-emerald-500',
-  fractional: 'bg-violet-500',
-  land_banking: 'bg-orange-500',
-  save_to_own: 'bg-blue-500',
-  outright: 'bg-amber-500',
+  fractional:     'bg-violet-500',
+  land_banking:   'bg-orange-500',
+  save_to_own:    'bg-blue-500',
+  outright:       'bg-amber-500',
 };
+
+const STATUS_BADGE: Record<string, string> = {
+  active:         'bg-emerald-500',
+  pending:        'bg-amber-500',
+  completed:      'bg-blue-500',
+  exited:         'bg-slate-500',
+  pending_resale: 'bg-violet-500',
+};
+
+// ─── DataCol helper ────────────────────────────────────────────────────────────
+
+function DataCol({
+  label,
+  value,
+  className,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className={cn('min-w-0 flex-1 px-3 border-l border-foreground/8', className)}>
+      <p className="text-foreground/40 text-[10px]">{label}</p>
+      <p className={cn('text-xs font-bold mt-0.5 truncate', valueClassName ?? 'text-foreground')}>{value}</p>
+    </div>
+  );
+}
 
 // ─── Investment card ───────────────────────────────────────────────────────────
 
 function InvestmentCard({ inv }: { inv: Investment }) {
-  const badgeCls = MODEL_BADGE[inv.type] ?? 'bg-foreground/30';
+  const modelBadgeCls = MODEL_BADGE[inv.type] ?? 'bg-foreground/30';
+  const statusBadgeBg = STATUS_BADGE[inv.status] ?? 'bg-foreground/40';
+  const returnsClass =
+    inv.totalReturns > 0 ? 'text-green-400' :
+    inv.totalReturns < 0 ? 'text-red-400' :
+    'text-foreground/60';
+  const returnsValue =
+    inv.totalReturns > 0 ? `+${formatCurrency(inv.totalReturns)}` :
+    inv.totalReturns < 0 ? `-${formatCurrency(Math.abs(inv.totalReturns))}` :
+    formatCurrency(0);
+
+  const thumbnail = (large: boolean) => (
+    <div className={cn('relative rounded-xl overflow-hidden shrink-0', large ? 'w-19 h-19' : 'w-14 h-14')}>
+      {inv.propertyImageUrl ? (
+        <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-accent/10 flex items-center justify-center">
+          <RiBriefcaseLine className="text-accent h-6 w-6" />
+        </div>
+      )}
+      <span className={cn(
+        'absolute top-1.5 left-1.5 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap leading-none',
+        large ? modelBadgeCls : statusBadgeBg,
+      )}>
+        {large
+          ? (inv.typeLabel === 'Co-development' ? 'Co-Dev' : inv.typeLabel)
+          : inv.statusLabel}
+      </span>
+    </div>
+  );
 
   return (
     <Link
       to={`/investor/portfolio/${inv.id}`}
-      className="flex items-center gap-3 p-3 rounded-2xl border border-foreground/10 hover:border-foreground/20 bg-card transition-all active:scale-[0.99]"
+      className="block rounded-2xl border border-foreground/10 hover:border-foreground/20 bg-card transition-all active:scale-[0.99]"
     >
-      {/* Thumbnail */}
-      <div className="relative w-19 h-19 rounded-xl overflow-hidden shrink-0">
-        {inv.propertyImageUrl ? (
-          <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-accent/10 flex items-center justify-center">
-            <RiBriefcaseLine className="text-accent h-6 w-6" />
+      {/* Mobile — original design */}
+      <div className="md:hidden flex items-center gap-3 p-3">
+        {thumbnail(true)}
+        <div className="flex-1 min-w-0">
+          <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+          <div className="flex items-center gap-1 mt-1">
+            <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
+            <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
           </div>
-        )}
-        <span className={cn('absolute top-1.5 left-1.5 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap leading-none', badgeCls)}>
-          {inv.typeLabel === 'Co-development' ? 'Co-Dev' : inv.typeLabel}
-        </span>
+          <div className="flex items-center mt-2 pt-2 border-t border-foreground/8">
+            <div className="flex-1 min-w-0">
+              <p className="text-foreground/40 text-[10px]">Units Owned</p>
+              <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
+            </div>
+            <div className="w-px h-6 bg-foreground/10 mx-2 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-foreground/40 text-[10px]">Current Value</p>
+              <p className="text-foreground text-xs font-bold mt-0.5">{formatCurrency(inv.currentValue)}</p>
+            </div>
+            {inv.projectMilestoneLabel && (
+              <>
+                <div className="hidden sm:block w-px h-6 bg-foreground/10 mx-2 shrink-0" />
+                <div className="hidden sm:flex flex-1 min-w-0 flex-col">
+                  <p className="text-foreground/40 text-[10px]">Milestone</p>
+                  <p className="text-foreground text-xs font-bold mt-0.5 truncate">{inv.projectMilestoneLabel}</p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        {/* Row 1: title */}
-        <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
-
-        {/* Row 2: location */}
-        <div className="flex items-center gap-1 mt-1">
-          <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
-          <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
-        </div>
-
-        {/* Row 3: stats */}
-        <div className="flex items-center mt-2 pt-2 border-t border-foreground/8">
-          <div className="flex-1 min-w-0">
-            <p className="text-foreground/40 text-[10px]">Units Owned</p>
-            <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
+      {/* Desktop — new table-row design */}
+      <div className="hidden md:flex items-center gap-3 p-3">
+        {thumbnail(false)}
+        <div className="w-36 shrink-0 min-w-0">
+          <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+          <div className="flex items-center gap-1 mt-1">
+            <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
+            <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
           </div>
-          <div className="w-px h-6 bg-foreground/10 mx-2 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-foreground/40 text-[10px]">Current Value</p>
-            <p className="text-foreground text-xs font-bold mt-0.5">{formatCurrency(inv.currentValue)}</p>
-          </div>
-          {inv.projectMilestoneLabel && (
-            <>
-              <div className="hidden sm:block w-px h-6 bg-foreground/10 mx-2 shrink-0" />
-              <div className="hidden sm:flex flex-1 min-w-0 flex-col">
-                <p className="text-foreground/40 text-[10px]">Milestone</p>
-                <p className="text-foreground text-xs font-bold mt-0.5 truncate">{inv.projectMilestoneLabel}</p>
-              </div>
-            </>
-          )}
         </div>
+        <div className="flex flex-1 items-center">
+          <DataCol label="Type" value={inv.typeLabel} />
+          <DataCol label="Units Owned" value={inv.unitsOwnedLabel} />
+          <DataCol label="Invested Amount" value={formatCurrency(inv.totalInvested)} />
+          <DataCol label="Current Value" value={formatCurrency(inv.currentValue)} valueClassName="text-accent" />
+          <DataCol label="Returns" value={returnsValue} valueClassName={returnsClass} />
+        </div>
+        <RiArrowRightLine className="text-foreground/30 shrink-0 h-4 w-4" />
       </div>
     </Link>
+  );
+}
+
+// ─── Quick Overview sidebar ────────────────────────────────────────────────────
+
+function QuickOverview({ perf, loading }: { perf: PortfolioPerformance | undefined; loading: boolean }) {
+  const items = [
+    {
+      icon: <RiPieChart2Line className="h-5 w-5 text-orange-500" />,
+      iconBg: 'bg-orange-500/15',
+      label: 'Total Invested',
+      value: perf ? formatCurrency(perf.totalInvested) : null,
+    },
+    {
+      icon: <RiLineChartLine className="h-5 w-5 text-emerald-500" />,
+      iconBg: 'bg-emerald-500/15',
+      label: 'Total Returns',
+      value: perf ? formatCurrency(perf.returnsEarned) : null,
+    },
+    {
+      icon: <RiFlashlightLine className="h-5 w-5 text-violet-500" />,
+      iconBg: 'bg-violet-500/15',
+      label: 'Active Investments',
+      value: perf ? String(perf.activeInvestments) : null,
+    },
+    {
+      icon: <RiCheckboxCircleLine className="h-5 w-5 text-blue-500" />,
+      iconBg: 'bg-blue-500/15',
+      label: 'Total Investments',
+      value: perf ? String(perf.totalInvestments) : null,
+    },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-foreground/10 bg-card p-4 sticky top-20">
+      <p className="text-foreground text-sm font-semibold mb-4">Quick Overview</p>
+      <div className="space-y-4">
+        {items.map((item) => (
+          <div key={item.label} className="flex items-center gap-3">
+            <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center shrink-0', item.iconBg)}>
+              {item.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-foreground/50 text-xs">{item.label}</p>
+              {loading ? (
+                <Skeleton className="h-4 w-24 mt-1" />
+              ) : (
+                <p className="text-foreground text-sm font-bold mt-0.5 truncate">{item.value ?? '—'}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
   );
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Portfolio() {
-  // const { user } = useAuth();
-  // const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 639px)');
 
   const [tab, setTab] = useState<TabValue>('all');
@@ -174,229 +289,199 @@ export default function Portfolio() {
 
   const filtered = useMemo(() => sortInvestments(rawInvestments, sort), [rawInvestments, sort]);
 
-  const handleTabChange = (newTab: TabValue) => { setTab(newTab); };
-
   const currentPeriodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? 'This month';
   const currentSortLabel = SORT_OPTIONS.find((s) => s.value === sort)?.label ?? 'Recent';
-
-  // const copyReferral = () => {
-  //   if (!user?.referralCode) return;
-  //   const link = `${window.location.origin}/register?ref=${user.referralCode}`;
-  //   navigator.clipboard.writeText(link);
-  //   toast({ title: 'Referral link copied!' });
-  // };
 
   return (
     <div className="space-y-5 pb-4">
       {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">My Portfolio</h1>
-          <p className="text-foreground/50 text-sm mt-0.5">Track your investments and earnings</p>
-        </div>
-        {/* <button
-          onClick={() =>
-            toast({ title: 'Coming soon', description: 'Portfolio report download will be available soon.' })
-          }
-          className="w-10 h-10 rounded-xl border border-foreground/10 bg-card flex items-center justify-center text-foreground/50 hover:text-foreground transition-colors"
-        >
-          <RiDownloadLine className="h-5 w-5" />
-        </button> */}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {/* Hero — Total Portfolio Value */}
-      <div className="relative rounded-2xl overflow-hidden bg-primary p-5 min-h-[170px] flex flex-col justify-between">
-        <div className="flex flex-row justify-between">
-          <div className="flex flex-col gap-1">
-            {/* Label + toggle */}
-            <div className="flex items-center gap-2">
-              <p className="text-white/60 text-sm">Total Portfolio Value</p>
-              <button
-                onClick={() => setShowValue((v) => !v)}
-                className="text-white/40 hover:text-white/70 transition-colors"
-              >
-                {showValue ? <RiEyeLine className="h-4 w-4" /> : <RiEyeOffLine className="h-4 w-4" />}
-              </button>
-            </div>
-
-            {/* Big value */}
-            <div className="mt-1">
-              {perfLoading ? (
-                <Skeleton className="h-9 w-40 bg-white/10" />
-              ) : showValue ? (
-                <CurrencyDisplay amount={perf?.totalPortfolioValue ?? 0} size="xl" className="text-white" />
-              ) : (
-                <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
-              )}
-            </div>
-          </div>
-
-          <img src="/resources/portfolio-hero.png" alt="portfolio_image" className='h-auto w-20' />
-        </div>
-
-        {/* Mini stats row */}
-        <div className="flex items-center mt-4 pt-4 border-t border-white/10">
-          {(
-            [
-              { label: 'Total Invested', amount: perf?.totalInvested ?? 0, currency: true },
-              { label: 'Total Returns', amount: perf?.returnsEarned ?? 0, currency: true },
-              { label: 'Active', amount: perf?.activeInvestments ?? 0, currency: false },
-            ] as const
-          ).map((stat, i) => (
-            <div key={stat.label} className={cn('flex-1 text-center', i !== 0 && 'border-l border-white/10')}>
-              <p className="text-white/50 text-[10px]">{stat.label}</p>
-              {perfLoading ? (
-                <Skeleton className="h-3.5 w-10 mx-auto mt-1.5 bg-white/10" />
-              ) : (
-                <p className="text-white text-xs font-bold mt-0.5">
-                  {stat.currency ? formatCurrency(stat.amount as number) : (stat.amount as number)}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Portfolio Performance */}
-      <div className="rounded-2xl border border-foreground/10 bg-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-foreground text-sm font-semibold">Portfolio Performance</p>
-          <button
-            onClick={() => setPeriodOpen(true)}
-            className="flex items-center gap-1.5 text-accent text-sm font-medium hover:opacity-80 transition-opacity"
-          >
-            <RiTimeLine className="h-3.5 w-3.5" />
-            {currentPeriodLabel}
-            <RiArrowDownSLine className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        {perfLoading ? (
-          <div className="space-y-3">
-            <div className="flex gap-4">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 flex-1" />)}
-            </div>
-            <Skeleton className="h-2 w-full rounded-full" />
-          </div>
-        ) : (
-          <>
-            <div className="flex items-start divide-x divide-foreground/10">
-              <div className="flex-1 pr-4">
-                <p className="text-green-400 text-lg font-bold">
-                  +{(perf?.totalReturnsPercent ?? 0).toFixed(1)}%
-                </p>
-                <p className="text-foreground/50 text-[11px] mt-0.5">Total Returns</p>
-              </div>
-              <div className="flex-1 px-4">
-                <CurrencyDisplay amount={perf?.returnsEarned ?? 0} size="lg" className="text-foreground" />
-                <p className="text-foreground/50 text-[11px] mt-0.5">Returns Earned</p>
-              </div>
-              <div className="flex-1 pl-4">
-                <p className="text-green-400 text-lg font-bold">
-                  {(perf?.portfolioOccupancyPercent ?? 0).toFixed(0)}%
-                </p>
-                <p className="text-foreground/50 text-[11px] mt-0.5">Portfolio Occupancy</p>
-              </div>
-            </div>
-
-            <div className="mt-4 h-2 rounded-full bg-foreground/8 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-accent transition-all duration-700"
-                style={{ width: `${Math.min(perf?.portfolioOccupancyPercent ?? 0, 100)}%` }}
-              />
-            </div>
-          </>
-        )}
-      </div>
-      </div>
-
-      {/* My Investments list */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-foreground font-semibold">My Investments</p>
-          <button
-            onClick={() => setSortOpen(true)}
-            className="flex items-center gap-1.5 text-foreground/60 text-sm hover:text-foreground transition-colors"
-          >
-            <RiSortDesc className="h-4 w-4" />
-            Sort by:&nbsp;<span className="text-accent font-medium">{currentSortLabel}</span>
-            <RiArrowDownSLine className="h-3.5 w-3.5 text-accent" />
-          </button>
-        </div>
-
-        {/* Status filter tabs */}
-        <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 no-scrollbar mb-4 [-webkit-overflow-scrolling:touch]">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => handleTabChange(t.value)}
-              className={cn(
-                'shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
-                tab === t.value
-                  ? 'bg-accent/15 border-accent/40 text-accent'
-                  : 'bg-transparent border-foreground/10 text-foreground/60 hover:border-foreground/20'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Investment cards */}
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[100px] w-full rounded-2xl" />)}
-          </div>
-        ) : !filtered.length ? (
-          <EmptyState
-            icon={<RiBriefcaseLine />}
-            title="No investments yet"
-            description="Start investing in real estate to see your portfolio here."
-            action={
-              <Link to="/investor/marketplace">
-                <Button variant="default" size="sm">Browse Marketplace</Button>
-              </Link>
-            }
-          />
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((inv) => <InvestmentCard key={inv.id} inv={inv} />)}
-          </div>
-        )}
-
-        {hasNextPage && (
-          <div className="flex justify-center mt-5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="min-w-32"
-            >
-              {isFetchingNextPage ? 'Loading...' : 'Load More'}
-            </Button>
-          </div>
-        )}
+        <h1 className="text-2xl font-bold text-foreground">My Portfolio</h1>
+        <p className="text-foreground/50 text-sm mt-0.5">Track your investments and earnings</p>
       </div>
 
-      {/* Referral invite banner */}
-      {/* <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 p-4">
-        <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-          <RiUserAddLine className="h-5 w-5 text-white" />
+      {/* Top cards — hero + performance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Hero — Total Portfolio Value */}
+        <div className="relative rounded-2xl overflow-hidden bg-primary p-5 min-h-[170px] flex flex-col justify-between">
+          <div className="flex flex-row justify-between">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <p className="text-white/60 text-sm">Total Portfolio Value</p>
+                <button
+                  onClick={() => setShowValue((v) => !v)}
+                  className="text-white/40 hover:text-white/70 transition-colors"
+                >
+                  {showValue ? <RiEyeLine className="h-4 w-4" /> : <RiEyeOffLine className="h-4 w-4" />}
+                </button>
+              </div>
+
+              <div className="mt-1">
+                {perfLoading ? (
+                  <Skeleton className="h-9 w-40 bg-white/10" />
+                ) : showValue ? (
+                  <CurrencyDisplay amount={perf?.totalPortfolioValue ?? 0} size="xl" className="text-white" />
+                ) : (
+                  <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
+                )}
+              </div>
+            </div>
+
+            <img src="/resources/portfolio-hero.png" alt="portfolio" className="h-auto w-20" />
+          </div>
+
+          <div className="flex items-center mt-4 pt-4 border-t border-white/10">
+            {(
+              [
+                { label: 'Total Invested', amount: perf?.totalInvested ?? 0, currency: true },
+                { label: 'Total Returns', amount: perf?.returnsEarned ?? 0, currency: true },
+                { label: 'Active', amount: perf?.activeInvestments ?? 0, currency: false },
+              ] as const
+            ).map((stat, i) => (
+              <div key={stat.label} className={cn('flex-1 text-center', i !== 0 && 'border-l border-white/10')}>
+                <p className="text-white/50 text-[10px]">{stat.label}</p>
+                {perfLoading ? (
+                  <Skeleton className="h-3.5 w-10 mx-auto mt-1.5 bg-white/10" />
+                ) : (
+                  <p className="text-white text-xs font-bold mt-0.5">
+                    {stat.currency ? formatCurrency(stat.amount as number) : (stat.amount as number)}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Portfolio Performance */}
+        <div className="rounded-2xl border border-foreground/10 bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-foreground text-sm font-semibold">Portfolio Performance</p>
+            <button
+              onClick={() => setPeriodOpen(true)}
+              className="flex items-center gap-1.5 text-accent text-sm font-medium hover:opacity-80 transition-opacity"
+            >
+              <RiTimeLine className="h-3.5 w-3.5" />
+              {currentPeriodLabel}
+              <RiArrowDownSLine className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {perfLoading ? (
+            <div className="space-y-3">
+              <div className="flex gap-4">
+                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 flex-1" />)}
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          ) : (
+            <>
+              <div className="flex items-start divide-x divide-foreground/10">
+                <div className="flex-1 pr-4">
+                  <p className="text-green-400 text-lg font-bold">
+                    +{(perf?.totalReturnsPercent ?? 0).toFixed(1)}%
+                  </p>
+                  <p className="text-foreground/50 text-[11px] mt-0.5">Total Returns</p>
+                </div>
+                <div className="flex-1 px-4">
+                  <CurrencyDisplay amount={perf?.returnsEarned ?? 0} size="lg" className="text-foreground" />
+                  <p className="text-foreground/50 text-[11px] mt-0.5">Returns Earned</p>
+                </div>
+                <div className="flex-1 pl-4">
+                  <p className="text-green-400 text-lg font-bold">
+                    {(perf?.portfolioOccupancyPercent ?? 0).toFixed(0)}%
+                  </p>
+                  <p className="text-foreground/50 text-[11px] mt-0.5">Portfolio Occupancy</p>
+                </div>
+              </div>
+
+              <div className="mt-4 h-2 rounded-full bg-foreground/8 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-accent transition-all duration-700"
+                  style={{ width: `${Math.min(perf?.portfolioOccupancyPercent ?? 0, 100)}%` }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom — investments list + quick overview sidebar */}
+      <div className="flex flex-col xl:flex-row gap-5">
+
+        {/* My Investments list */}
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-semibold">Earn more with your investments</p>
-          <p className="text-white/70 text-xs mt-0.5">Invite friends and earn up to ₦50,000</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-foreground font-semibold">My Investments</p>
+            <button
+              onClick={() => setSortOpen(true)}
+              className="flex items-center gap-1.5 text-foreground/60 text-sm hover:text-foreground transition-colors"
+            >
+              <RiSortDesc className="h-4 w-4" />
+              Sort by:&nbsp;<span className="text-accent font-medium">{currentSortLabel}</span>
+              <RiArrowDownSLine className="h-3.5 w-3.5 text-accent" />
+            </button>
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 no-scrollbar mb-4 [-webkit-overflow-scrolling:touch]">
+            {STATUS_TABS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => setTab(t.value)}
+                className={cn(
+                  'shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+                  tab === t.value
+                    ? 'bg-accent/15 border-accent/40 text-accent'
+                    : 'bg-transparent border-foreground/10 text-foreground/60 hover:border-foreground/20'
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Investment cards */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
+            </div>
+          ) : !filtered.length ? (
+            <EmptyState
+              icon={<RiBriefcaseLine />}
+              title="No investments yet"
+              description="Start investing in real estate to see your portfolio here."
+              action={
+                <Link to="/investor/marketplace">
+                  <Button variant="default" size="sm">Browse Marketplace</Button>
+                </Link>
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {filtered.map((inv) => <InvestmentCard key={inv.id} inv={inv} />)}
+            </div>
+          )}
+
+          {hasNextPage && (
+            <div className="flex justify-center mt-5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="min-w-32"
+              >
+                {isFetchingNextPage ? 'Loading...' : 'Load More'}
+              </Button>
+            </div>
+          )}
         </div>
-        <button
-          onClick={copyReferral}
-          className="shrink-0 flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-2 rounded-xl transition-colors"
-        >
-          Invite Now
-          <RiArrowRightLine className="h-4 w-4" />
-        </button>
-      </div> */}
+
+        {/* Quick Overview — desktop sidebar */}
+        <div className="hidden xl:block xl:w-64 shrink-0">
+          <QuickOverview perf={perf} loading={perfLoading} />
+        </div>
+      </div>
 
       {/* Period filter sheet */}
       <Sheet open={periodOpen} onOpenChange={setPeriodOpen}>
