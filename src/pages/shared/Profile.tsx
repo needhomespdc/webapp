@@ -19,6 +19,8 @@ import {
   RiPencilLine,
   RiVerifiedBadgeLine,
   RiArrowDownSLine,
+  RiLinksLine,
+  RiMoneyDollarBoxLine,
 } from 'react-icons/ri';
 import { Country, State } from 'country-state-city';
 import authApi from '@/api/auth.api';
@@ -34,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -111,6 +114,9 @@ export default function Profile() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [referralSettingsOpen, setReferralSettingsOpen] = useState(false);
+  const [leadAlerts, setLeadAlerts] = useState(true);
+  const [conversionAlerts, setConversionAlerts] = useState(true);
 
   const { data: sqStatus } = useQuery({
     queryKey: ['auth', 'security-questions'],
@@ -350,6 +356,26 @@ export default function Profile() {
               />
             </MenuSection>
           )}
+          {!isInvestor && (
+            <MenuSection title="Partner">
+              <MenuItem
+                icon={<RiLinksLine />}
+                iconBg="bg-orange-500/15"
+                iconColor="text-orange-500"
+                label="Referral Settings"
+                desc="Manage your referral tracking preferences"
+                onClick={() => setReferralSettingsOpen(true)}
+              />
+              <MenuItem
+                icon={<RiMoneyDollarBoxLine />}
+                iconBg="bg-green-500/15"
+                iconColor="text-green-400"
+                label="Commission History"
+                desc="View earnings, payouts, and performance"
+                onClick={() => navigate('/partner/commissions')}
+              />
+            </MenuSection>
+          )}
           <MenuSection title="Support & Information">
             <MenuItem
               icon={<RiHeadphoneLine />}
@@ -390,6 +416,35 @@ export default function Profile() {
         <div className="md:hidden">{accountMenu}</div>
 
       </div>
+
+      {/* Referral Settings — bottom Sheet on mobile, right Sheet on desktop */}
+      <Sheet open={referralSettingsOpen} onOpenChange={setReferralSettingsOpen}>
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className={isMobile ? 'rounded-t-2xl pb-8' : 'w-95 sm:max-w-95'}>
+          <SheetHeader className="mb-6">
+            <SheetTitle>Referral Settings</SheetTitle>
+            <p className="text-foreground/50 text-sm">Manage your referral tracking preferences.</p>
+          </SheetHeader>
+          <div>
+            <p className="text-foreground font-semibold text-sm mb-2 px-1">Tracking Preferences</p>
+            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="text-sm font-medium text-foreground">Lead Alerts</p>
+                  <p className="text-xs text-foreground/45 mt-0.5 leading-snug">Get notified when someone engages through your referrals</p>
+                </div>
+                <Switch checked={leadAlerts} onCheckedChange={setLeadAlerts} />
+              </div>
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="text-sm font-medium text-foreground">Conversion Alerts</p>
+                  <p className="text-xs text-foreground/45 mt-0.5 leading-snug">Receive alerts when a referral completes an investment</p>
+                </div>
+                <Switch checked={conversionAlerts} onCheckedChange={setConversionAlerts} />
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Edit profile — Sheet on mobile, Dialog on desktop */}
       {isMobile ? (
