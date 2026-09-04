@@ -25,8 +25,8 @@ export const partnersApi = {
       `/partners/me/commission-entries?page=${page}&limit=${limit}`
     ),
 
-  getCommissionEntry: (commissionEntryId: string): Promise<ApiResponse<CommissionEntry>> =>
-    api.get<ApiResponse<CommissionEntry>>(`/partners/me/commission-entries/${commissionEntryId}`),
+  getCommissionEntry: (commissionEntryId: string): Promise<CommissionEntry> =>
+    api.get<CommissionEntry>(`/partners/me/commission-entries/${commissionEntryId}`),
 
   requestPayout: (payload: {
     amount: number;

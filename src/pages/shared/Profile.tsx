@@ -373,7 +373,7 @@ export default function Profile() {
                 iconColor="text-green-400"
                 label="Commission History"
                 desc="View earnings, payouts, and performance"
-                onClick={() => navigate('/partner/commissions')}
+                onClick={() => navigate('/partner/commission-earnings')}
               />
             </MenuSection>
           )}

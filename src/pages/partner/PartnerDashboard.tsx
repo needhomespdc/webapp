@@ -336,7 +336,7 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/partner/favorites">
+          <Link to="/partner/favorites" className='hidden sm:flex'>
             <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
               <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
