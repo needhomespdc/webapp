@@ -659,6 +659,9 @@ export interface ReferralAnalytics {
   previousTotals: ReferralAnalyticsTotals;
   trends: ReferralAnalyticsTrends;
   recentActivity: ReferralActivityEvent[];
+  // TODO: confirm exact API field names for these
+  clicksByPeriod: { date: string; clicks: number }[];
+  totalLifetimeEarnings?: number;
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────────────

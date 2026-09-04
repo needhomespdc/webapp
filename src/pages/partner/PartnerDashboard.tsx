@@ -74,13 +74,13 @@ function StatCard({
         {icon}
       </div>
       <div>
-        <p className="text-foreground/50 text-xs leading-none mb-1.5">{label}</p>
+        <p className="text-foreground text-xs leading-none mb-1.5">{label}</p>
         {loading ? (
           <Skeleton className="h-6 w-20" />
         ) : (
           <p className="text-foreground font-bold text-lg leading-none">{value}</p>
         )}
-        <p className="text-foreground/30 text-[10px] mt-1">{sub}</p>
+        <p className="text-foreground/50 text-[10px] mt-1">{sub}</p>
       </div>
     </div>
   );
@@ -309,42 +309,42 @@ export default function PartnerDashboard() {
           <p className="text-foreground font-semibold text-base">Quick Actions</p>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <Link to="/partner/properties">
             <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
-              <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
+              <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiLinksLine className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-foreground text-xs font-semibold">Share property</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Promote listings</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight hidden sm:flex">Promote listings</p>
                 </div>
               </CardContent>
             </Card>
           </Link>
           <Link to="/partner/properties">
             <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
-              <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
+              <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiBuilding2Line className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-foreground text-xs font-semibold">Browse Properties</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Find properties to promote</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight hidden sm:flex">Find properties to promote</p>
                 </div>
               </CardContent>
             </Card>
           </Link>
-          <Link to="/partner/favorites" className='hidden sm:flex'>
+          <Link to="/partner/favorites">
             <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
-              <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
+              <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiHeartLine className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-foreground text-xs font-semibold">Favorites</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Saved properties</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight hidden sm:flex">Saved properties</p>
                 </div>
               </CardContent>
             </Card>
