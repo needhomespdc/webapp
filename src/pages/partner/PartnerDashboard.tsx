@@ -309,7 +309,7 @@ export default function PartnerDashboard() {
           <p className="text-foreground font-semibold text-base">Quick Actions</p>
         </div>
         
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Link to="/partner/properties">
             <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
               <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
