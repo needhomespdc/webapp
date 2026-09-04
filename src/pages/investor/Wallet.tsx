@@ -191,7 +191,7 @@ export default function InvestorWallet() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* ── Action buttons ──────────────────────────────────────────────────── */}
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
           <div className="grid grid-cols-2 divide-x divide-foreground/10">
             <button
               onClick={() => setTopUpOpen(true)}
@@ -221,7 +221,7 @@ export default function InvestorWallet() {
         </div>
 
         {/* ── Bank accounts ────────────────────────────────────────────────────── */}
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
           {banksLoading ? (
             <div className="p-4"><Skeleton className="h-5 w-48" /></div>
           ) : !bankAccounts.length ? (
@@ -256,7 +256,7 @@ export default function InvestorWallet() {
       </div>
 
       {/* ── Transaction history ───────────────────────────────────────────────── */}
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
           <h2 className="text-foreground font-semibold">Transaction History</h2>
           <button

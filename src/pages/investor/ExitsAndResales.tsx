@@ -48,7 +48,7 @@ export default function ExitsAndResales() {
           <button
             key={card.key}
             onClick={card.onClick}
-            className="group relative rounded-2xl bg-foreground/5 border border-foreground/10 hover:border-foreground/20 p-5 transition-all flex flex-col text-left"
+            className="group relative rounded-2xl bg-white dark:bg-foreground/5 border border-foreground/10 hover:border-foreground/20 p-5 transition-all flex flex-col text-left"
           >
             <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', card.iconBg, card.iconColor)}>
               {card.icon}

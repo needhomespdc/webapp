@@ -325,7 +325,7 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
   }
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex items-start gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
@@ -388,7 +388,7 @@ function ProgressSection({
   theme: ModelTheme;
 }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-base mb-5">Investment Progress</h2>
 
       <div className="flex items-start">
@@ -453,7 +453,7 @@ function ProgressSection({
 
 function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <p className="text-foreground/50 text-[11px] font-semibold mb-3 uppercase tracking-widest">
         Project Manager
       </p>
@@ -495,7 +495,7 @@ function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme
 
 function DevelopmentStageSection({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-sm mb-3">Current Development Stage</h2>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
@@ -580,7 +580,7 @@ function InvestmentInfoSection({ inv }: { inv: Investment }) {
   const showCalIcon = type === 'co_development' || type === 'save_to_own';
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-foreground font-bold text-sm">{sectionTitle}</h2>
         {showCalIcon && (
@@ -629,7 +629,7 @@ function AboutSection({ inv }: { inv: Investment }) {
   const label = inv.aboutLabel
     ?? (inv.type === 'land_banking' ? 'About This Land' : 'About This Property');
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-sm mb-2">{label}</h2>
       <p className="text-foreground/60 text-sm leading-relaxed">{inv.description}</p>
     </div>
@@ -709,7 +709,7 @@ function DocumentsSection({ inv }: { inv: Investment }) {
   const totalRows = apiDocs.length + fixedDocs.length;
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-bold text-sm">Investment Documents</h2>
         <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center">

@@ -69,7 +69,7 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
         {icon}
       </div>
@@ -311,7 +311,7 @@ export default function PartnerDashboard() {
         
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Link to="/partner/properties">
-            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
+            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
               <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiLinksLine className="h-5 w-5" />
@@ -324,7 +324,7 @@ export default function PartnerDashboard() {
             </Card>
           </Link>
           <Link to="/partner/properties">
-            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
+            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
               <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiBuilding2Line className="h-5 w-5" />
@@ -337,7 +337,7 @@ export default function PartnerDashboard() {
             </Card>
           </Link>
           <Link to="/partner/favorites" className='hidden sm:flex'>
-            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
+            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
               <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiHeartLine className="h-5 w-5" />
@@ -354,7 +354,7 @@ export default function PartnerDashboard() {
 
       {/* Performance overview + Recent sales — side by side on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        <Card>
+        <Card className="bg-white dark:bg-foreground/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <p className="text-foreground font-semibold text-base">Performance Overview</p>
@@ -400,7 +400,7 @@ export default function PartnerDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-foreground/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-foreground font-semibold text-base">Recent Sales</p>

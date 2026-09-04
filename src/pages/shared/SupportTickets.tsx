@@ -31,7 +31,7 @@ function TicketCard({ ticket, onClick }: { ticket: SupportTicket; onClick: () =>
   return (
     <button
       onClick={onClick}
-      className="w-full text-left bg-foreground/5 border border-foreground/10 rounded-2xl p-4 hover:border-foreground/20 transition-colors active:scale-[0.99]"
+      className="w-full text-left bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 hover:border-foreground/20 transition-colors active:scale-[0.99]"
     >
       <div className="flex items-start gap-3">
         <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', isOpen ? 'bg-accent/15' : 'bg-foreground/8')}>

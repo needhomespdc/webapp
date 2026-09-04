@@ -230,7 +230,7 @@ function SelfieStep({
       <div
         onClick={!cameraActive && !capturedImg && !cameraError ? startCamera : undefined}
         className={cn(
-          'relative w-full md:mx-auto aspect-4/3 rounded-2xl overflow-hidden bg-foreground/5 border border-foreground/10',
+          'relative w-full md:mx-auto aspect-4/3 rounded-2xl overflow-hidden bg-white dark:bg-foreground/5 border border-foreground/10',
           !cameraActive && !capturedImg && !cameraError && 'cursor-pointer hover:bg-foreground/8 transition-colors'
         )}
       >
@@ -435,7 +435,7 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
           </p>
         </div>
 
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
           <p className="text-foreground font-semibold text-sm mb-1">Once approved you can</p>
           {['Withdraw your commission earnings', 'Request payout to your bank account', 'Access all partner features'].map((item) => (
             <div key={item} className="flex items-center gap-3">
@@ -445,7 +445,7 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
+        <div className="flex items-center justify-center gap-2 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
           <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
           <span className="text-foreground/50 text-sm">Powered by QoreID</span>
         </div>
@@ -487,7 +487,7 @@ export default function PartnerKYCPage() {
   const ctaLabel = kycStatus === 'rejected' ? 'Retry Verification' : 'Start Verification';
 
   const StatusCard = () => (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-5 flex items-center gap-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-5 flex items-center gap-4">
       <div className={cn('w-16 h-16 rounded-full flex items-center justify-center shrink-0', statusContent.bg)}>
         <RiShieldCheckLine className={cn('h-8 w-8', statusContent.iconColor)} />
       </div>
@@ -507,7 +507,7 @@ export default function PartnerKYCPage() {
     return (
       <div>
         <p className="text-foreground font-semibold text-sm mb-3">What you'll need</p>
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
           {WHAT_YOU_NEED.map(({ icon: Icon, title, desc }, i) => (
             <div key={title} className={cn('flex items-center gap-3 px-4 py-4', i < WHAT_YOU_NEED.length - 1 && 'border-b border-foreground/10')}>
               <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
@@ -549,7 +549,7 @@ export default function PartnerKYCPage() {
   const WhyVerify = () => (
     <div>
       <p className="text-foreground font-semibold text-sm mb-3">Why verify your account?</p>
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         {PARTNER_BENEFITS.map(({ icon: Icon, title, desc }, i) => (
           <div key={title} className={cn('flex items-start gap-3 px-4 py-4', i < PARTNER_BENEFITS.length - 1 && 'border-b border-foreground/10')}>
             <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
@@ -566,7 +566,7 @@ export default function PartnerKYCPage() {
   );
 
   const NeedHelp = () => (
-    <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4">
+    <div className="flex items-center gap-3 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4">
       <div className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center shrink-0">
         <RiCustomerService2Line className="h-5 w-5 text-foreground/50" />
       </div>
@@ -589,7 +589,7 @@ export default function PartnerKYCPage() {
   const ReadyCTA = () => {
     if (!canStart) return null;
     return (
-      <div className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+      <div className="flex items-center gap-4 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
           <RiShieldCheckLine className="h-6 w-6 text-accent" />
         </div>

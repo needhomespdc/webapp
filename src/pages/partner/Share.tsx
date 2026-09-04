@@ -196,7 +196,7 @@ function QuickShareCard({ property, onShare }: { property: Property; onShare: ()
   const badgeColor = MODEL_COLORS[property.investmentModelType] ?? 'bg-black/50';
 
   return (
-    <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-foreground/5 border border-foreground/10 overflow-hidden">
       <Link to={`/partner/properties/${property.slug}`} className="block relative h-40 overflow-hidden bg-foreground/5">
         {property.primaryImageUrl ? (
           <img
@@ -366,7 +366,7 @@ export default function Share() {
           <div className="relative">
             <button
               onClick={() => setPeriodOpen((v) => !v)}
-              className="flex items-center gap-1.5 bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-1.5 text-sm text-foreground font-medium"
+              className="flex items-center gap-1.5 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-1.5 text-sm text-foreground font-medium"
             >
               {currentPeriodLabel}
               <RiArrowDownSLine className={cn('h-4 w-4 text-foreground/50 transition-transform', periodOpen && 'rotate-180')} />
@@ -392,7 +392,7 @@ export default function Share() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {stats.map((stat) => (
-            <div key={stat.label} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
+            <div key={stat.label} className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
               <div className={cn('w-10 h-10 rounded-full flex items-center justify-center shrink-0', stat.iconBg)}>
                 <stat.icon className={cn('h-5 w-5', stat.iconColor)} />
               </div>
@@ -450,12 +450,12 @@ export default function Share() {
               {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-14 rounded-2xl" />)}
             </div>
           ) : recentActivity.length === 0 ? (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 text-center">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-6 text-center">
               <p className="text-foreground/40 text-sm">No recent activity yet.</p>
               <p className="text-foreground/30 text-xs mt-1">Share properties to start tracking activity.</p>
             </div>
           ) : (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
               {recentActivity.slice(0, 6).map((event, i) => {
                 const badge = ACTIVITY_BADGE[event.eventType] ?? ACTIVITY_BADGE.share;
                 return (

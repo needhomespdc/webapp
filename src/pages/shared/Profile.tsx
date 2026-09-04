@@ -427,7 +427,7 @@ export default function Profile() {
           </SheetHeader>
           <div>
             <p className="text-foreground font-semibold text-sm mb-2 px-1">Tracking Preferences</p>
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
               <div className="flex items-center justify-between px-4 py-4">
                 <div className="flex-1 min-w-0 pr-4">
                   <p className="text-sm font-medium text-foreground">Lead Alerts</p>
@@ -762,7 +762,7 @@ function EditProfileForm({
         {/* Next of Kin */}
         <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">Next of Kin Information</p>
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-4">
+          <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-4">
             <div className="space-y-2">
               <Label>Full Name</Label>
               <Input
@@ -816,7 +816,7 @@ function MenuSection({ title, children }: { title: string; children: React.React
   return (
     <div>
       <p className="text-foreground font-semibold text-sm mb-2 px-1">{title}</p>
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
         {children}
       </div>
     </div>

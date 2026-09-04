@@ -109,7 +109,7 @@ export default function CommissionEarnings() {
         {STATS.map(({ icon: Icon, label, value, iconBg, iconCls }) => (
           <div
             key={label}
-            className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 flex items-center gap-3"
+            className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 flex items-center gap-3"
           >
             <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', iconBg)}>
               <Icon className={cn('h-5 w-5', iconCls)} />
@@ -129,7 +129,7 @@ export default function CommissionEarnings() {
       </div>
 
       {/* ── Withdraw CTA ─────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4">
+      <div className="flex items-center gap-3 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4">
         <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
           <RiWallet3Line className="h-5 w-5 text-accent" />
         </div>
@@ -163,7 +163,7 @@ export default function CommissionEarnings() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-5 items-start">
 
         {/* History */}
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
           <div className="px-4 py-3.5 border-b border-foreground/10 flex items-center justify-between">
             <h2 className="text-foreground font-semibold text-sm">Transaction History</h2>
             <span className="text-foreground/40 text-xs">{allEntries.length} entries</span>
@@ -240,7 +240,7 @@ export default function CommissionEarnings() {
 
         {/* Earnings Summary — desktop sidebar */}
         <div className="hidden lg:block">
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+          <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
             <div className="px-4 py-3.5 border-b border-foreground/10">
               <h2 className="text-foreground font-semibold text-sm">Summary</h2>
             </div>

@@ -46,7 +46,7 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite, basePath
   const isSoldOut = property.inventoryAvailable === 0 || property.status === 'sold_out';
 
   return (
-    <div className={cn('rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden transition-all', isSoldOut ? 'opacity-80' : 'hover:border-foreground/20')}>
+    <div className={cn('rounded-2xl bg-white dark:bg-foreground/5 border border-foreground/10 overflow-hidden transition-all', isSoldOut ? 'opacity-80' : 'hover:border-foreground/20')}>
       {/* Image */}
       <Link to={`${basePath}/${property.slug}`} className="block relative h-44 bg-foreground/5 overflow-hidden">
         {property.primaryImageUrl ? (
@@ -110,7 +110,7 @@ export function PropertyCard({ property, isFavorited, onToggleFavorite, basePath
         {hasStatBoxes && (
           <div className="grid grid-cols-2 gap-2 mt-3">
             {listingStats.slice(0, 2).map((stat, i) => (
-              <div key={i} className="bg-foreground/5 border border-foreground/10 rounded-lg px-2.5 py-1.5 text-center">
+              <div key={i} className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-lg px-2.5 py-1.5 text-center">
                 <p className="text-foreground text-sm font-bold">{stat.value}</p>
                 <p className="text-foreground/40 text-[10px] capitalize">{stat.label}</p>
               </div>

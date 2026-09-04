@@ -79,7 +79,7 @@ function CoDevSection({ property, config }: { property: Property; config: Record
 
   return (
     <>
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="px-4 py-3 border-b border-foreground/10">
           <h2 className="text-foreground font-semibold text-sm">Co-Development Overview</h2>
         </div>
@@ -104,7 +104,7 @@ function CoDevSection({ property, config }: { property: Property; config: Record
       </div>
 
       {milestones.length > 0 && (
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
           <h2 className="text-foreground font-semibold text-sm mb-0.5">Development Milestones</h2>
           <p className="text-foreground/40 text-xs mb-4">Your contribution is released per milestone as construction progresses.</p>
           <div className="space-y-4">
@@ -150,7 +150,7 @@ function FractionalSection({ config }: { config: Record<string, unknown> }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       {items.map((item) => (
-        <div key={item.label} className="bg-foreground/5 border border-foreground/10 rounded-2xl p-3">
+        <div key={item.label} className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-3">
           <p className="text-foreground/50 text-xs mb-1">{item.label}</p>
           <p className="text-accent font-semibold text-sm">{item.value}</p>
         </div>
@@ -172,7 +172,7 @@ function LandBankingSection({ property, config }: { property: Property; config: 
   ];
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       {rows.map((row, i) => (
         <div
           key={row.label}
@@ -194,7 +194,7 @@ function OutrightSection({ property }: { property: Property }) {
   const totalPurchase = unitPrice + mgmtFee;
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold text-sm">Cost Breakdown</h2>
       </div>
@@ -231,7 +231,7 @@ function SaveToOwnSection({ property, config }: { property: Property; config: Re
   ];
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold text-sm">Savings Plan</h2>
       </div>
@@ -267,7 +267,7 @@ function FractionalInvestmentDetails({ property, config }: { property: Property;
   ];
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold text-sm">Investment Details</h2>
       </div>
@@ -296,7 +296,7 @@ function PropertyVideoCard({ url }: { url: string }) {
       : null;
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold text-sm">Property Video</h2>
       </div>
@@ -336,7 +336,7 @@ function CommissionCard({
   };
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-3">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
@@ -628,7 +628,7 @@ export default function PartnerPropertyDetail() {
 
           {/* Property Highlights — always first */}
           {(property.highlights?.length ?? 0) > 0 && (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
               <h2 className="text-foreground font-semibold text-sm mb-3">Property Highlights</h2>
               <div className="grid grid-cols-2 gap-y-3 gap-x-2">
                 {property.highlights!.map((h) => (
@@ -670,7 +670,7 @@ export default function PartnerPropertyDetail() {
 
           {/* Management Fees (hidden for outright — already in cost breakdown) */}
           {(property.managementFees?.items.length ?? 0) > 0 && property.investmentModelType !== 'outright' && (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
               <div className="px-4 py-3 border-b border-foreground/10">
                 <h2 className="text-foreground font-semibold text-sm">Management Fees</h2>
               </div>
@@ -689,7 +689,7 @@ export default function PartnerPropertyDetail() {
 
           {/* Documents + Building Permit */}
           {((property.documents?.length ?? 0) > 0 || property.buildingPermitNumber) && (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
                 <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
                 <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
@@ -724,7 +724,7 @@ export default function PartnerPropertyDetail() {
           {property.projectManagerName && (
             <div>
               <p className="text-foreground font-semibold text-sm mb-2">Have questions about this property?</p>
-              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+              <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
               <p className="text-foreground/50 text-xs font-medium mb-3 uppercase tracking-wide">Property Manager</p>
               <div className="flex items-center gap-3">
                 {property.projectManagerImageUrl ? (

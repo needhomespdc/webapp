@@ -77,7 +77,7 @@ export default function CommissionWallet() {
   );
 
   const payoutAccountBlock = (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       {banksLoading ? (
         <div className="p-4"><Skeleton className="h-5 w-48" /></div>
       ) : !bankAccounts.length ? (
@@ -128,7 +128,7 @@ export default function CommissionWallet() {
   );
 
   const recentActivity = (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold">Recent Activity</h2>
         <button
@@ -186,7 +186,7 @@ export default function CommissionWallet() {
   );
 
   const walletSummary = (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-semibold text-sm">Wallet Summary</h2>
       </div>
@@ -209,7 +209,7 @@ export default function CommissionWallet() {
   );
 
   const howItWorks = (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <RiInformationLine className="h-4 w-4 text-accent shrink-0" />
         <h2 className="text-foreground font-semibold text-sm">How it works</h2>
@@ -231,7 +231,7 @@ export default function CommissionWallet() {
   );
 
   const needHelp = (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-start gap-3">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-start gap-3">
       <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 text-accent">
         <RiCustomerServiceLine className="h-5 w-5" />
       </div>
@@ -264,7 +264,7 @@ export default function CommissionWallet() {
         {balanceCard}
 
         {/* Action buttons — old style: one card with vertical divider */}
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
           <div className="grid grid-cols-2 divide-x divide-foreground/10">
             <button
               onClick={() => setPayoutOpen(true)}
@@ -317,7 +317,7 @@ export default function CommissionWallet() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setPayoutOpen(true)}
-              className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-accent/40 hover:bg-accent/5 transition-all group"
+              className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-accent/40 hover:bg-accent/5 transition-all group"
             >
               <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center group-hover:bg-accent/25 transition-colors">
                 <RiArrowUpLine className="h-6 w-6 text-accent" />
@@ -327,7 +327,7 @@ export default function CommissionWallet() {
             </button>
             <button
               onClick={() => navigate('/partner/commission-earnings')}
-              className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group"
+              className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col items-center gap-2 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group"
             >
               <div className="w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
                 <RiMoneyDollarCircleLine className="h-6 w-6 text-emerald-500" />

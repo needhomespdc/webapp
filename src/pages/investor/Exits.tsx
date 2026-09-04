@@ -282,7 +282,7 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
             {/* Payout summary */}
             <div>
               <p className="text-foreground font-bold text-sm mb-3">Payout Summary</p>
-              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-3">
+              <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-foreground/60">Current Value</span>
                   <span className="text-foreground font-medium">{formatCurrency(selectedInv.currentValue)}</span>
@@ -303,7 +303,7 @@ function ExitRequestSheet({ open, onOpenChange, eligible, eligibleLoading }: Exi
             </div>
 
             {/* Disclaimer note */}
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-start gap-3">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-start gap-3">
               <RiInformationLine className="text-foreground/40 h-4 w-4 mt-0.5 shrink-0" />
               <p className="text-foreground/50 text-xs leading-relaxed">
                 Your exit request will be reviewed within 1–2 business days. The estimated payout is based on current valuation and may change before completion after exit fees are applied.
@@ -359,7 +359,7 @@ function ExitCard({ exit, onClick }: { exit: ExitRequest; onClick: () => void })
   return (
     <div
       onClick={onClick}
-      className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:border-foreground/20 transition-colors active:scale-[0.99]"
+      className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:border-foreground/20 transition-colors active:scale-[0.99]"
     >
       {/* Top row */}
       <div className="flex items-start gap-3">
@@ -453,7 +453,7 @@ export default function Exits() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
             <RiLogoutCircleRLine className="text-accent h-5 w-5" />
           </div>
@@ -462,7 +462,7 @@ export default function Exits() {
             <p className="text-foreground font-bold text-xl leading-tight">{isLoading ? '—' : totalExits}</p>
           </div>
         </div>
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center shrink-0">
             <RiTimeLine className="text-blue-400 h-5 w-5" />
           </div>
