@@ -27,7 +27,7 @@ export function useReferralAnalytics(period = '30d') {
 export function useCommissionWallet() {
   const query = useQuery({
     queryKey: queryKeys.partner.wallet,
-    queryFn: () => partnersApi.getCommissionWallet().then((r) => r.data),
+    queryFn: () => partnersApi.getCommissionWallet(),
     refetchInterval: 60_000,
   });
 

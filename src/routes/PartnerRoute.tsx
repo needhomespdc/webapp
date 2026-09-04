@@ -28,7 +28,7 @@ const partnerNavItems = [
     activeIcon: <HiBuildingOffice2 />,
   },
   {
-    label: 'Share',
+    label: 'Share & Promote',
     to: '/partner/share',
     icon: <RiLinksLine />,
     activeIcon: <RiLinksLine />,
@@ -40,7 +40,7 @@ const partnerNavItems = [
     activeIcon: <RiMoneyDollarCircleFill />,
   },
   {
-    label: 'Wallet',
+    label: 'Commission Wallet',
     to: '/partner/wallet',
     icon: <RiWallet3Line />,
     activeIcon: <RiWallet3Fill />,

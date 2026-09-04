@@ -17,8 +17,8 @@ export const partnersApi = {
   getReferralAnalytics: (period = '30d'): Promise<ReferralAnalytics> =>
     api.get<ReferralAnalytics>(`/partners/me/referral-analytics?period=${period}`),
 
-  getCommissionWallet: (): Promise<ApiResponse<CommissionWallet>> =>
-    api.get<ApiResponse<CommissionWallet>>('/partners/me/commission-wallet'),
+  getCommissionWallet: (): Promise<CommissionWallet> =>
+    api.get<CommissionWallet>('/partners/me/commission-wallet'),
 
   getCommissionEntries: (page = 1, limit = 10): Promise<PaginatedResponse<CommissionEntry>> =>
     api.get<PaginatedResponse<CommissionEntry>>(
