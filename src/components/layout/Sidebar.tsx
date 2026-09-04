@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { RiLogoutBoxLine, RiShieldCheckLine, RiCustomerService2Line, RiArrowDownSLine, RiLinksLine } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
@@ -14,8 +14,15 @@ export function Sidebar({ navItems }: SidebarProps) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
+  const location = useLocation();
+  const isWalletRoute = location.pathname.includes('/wallet');
+
   const showKycBanner   = user?.role === 'partner' && user?.kycStatus !== 'approved';
   const showShareBanner = user?.role === 'partner' && user?.kycStatus === 'approved';
+
+  const showInvestorKycBanner    = user?.role === 'investor' && user?.kycStatus !== 'approved';
+  const showMarketplaceBanner    = user?.role === 'investor' && !isWalletRoute;
+  const showAddFundsBanner       = user?.role === 'investor' && isWalletRoute;
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -33,7 +40,7 @@ export function Sidebar({ navItems }: SidebarProps) {
     el.addEventListener('scroll', check);
     window.addEventListener('resize', check);
     return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
-  }, [navItems, showKycBanner, showShareBanner]);
+  }, [navItems, showKycBanner, showShareBanner, showInvestorKycBanner, showMarketplaceBanner, showAddFundsBanner]);
 
   const scrollToBottom = () =>
     navRef.current?.scrollTo({ top: navRef.current.scrollHeight, behavior: 'smooth' });
@@ -137,11 +144,91 @@ export function Sidebar({ navItems }: SidebarProps) {
               </button>
               <button
                 onClick={() => navigate('/partner/support')}
-                className="flex items-top gap-2 text-white/50 hover:text-white/80 transition-colors"
+                className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors"
               >
                 <RiCustomerService2Line className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[11px]">Need Help? Chat with our support team</span>
               </button>
+            </div>
+          )}
+
+          {/* ── Investor banners ─────────────────────────────── */}
+
+          {/* KYC nudge — investors, persists on all routes until approved */}
+          {showInvestorKycBanner && (
+            <div className="mt-4 rounded-2xl border border-accent/25 bg-accent/8 p-4 flex flex-col gap-3">
+              <div className="flex items-start gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
+                  <RiShieldCheckLine className="h-4 w-4 text-accent" />
+                </div>
+                <div>
+                  <p className="text-foreground text-sm font-bold leading-snug">Verify Your Identity</p>
+                  <p className="text-foreground/55 text-xs mt-1 leading-snug">
+                    Complete KYC to unlock your full investment potential.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/investor/kyc')}
+                className="w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
+              >
+                Start Verification
+              </button>
+              <button
+                onClick={() => navigate('/investor/support')}
+                className="flex items-center gap-2 text-foreground/40 hover:text-foreground/70 transition-colors"
+              >
+                <RiCustomerService2Line className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px]">Need Help? Chat with our support team</span>
+              </button>
+            </div>
+          )}
+
+          {/* Explore Marketplace nudge — investors, all routes except wallet */}
+          {showMarketplaceBanner && (
+            <div className="mt-4 rounded-2xl bg-card border border-foreground/10 overflow-hidden">
+              <div className="p-4">
+                <p className="text-foreground text-sm font-bold leading-snug">Invest in your future</p>
+                <p className="text-foreground/50 text-xs mt-1.5 leading-snug">
+                  Start building wealth with secure real estate investments.
+                </p>
+                <button
+                  onClick={() => navigate('/investor/marketplace')}
+                  className="mt-3 w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
+                >
+                  Explore Marketplace
+                </button>
+              </div>
+              <img
+                src="/resources/invest-hero-house.png"
+                alt=""
+                aria-hidden
+                className="w-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Add Funds nudge — investors, wallet route only */}
+          {showAddFundsBanner && (
+            <div className="mt-4 rounded-2xl bg-primary overflow-hidden">
+              <div className="p-4">
+                <p className="text-white text-sm font-bold leading-snug">Grow your portfolio with more opportunities</p>
+                <p className="text-white/55 text-xs mt-1.5 leading-snug">
+                  Add funds to invest in high-yield properties.
+                </p>
+                <button
+                  onClick={() => navigate('/investor/wallet')}
+                  className="mt-3 w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
+                >
+                  Add Funds Now
+                </button>
+              </div>
+              <img
+                src="/resources/wallet-hero.png"
+                alt=""
+                aria-hidden
+                className="w-50 h-50 text-center object-cover"
+              />
             </div>
           )}
         </nav>
