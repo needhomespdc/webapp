@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { RiMenuLine, RiLogoutBoxLine, RiUserLine, RiArrowDownSLine, RiVerifiedBadgeLine } from 'react-icons/ri';
+import { RiMenuLine, RiLogoutBoxLine, RiUserLine, RiArrowDownSLine, RiVerifiedBadgeLine, RiShieldCheckLine, RiCustomerService2Line, RiLinksLine } from 'react-icons/ri';
 import { HiOutlineBell } from 'react-icons/hi2';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -55,6 +55,9 @@ export function Header({ navItems }: HeaderProps) {
 
   const notifPath = user?.role === 'investor' ? '/investor/notifications' : user?.role === 'partner' ? '/partner/notifications' : "/";
   const profilePath = user?.role === 'investor' ? '/investor/profile' : user?.role === 'partner' ? '/partner/profile' : "/";
+
+  const showKycBanner   = user?.role === 'partner' && user?.kycStatus !== 'approved';
+  const showShareBanner = user?.role === 'partner' && user?.kycStatus === 'approved';
 
   // Notifications and Profile are reached via this header (bell + dropdown), not the mobile menu.
   const menuItems = navItems.filter((item) => item.label !== 'Notifications');
@@ -141,12 +144,18 @@ export function Header({ navItems }: HeaderProps) {
 
         {/* Mobile menu sheet — left side, full nav */}
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-          <SheetContent side="left" className="w-72 flex flex-col">
-            <SheetHeader>
-              <SheetTitle>{}</SheetTitle>
+          <SheetContent side="left" className="w-68 p-0 flex flex-col">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation</SheetTitle>
             </SheetHeader>
 
-            <nav className="flex-1 mt-2 space-y-1 overflow-y-auto">
+            {/* Logo strip */}
+            <div className="px-4 py-4 border-b border-foreground/5 flex items-center">
+              <img src="/logo/logo-hero-white.png" alt="NeedHomes" className="w-28 hidden dark:block" />
+              <img src="/logo/needhomes-logo.png" alt="NeedHomes" className="w-28 dark:hidden" />
+            </div>
+
+            <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
               {menuItems.map((item) => (
                 <NavLink
                   key={item.to}
@@ -154,7 +163,7 @@ export function Header({ navItems }: HeaderProps) {
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                       isActive
                         ? 'bg-accent/15 text-accent'
                         : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
@@ -171,15 +180,68 @@ export function Header({ navItems }: HeaderProps) {
                   )}
                 </NavLink>
               ))}
+
+              {/* Share nudge — partner only, KYC approved */}
+              {showShareBanner && (
+                <div className="mt-3 rounded-2xl bg-primary p-4 flex flex-col gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                    <RiLinksLine className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold leading-snug">Share more. Earn more.</p>
+                    <p className="text-white/55 text-xs mt-1 leading-snug">
+                      Invite people to invest and earn attractive commissions.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate('/partner/share'); }}
+                    className="w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
+                  >
+                    Share Now
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate('/partner/support'); }}
+                    className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors"
+                  >
+                    <RiCustomerService2Line className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[11px]">Need Help? Chat with our support team</span>
+                  </button>
+                </div>
+              )}
+
+              {/* KYC nudge — partner only, not yet approved */}
+              {showKycBanner && (
+                <div className="mt-3 rounded-2xl bg-primary p-4 flex flex-col gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                    <RiShieldCheckLine className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold leading-snug">Verify Your Account</p>
+                    <p className="text-white/55 text-xs mt-1 leading-snug">
+                      Complete KYC to increase your withdrawal limit and access exclusive partner benefits.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate('/partner/kyc'); }}
+                    className="w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
+                  >
+                    Start Verification
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate('/partner/support'); }}
+                    className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors"
+                  >
+                    <RiCustomerService2Line className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[11px]">Need Help? Chat with our support team</span>
+                  </button>
+                </div>
+              )}
             </nav>
 
-            <div className="border-t border-foreground/5 pt-2 space-y-1">
+            <div className="px-2 py-3 border-t border-foreground/5">
               <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setLogoutOpen(true);
-                }}
-                className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-400 hover:bg-red-400/5 transition-all"
+                onClick={() => { setMenuOpen(false); setLogoutOpen(true); }}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-400/5 transition-all"
               >
                 <RiLogoutBoxLine className="h-5 w-5" />
                 <span className="text-sm font-medium">Logout</span>

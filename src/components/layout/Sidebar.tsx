@@ -19,21 +19,26 @@ export function Sidebar({ navItems }: SidebarProps) {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const el = navRef.current;
     if (!el) return;
-    const check = () => setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+    const check = () => {
+      setHasOverflow(el.scrollHeight > el.clientHeight + 4);
+      setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+    };
     check();
     el.addEventListener('scroll', check);
     window.addEventListener('resize', check);
     return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
   }, [navItems, showKycBanner, showShareBanner]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = () =>
     navRef.current?.scrollTo({ top: navRef.current.scrollHeight, behavior: 'smooth' });
-  };
+  const scrollToTop = () =>
+    navRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -141,14 +146,14 @@ export function Sidebar({ navItems }: SidebarProps) {
           )}
         </nav>
 
-        {/* Floating scroll-down button — hidden once the user reaches the bottom */}
-        {canScrollDown && (
+        {/* Floating scroll button — toggles between down and up */}
+        {hasOverflow && (
           <button
-            onClick={scrollToBottom}
+            onClick={canScrollDown ? scrollToBottom : scrollToTop}
             className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-card border border-foreground/10 shadow-sm rounded-full px-3 py-1.5 text-foreground/50 transition-all"
           >
-            <RiArrowDownSLine className="h-3.5 w-3.5" />
-            <span className="text-[11px] font-medium">Scroll down</span>
+            <RiArrowDownSLine className={cn('h-3.5 w-3.5 transition-transform', !canScrollDown && 'rotate-180')} />
+            <span className="text-[11px] font-medium">{canScrollDown ? 'Scroll down' : 'Scroll up'}</span>
           </button>
         )}
       </div>

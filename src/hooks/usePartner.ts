@@ -50,7 +50,7 @@ export function useCommissionEntries(page = 1, limit = 10) {
 export function useCommissionEntry(id: string | null) {
   const query = useQuery({
     queryKey: queryKeys.partner.commissionEntry(id!),
-    queryFn: () => partnersApi.getCommissionEntry(id!).then((r) => r.data),
+    queryFn: () => partnersApi.getCommissionEntry(id!),
     enabled: !!id,
   });
   return { entry: query.data, isLoading: query.isLoading };
