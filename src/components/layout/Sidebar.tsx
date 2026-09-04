@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { RiLogoutBoxLine, RiShieldCheckLine, RiCustomerService2Line, RiArrowDownSLine } from 'react-icons/ri';
+import { RiLogoutBoxLine, RiShieldCheckLine, RiCustomerService2Line, RiArrowDownSLine, RiLinksLine } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,8 @@ export function Sidebar({ navItems }: SidebarProps) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-  const showKycBanner = user?.role === 'partner' && user?.kycStatus !== 'approved';
+  const showKycBanner   = user?.role === 'partner' && user?.kycStatus !== 'approved';
+  const showShareBanner = user?.role === 'partner' && user?.kycStatus === 'approved';
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -28,7 +29,7 @@ export function Sidebar({ navItems }: SidebarProps) {
     el.addEventListener('scroll', check);
     window.addEventListener('resize', check);
     return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
-  }, [navItems, showKycBanner]);
+  }, [navItems, showKycBanner, showShareBanner]);
 
   const scrollToBottom = () => {
     navRef.current?.scrollTo({ top: navRef.current.scrollHeight, behavior: 'smooth' });
@@ -82,6 +83,34 @@ export function Sidebar({ navItems }: SidebarProps) {
               )}
             </NavLink>
           ))}
+
+          {/* Share nudge — shown once KYC is approved */}
+          {showShareBanner && (
+            <div className="mt-4 rounded-2xl bg-primary p-4 flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                <RiLinksLine className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-bold leading-snug">Share more. Earn more.</p>
+                <p className="text-white/55 text-xs mt-1 leading-snug">
+                  Invite people to invest and earn attractive commissions.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/partner/share')}
+                className="w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
+              >
+                Share Now
+              </button>
+              <button
+                onClick={() => navigate('/partner/support')}
+                className="flex items-top gap-2 text-white/50 hover:text-white/80 transition-colors"
+              >
+                <RiCustomerService2Line className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px]">Need Help? Chat with our support team</span>
+              </button>
+            </div>
+          )}
 
           {/* KYC verification nudge — partners only, hidden once approved */}
           {showKycBanner && (
