@@ -18,7 +18,7 @@ export function usePromotableProperties(page = 1, limit = 10) {
 export function useReferralAnalytics(period = '30d') {
   const query = useQuery({
     queryKey: queryKeys.partner.analytics(period),
-    queryFn: () => partnersApi.getReferralAnalytics(period).then((r) => r.data),
+    queryFn: () => partnersApi.getReferralAnalytics(period),
   });
 
   return { analytics: query.data, isLoading: query.isLoading };
@@ -27,7 +27,7 @@ export function useReferralAnalytics(period = '30d') {
 export function useCommissionWallet() {
   const query = useQuery({
     queryKey: queryKeys.partner.wallet,
-    queryFn: () => partnersApi.getCommissionWallet().then((r) => r.data),
+    queryFn: () => partnersApi.getCommissionWallet(),
     refetchInterval: 60_000,
   });
 
@@ -50,7 +50,7 @@ export function useCommissionEntries(page = 1, limit = 10) {
 export function useCommissionEntry(id: string | null) {
   const query = useQuery({
     queryKey: queryKeys.partner.commissionEntry(id!),
-    queryFn: () => partnersApi.getCommissionEntry(id!).then((r) => r.data),
+    queryFn: () => partnersApi.getCommissionEntry(id!),
     enabled: !!id,
   });
   return { entry: query.data, isLoading: query.isLoading };

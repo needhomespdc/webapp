@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import {
@@ -19,6 +19,10 @@ import {
   RiCloseLine,
   RiBuildingLine,
   RiTimeLine,
+  RiArrowRightLine,
+  RiWallet3Line,
+  RiArrowUpLine,
+  RiCustomerService2Line,
 } from 'react-icons/ri';
 import { mediaApi } from '@/api/media.api';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,11 +31,10 @@ import {
   useKYCStatus,
   useVerifyNIN,
   useVerifyLiveness,
-  useSubmitKYC,  // used by CorporateKYCFlow
+  useSubmitKYC,
   useCorporateVerifyAccountManager,
   useCorporateSubmitCAC,
 } from '@/hooks/useKYC';
-import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
@@ -71,7 +74,7 @@ const CORPORATE_WHAT_YOU_NEED = [
   {
     icon: RiBuildingLine,
     title: 'CAC Registration Number',
-    desc: 'Your company\'s Corporate Affairs Commission registration number',
+    desc: "Your company's Corporate Affairs Commission registration number",
   },
   {
     icon: RiUploadCloud2Line,
@@ -80,7 +83,61 @@ const CORPORATE_WHAT_YOU_NEED = [
   },
 ];
 
-// ─── Centered flow wrapper (desktop card) ─────────────────────────────────────
+const STATUS_CONTENT = {
+  not_submitted: {
+    label: 'Not Submitted',
+    desc: 'Complete your verification to unlock investing and withdrawals.',
+    bg: 'bg-accent/10',
+    iconColor: 'text-accent',
+    textColor: 'text-foreground',
+  },
+  pending: {
+    label: 'Under Review',
+    desc: "We're reviewing your documents. This usually takes 1–2 business days.",
+    bg: 'bg-amber-500/10',
+    iconColor: 'text-amber-400',
+    textColor: 'text-amber-400',
+  },
+  approved: {
+    label: 'Verified',
+    desc: 'Your identity is verified. All investment features are unlocked.',
+    bg: 'bg-green-500/15',
+    iconColor: 'text-green-400',
+    textColor: 'text-green-400',
+  },
+  rejected: {
+    label: 'Verification Failed',
+    desc: 'Your verification was rejected. Please re-submit your documents.',
+    bg: 'bg-red-500/10',
+    iconColor: 'text-red-400',
+    textColor: 'text-red-400',
+  },
+};
+
+const INVESTOR_BENEFITS = [
+  {
+    icon: RiWallet3Line,
+    title: 'Unlimited Wallet Funding',
+    desc: 'Increase your funding limit and enjoy smoother transactions.',
+  },
+  {
+    icon: RiArrowUpLine,
+    title: 'Higher Withdrawal Limit',
+    desc: 'Unlock higher withdrawal limits for your investment returns.',
+  },
+  {
+    icon: RiShieldLine,
+    title: 'Secure & Trusted',
+    desc: 'Keep your account safe and invest with complete confidence.',
+  },
+  {
+    icon: RiBuildingLine,
+    title: 'Priority Investment Access',
+    desc: 'Be among the first to access exclusive property investment listings.',
+  },
+];
+
+// ─── Centered flow wrapper ────────────────────────────────────────────────────
 
 function FlowCard({ children }: { children: React.ReactNode }) {
   return (
@@ -91,8 +148,6 @@ function FlowCard({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-// ─── Shared step header ───────────────────────────────────────────────────────
 
 function StepHeader({ onBack, stepLabel }: { onBack: () => void; stepLabel?: string }) {
   return (
@@ -201,11 +256,10 @@ function SelfieStep({
         </p>
       </div>
 
-      {/* Camera / photo area — capped to feel natural on desktop */}
       <div
         onClick={!cameraActive && !capturedImg && !cameraError ? startCamera : undefined}
         className={cn(
-          'relative w-full md:mx-auto aspect-4/3 rounded-2xl overflow-hidden bg-foreground/5 border border-foreground/10',
+          'relative w-full md:mx-auto aspect-4/3 rounded-2xl overflow-hidden bg-white dark:bg-foreground/5 border border-foreground/10',
           !cameraActive && !capturedImg && !cameraError && 'cursor-pointer hover:bg-foreground/8 transition-colors'
         )}
       >
@@ -282,6 +336,7 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
   const [dob, setDob] = useState(user?.dateOfBirth ?? '');
 
   const verifyNINMutation = useVerifyNIN();
+  const queryClient = useQueryClient();
 
   const handleVerifyNIN = () => {
     if (nin.length < 11) { toast.error('Enter a valid 11-digit NIN'); return; }
@@ -295,14 +350,11 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
     );
   };
 
-  const queryClient = useQueryClient();
-
   const handleLivenessVerified = () => {
     setStep('success');
     queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
   };
 
-  // ── NIN step ──
   if (step === 'nin') {
     return (
       <FlowCard>
@@ -389,7 +441,6 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // ── Selfie step ──
   if (step === 'selfie') {
     return (
       <FlowCard>
@@ -402,49 +453,43 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-
-  // ── Success step ──
-  if (step === 'success') {
-    return (
-      <FlowCard>
-        <div className="space-y-6 text-center pt-4">
-          <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center mx-auto">
-            <RiCheckLine className="h-12 w-12 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Identity verification complete</h2>
-            <p className="text-foreground/50 text-sm mt-2 leading-relaxed">
-              Your verification is complete. You can now invest, fund your wallet, and withdraw.
-            </p>
-          </div>
-
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
-            <p className="text-foreground font-semibold text-sm mb-1">You can now</p>
-            {['Invest in properties', 'Fund your wallet', 'Withdraw to your bank account'].map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
-                <span className="text-foreground/70 text-sm">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
-            <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
-            <span className="text-foreground/50 text-sm">Powered by QoreID</span>
-          </div>
-
-          <Button
-            className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
-            onClick={() => navigate('/investor/dashboard')}
-          >
-            Go to Dashboard
-          </Button>
+  return (
+    <FlowCard>
+      <div className="space-y-6 text-center pt-4">
+        <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center mx-auto">
+          <RiCheckLine className="h-12 w-12 text-white" />
         </div>
-      </FlowCard>
-    );
-  }
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Identity verification complete</h2>
+          <p className="text-foreground/50 text-sm mt-2 leading-relaxed">
+            Your verification is complete. You can now invest, fund your wallet, and withdraw.
+          </p>
+        </div>
 
-  return null;
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
+          <p className="text-foreground font-semibold text-sm mb-1">You can now</p>
+          {['Invest in properties', 'Fund your wallet', 'Withdraw to your bank account'].map((item) => (
+            <div key={item} className="flex items-center gap-3">
+              <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
+              <span className="text-foreground/70 text-sm">{item}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-2 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
+          <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
+          <span className="text-foreground/50 text-sm">Powered by QoreID</span>
+        </div>
+
+        <Button
+          className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
+          onClick={() => navigate('/investor/dashboard')}
+        >
+          Go to Dashboard
+        </Button>
+      </div>
+    </FlowCard>
+  );
 }
 
 // ─── Corporate KYC (KYB) flow ─────────────────────────────────────────────────
@@ -494,7 +539,6 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
   const isSubmitting =
     uploadMutation.isPending || submitCacMutation.isPending || submitKYCMutation.isPending;
 
-  // ── Step 1: Account Manager NIN ──────────────────────────────────────────────
   if (step === 'manager') {
     return (
       <FlowCard>
@@ -572,7 +616,6 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // ── Step 2: CAC Document ─────────────────────────────────────────────────────
   if (step === 'cac') {
     return (
       <FlowCard>
@@ -585,7 +628,6 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
             </p>
           </div>
 
-          {/* CAC Number */}
           <div className="space-y-1.5">
             <Label className="text-foreground/70 text-sm">CAC Registration Number</Label>
             <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-3.5">
@@ -600,7 +642,6 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {/* CAC Certificate upload */}
           <div className="space-y-1.5">
             <Label className="text-foreground/70 text-sm">CAC Certificate</Label>
             <label className={cn(
@@ -664,7 +705,6 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-  // ── Success ──────────────────────────────────────────────────────────────────
   return (
     <FlowCard>
       <div className="space-y-6 text-center pt-4">
@@ -678,11 +718,11 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
           </p>
         </div>
 
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
           <p className="text-foreground font-semibold text-sm mb-1">What happens next</p>
           {[
             'Our compliance team will review your CAC documents',
-            'You\'ll receive an email notification once verified',
+            "You'll receive an email notification once verified",
             'After approval you can invest and transact freely',
           ].map((item) => (
             <div key={item} className="flex items-start gap-3">
@@ -692,7 +732,7 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
+        <div className="flex items-center justify-center gap-2 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
           <RiShieldLine className="text-accent h-4 w-4 shrink-0" />
           <span className="text-foreground/50 text-sm">Secured by NeedHomes Compliance</span>
         </div>
@@ -719,7 +759,8 @@ export default function KYCPage() {
 
   const kycStatus = status?.status ?? user?.kycStatus ?? 'not_submitted';
   const isCorporate = user?.role === 'investor' && user?.investorType === 'corporate';
-  // const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
+  const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
+  const ctaLabel = kycStatus === 'rejected' ? 'Retry Verification' : 'Start Verification';
 
   if (flowActive && !isCorporate) {
     return <IndividualFlow onClose={() => setFlowActive(false)} />;
@@ -728,71 +769,47 @@ export default function KYCPage() {
     return <CorporateFlow onClose={() => setFlowActive(false)} />;
   }
 
-  const ctaConfig = {
-    not_submitted: { label: 'Start Verification', active: true },
-    pending: { label: 'Under Review', active: false },
-    approved: { label: 'KYC Approved', active: false },
-    rejected: { label: 'Retry Verification', active: true },
-  } as const;
-  const cta = ctaConfig[kycStatus as keyof typeof ctaConfig] ?? ctaConfig.not_submitted;
+  const statusContent = STATUS_CONTENT[kycStatus as keyof typeof STATUS_CONTENT] ?? STATUS_CONTENT.not_submitted;
+  const whatYouNeedItems = isCorporate ? CORPORATE_WHAT_YOU_NEED : WHAT_YOU_NEED;
 
-  const shieldStyle = {
-    approved: { bg: 'bg-green-500/15', icon: 'text-green-400' },
-    rejected: { bg: 'bg-red-500/10', icon: 'text-red-400' },
-    pending: { bg: 'bg-amber-500/10', icon: 'text-amber-400' },
-    not_submitted: { bg: 'bg-accent/10', icon: 'text-accent' },
-  }[kycStatus] ?? { bg: 'bg-accent/10', icon: 'text-accent' };
-
-  // Reusable hero block
-  const Hero = ({ align }: { align: 'center' | 'left' }) => (
-    <div className={cn('flex flex-col pt-2 pb-2', align === 'center' ? 'items-center text-center' : 'items-start text-left')}>
-      <div className={cn('w-20 h-20 rounded-full flex items-center justify-center mb-4', shieldStyle.bg)}>
-        <RiShieldCheckLine className={cn('h-10 w-10', shieldStyle.icon)} />
+  const StatusCard = () => (
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-5 flex items-center gap-4">
+      <div className={cn('w-16 h-16 rounded-full flex items-center justify-center shrink-0', statusContent.bg)}>
+        <RiShieldCheckLine className={cn('h-8 w-8', statusContent.iconColor)} />
       </div>
-      <h1 className="text-2xl font-bold text-foreground">Identity Verification (KYC)</h1>
-      <p className="text-foreground/50 text-sm mt-2 leading-relaxed max-w-sm">
-        Verify your identity to unlock investing, wallet funding, and withdrawals on NeedHomes.
-      </p>
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground/50 text-xs font-medium uppercase tracking-wide mb-0.5">Verification Status</p>
+        <p className={cn('text-xl font-bold', statusContent.textColor)}>{statusContent.label}</p>
+        <div className="flex items-start gap-1.5 mt-1">
+          <span className="w-2 h-2 rounded-full bg-accent shrink-0 mt-1" />
+          <p className="text-foreground/50 text-sm leading-snug">{statusContent.desc}</p>
+        </div>
+      </div>
     </div>
   );
-
-  const StatusRow = () => (
-    <div className="flex items-center gap-2.5">
-      <div className="w-2 h-2 rounded-full bg-foreground/20" />
-      <span className="text-foreground/50 text-sm">Status</span>
-      <StatusBadge status={kycStatus} />
-    </div>
-  );
-
-  const RejectionBanner = () => status?.rejectionReason ? (
-    <p className="text-red-400 text-sm bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-3">
-      {status.rejectionReason}
-    </p>
-  ) : null;
 
   const WhatYouNeed = () => {
     if (kycStatus === 'approved') return null;
-    const items = isCorporate ? CORPORATE_WHAT_YOU_NEED : WHAT_YOU_NEED;
-
     return (
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-        <div className="px-4 pt-4 pb-3">
-          <p className="text-foreground font-semibold text-sm">What you'll need</p>
+      <div>
+        <p className="text-foreground font-semibold text-sm mb-3">What you'll need</p>
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+          {whatYouNeedItems.map(({ icon: Icon, title, desc }, i) => (
+            <div key={title} className={cn('flex items-center gap-3 px-4 py-4', i < whatYouNeedItems.length - 1 && 'border-b border-foreground/10')}>
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                <Icon className="text-accent h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-foreground font-semibold text-sm">{title}</p>
+                <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
+              </div>
+              <RiArrowRightLine className="h-4 w-4 text-foreground/30 shrink-0" />
+            </div>
+          ))}
         </div>
-        {items.map(({ icon: Icon, title, desc }, i) => (
-          <div key={title} className={cn('flex items-start gap-3 px-4 py-4', i < items.length - 1 && 'border-b border-foreground/10')}>
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              <Icon className="text-accent h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-foreground font-semibold text-sm">{title}</p>
-              <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
-            </div>
-          </div>
-        ))}
       </div>
     );
-  }
+  };
 
   const SecurityPrivacy = () => (
     <div className="bg-primary rounded-2xl p-4">
@@ -808,86 +825,119 @@ export default function KYCPage() {
           </li>
         ))}
       </ul>
+      {!isCorporate && (
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
+          <RiLockLine className="text-white/30 h-3 w-3 shrink-0" />
+          <span className="text-white/40 text-xs">Powered by QoreID</span>
+        </div>
+      )}
     </div>
   );
 
-  const CtaButton = ({ fullWidth }: { fullWidth?: boolean }) => (
-    <Button
-      className={cn(
-        'h-12 rounded-2xl font-semibold',
-        fullWidth ? 'w-full' : 'w-auto px-8',
-        cta.active ? 'bg-accent hover:bg-accent/90 text-white' : 'bg-foreground/8 text-foreground/30 cursor-default'
-      )}
-      disabled={!cta.active}
-      onClick={() => cta.active && setFlowActive(true)}
-    >
-      {cta.label}
-    </Button>
-  );
-
-  const DesktopStatusNotice = () => {
-    if (kycStatus === 'approved') return (
-      <div className="bg-green-500/8 border border-green-500/20 rounded-2xl px-4 py-4 space-y-2.5">
-        <p className="text-green-400 font-semibold text-sm">Your identity is verified</p>
-        {['Invest in properties', 'Fund your wallet', 'Withdraw to your bank account'].map((item) => (
-          <div key={item} className="flex items-center gap-2.5">
-            <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
-            <span className="text-foreground/70 text-sm">{item}</span>
+  const WhyVerify = () => (
+    <div>
+      <p className="text-foreground font-semibold text-sm mb-3">Why verify your account?</p>
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        {INVESTOR_BENEFITS.map(({ icon: Icon, title, desc }, i) => (
+          <div key={title} className={cn('flex items-start gap-3 px-4 py-4', i < INVESTOR_BENEFITS.length - 1 && 'border-b border-foreground/10')}>
+            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              <Icon className="text-accent h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-foreground font-semibold text-sm">{title}</p>
+              <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
+            </div>
           </div>
         ))}
       </div>
-    );
-    if (kycStatus === 'pending') return (
-      <div className="bg-amber-500/8 border border-amber-500/20 rounded-2xl px-4 py-4">
-        <p className="text-amber-400 font-semibold text-sm mb-1">Under review</p>
-        <p className="text-foreground/50 text-sm leading-relaxed">
-          We're reviewing your submission. This usually takes 1–2 business days.
-        </p>
+    </div>
+  );
+
+  const NeedHelp = () => (
+    <div className="flex items-center gap-3 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4">
+      <div className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center shrink-0">
+        <RiCustomerService2Line className="h-5 w-5 text-foreground/50" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground font-semibold text-sm">Need Help?</p>
+        <p className="text-foreground/50 text-xs mt-0.5">Chat with our support team</p>
+      </div>
+      <Link to="/investor/support" className="text-accent text-xs font-semibold hover:underline shrink-0">
+        Start a chat →
+      </Link>
+    </div>
+  );
+
+  const RejectionBanner = () => status?.rejectionReason ? (
+    <p className="text-red-400 text-sm bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-3">
+      {status.rejectionReason}
+    </p>
+  ) : null;
+
+  const ReadyCTA = () => {
+    if (!canStart) return null;
+    return (
+      <div className="flex items-center gap-4 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+        <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+          <RiShieldCheckLine className="h-6 w-6 text-accent" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-foreground font-semibold text-sm">Ready to get verified?</p>
+          <p className="text-foreground/50 text-xs mt-0.5 leading-snug">
+            It takes only a few minutes and you'll unlock all features available to investors.
+          </p>
+        </div>
+        <Button
+          className="bg-accent hover:bg-accent/90 text-white h-10 rounded-xl px-4 text-sm font-semibold shrink-0"
+          onClick={() => setFlowActive(true)}
+        >
+          {kycStatus === 'rejected' ? 'Retry' : 'Start'}
+        </Button>
       </div>
     );
-    return null;
   };
 
   return (
     <div className="pb-4 md:pb-8">
-
-      {/* ── Mobile layout: original order ─────────────────────────────────── */}
-      <div className="md:hidden space-y-6">
-        <Hero align="center" />
-        <StatusRow />
-        <RejectionBanner />
-        {}
-        <WhatYouNeed />
-        <SecurityPrivacy />
-        {!isCorporate && <p className="text-center text-foreground/30 text-xs">Powered by QoreID</p>}
-        <CtaButton fullWidth />
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground">Identity Verification (KYC)</h1>
+        <p className="text-foreground/50 text-sm mt-1">
+          Verify your identity to unlock investing, wallet funding, and withdrawals on NeedHomes.
+        </p>
       </div>
 
-      {/* ── Desktop layout: two-column ─────────────────────────────────────── */}
-      <div className="hidden md:grid md:grid-cols-[1fr_340px] md:gap-10 md:items-start md:pt-4 max-w-4xl mx-auto">
+      {/* Mobile */}
+      <div className="md:hidden space-y-5">
+        <StatusCard />
+        <RejectionBanner />
+        <WhatYouNeed />
+        <SecurityPrivacy />
+        <WhyVerify />
+        <NeedHelp />
+        {canStart && (
+          <Button
+            className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
+            onClick={() => setFlowActive(true)}
+          >
+            {ctaLabel}
+          </Button>
+        )}
+      </div>
 
-        {/* Left: hero + status + notices + CTA */}
-        <div className="space-y-6">
-          <Hero align="left" />
-          <StatusRow />
+      {/* Desktop two-column */}
+      <div className="hidden md:grid md:grid-cols-[1fr_300px] md:gap-8 md:items-start">
+        <div className="space-y-5">
+          <StatusCard />
           <RejectionBanner />
-          <DesktopStatusNotice />
-          <CtaButton />
-        </div>
-
-        {/* Right: info cards */}
-        <div className="flex flex-col gap-4">
           <WhatYouNeed />
           <SecurityPrivacy />
-          {!isCorporate && (
-            <div className="flex items-center justify-center gap-2">
-              <RiLockLine className="text-foreground/30 h-3 w-3 shrink-0" />
-              <span className="text-foreground/40 text-xs">Powered by QoreID</span>
-            </div>
-          )}
+          <ReadyCTA />
+        </div>
+        <div className="space-y-4">
+          <WhyVerify />
+          <NeedHelp />
         </div>
       </div>
     </div>
   );
 }
-

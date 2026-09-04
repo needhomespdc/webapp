@@ -19,6 +19,8 @@ import {
   RiPencilLine,
   RiVerifiedBadgeLine,
   RiArrowDownSLine,
+  RiLinksLine,
+  RiMoneyDollarBoxLine,
 } from 'react-icons/ri';
 import { Country, State } from 'country-state-city';
 import authApi from '@/api/auth.api';
@@ -34,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +50,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { ApiError, unwrapEnvelope } from '@/lib/fetchClient';
 import type { User } from '@/types';
 import { cn } from '@/lib/utils';
+import { KYCStatusBanner } from '@/components/shared/KYCStatusBanner';
 
 const EMPLOYMENT_STATUSES: SelectOption[] = [
   { value: 'student', label: 'Student' },
@@ -74,6 +78,7 @@ export default function Profile() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [firstName, setFirstName] = useState(user?.firstName ?? '');
+  const [middleName, setMiddleName] = useState(user?.middleName ?? '');
   const [lastName, setLastName] = useState(user?.lastName ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? '');
@@ -110,6 +115,9 @@ export default function Profile() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [referralSettingsOpen, setReferralSettingsOpen] = useState(false);
+  const [leadAlerts, setLeadAlerts] = useState(true);
+  const [conversionAlerts, setConversionAlerts] = useState(true);
 
   const { data: sqStatus } = useQuery({
     queryKey: ['auth', 'security-questions'],
@@ -281,24 +289,10 @@ export default function Profile() {
       </div>
 
       {user.kycStatus !== 'approved' && (
-        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-          <RiAlertLine className="text-amber-400 h-5 w-5 mt-0.5 shrink-0" />
-          <p className="text-amber-400 text-sm font-medium flex-1 min-w-0">
-            {user.kycStatus === 'pending'
-              ? "Your KYC is under review. We'll notify you once approved."
-              : user.kycStatus === 'rejected'
-              ? "Your KYC was rejected. Please re-submit to unlock all features."
-              : "Complete KYC verification to unlock withdrawals and payouts."}
-          </p>
-          {user.kycStatus !== 'pending' && (
-            <button
-              onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
-              className="shrink-0 text-xs font-semibold text-amber-400 border border-amber-500/50 rounded-lg px-3 py-1.5 hover:bg-amber-500/10 transition-colors"
-            >
-              {user.kycStatus === 'rejected' ? 'Re-submit' : 'Complete KYC'}
-            </button>
-          )}
-        </div>
+        <KYCStatusBanner
+          kycStatus={user.kycStatus}
+          kycPath={isInvestor ? '/investor/kyc' : '/partner/kyc'}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
@@ -363,6 +357,26 @@ export default function Profile() {
               />
             </MenuSection>
           )}
+          {!isInvestor && (
+            <MenuSection title="Partner">
+              <MenuItem
+                icon={<RiLinksLine />}
+                iconBg="bg-orange-500/15"
+                iconColor="text-orange-500"
+                label="Referral Settings"
+                desc="Manage your referral tracking preferences"
+                onClick={() => setReferralSettingsOpen(true)}
+              />
+              <MenuItem
+                icon={<RiMoneyDollarBoxLine />}
+                iconBg="bg-green-500/15"
+                iconColor="text-green-400"
+                label="Commission History"
+                desc="View earnings, payouts, and performance"
+                onClick={() => navigate('/partner/commission-earnings')}
+              />
+            </MenuSection>
+          )}
           <MenuSection title="Support & Information">
             <MenuItem
               icon={<RiHeadphoneLine />}
@@ -386,7 +400,7 @@ export default function Profile() {
               iconColor="text-purple-400"
               label="Terms & Conditions"
               desc="Read our terms and conditions"
-              onClick={() => {}}
+              onClick={() => window.open('https://needhomespdc.com/terms', '_blank', 'noopener,noreferrer')}
             />
             <MenuItem
               icon={<RiShieldLine />}
@@ -394,7 +408,7 @@ export default function Profile() {
               iconColor="text-accent"
               label="Privacy Policy"
               desc="View our privacy policy"
-              onClick={() => {}}
+              onClick={() => window.open('https://needhomespdc.com/privacy-policy', '_blank', 'noopener,noreferrer')}
             />
           </MenuSection>
         </div>
@@ -404,13 +418,42 @@ export default function Profile() {
 
       </div>
 
+      {/* Referral Settings — bottom Sheet on mobile, right Sheet on desktop */}
+      <Sheet open={referralSettingsOpen} onOpenChange={setReferralSettingsOpen}>
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className={isMobile ? 'rounded-t-2xl pb-8' : 'w-95 sm:max-w-95'}>
+          <SheetHeader className="mb-6">
+            <SheetTitle>Referral Settings</SheetTitle>
+            <p className="text-foreground/50 text-sm">Manage your referral tracking preferences.</p>
+          </SheetHeader>
+          <div>
+            <p className="text-foreground font-semibold text-sm mb-2 px-1">Tracking Preferences</p>
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="text-sm font-medium text-foreground">Lead Alerts</p>
+                  <p className="text-xs text-foreground/45 mt-0.5 leading-snug">Get notified when someone engages through your referrals</p>
+                </div>
+                <Switch checked={leadAlerts} onCheckedChange={setLeadAlerts} />
+              </div>
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="text-sm font-medium text-foreground">Conversion Alerts</p>
+                  <p className="text-xs text-foreground/45 mt-0.5 leading-snug">Receive alerts when a referral completes an investment</p>
+                </div>
+                <Switch checked={conversionAlerts} onCheckedChange={setConversionAlerts} />
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Edit profile — Sheet on mobile, Dialog on desktop */}
       {isMobile ? (
         <Sheet open={editOpen} onOpenChange={setEditOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl p-0 h-[92vh] flex flex-col overflow-hidden">
             <EditProfileForm
               user={user}
-              fields={{ firstName, setFirstName, lastName, setLastName, phone, setPhone,
+              fields={{ firstName, setFirstName, middleName, setMiddleName, lastName, setLastName, phone, setPhone,
                 dateOfBirth, setDateOfBirth, country, setCountry, state, setState,
                 city, setCity, street, setStreet, employmentStatus, setEmploymentStatus,
                 nextOfKinName, setNextOfKinName, nextOfKinAddress, setNextOfKinAddress,
@@ -418,7 +461,7 @@ export default function Profile() {
               isPending={updateProfileMutation.isPending}
               onCancel={() => setEditOpen(false)}
               onSave={() => updateProfileMutation.mutate({
-                firstName, lastName, phone,
+                firstName, middleName, lastName, phone,
                 ...(dateOfBirth ? { dateOfBirth } : {}),
                 ...(employmentStatus ? { employmentStatus } : {}),
                 ...(nextOfKinName ? { nextOfKinName } : {}),
@@ -437,7 +480,7 @@ export default function Profile() {
             </DialogHeader>
             <EditProfileForm
               user={user}
-              fields={{ firstName, setFirstName, lastName, setLastName, phone, setPhone,
+              fields={{ firstName, setFirstName, middleName, setMiddleName, lastName, setLastName, phone, setPhone,
                 dateOfBirth, setDateOfBirth, country, setCountry, state, setState,
                 city, setCity, street, setStreet, employmentStatus, setEmploymentStatus,
                 nextOfKinName, setNextOfKinName, nextOfKinAddress, setNextOfKinAddress,
@@ -445,7 +488,7 @@ export default function Profile() {
               isPending={updateProfileMutation.isPending}
               onCancel={() => setEditOpen(false)}
               onSave={() => updateProfileMutation.mutate({
-                firstName, lastName, phone,
+                firstName, middleName, lastName, phone,
                 ...(dateOfBirth ? { dateOfBirth } : {}),
                 ...(employmentStatus ? { employmentStatus } : {}),
                 ...(nextOfKinName ? { nextOfKinName } : {}),
@@ -578,6 +621,7 @@ export default function Profile() {
 
 interface EditProfileFields {
   firstName: string; setFirstName: (v: string) => void;
+  middleName: string; setMiddleName: (v: string) => void;
   lastName: string; setLastName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
   dateOfBirth: string; setDateOfBirth: (v: string) => void;
@@ -613,16 +657,22 @@ function EditProfileForm({
 
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-4">
         {isIndividual ? (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>First Name</Label>
-              <Input value={fields.firstName} onChange={(e) => fields.setFirstName(e.target.value)} placeholder="First name" />
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>First Name</Label>
+                <Input value={fields.firstName} onChange={(e) => fields.setFirstName(e.target.value)} placeholder="First name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name</Label>
+                <Input value={fields.lastName} onChange={(e) => fields.setLastName(e.target.value)} placeholder="Last name" />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Last Name</Label>
-              <Input value={fields.lastName} onChange={(e) => fields.setLastName(e.target.value)} placeholder="Last name" />
+              <Label>Middle Name <span className="text-foreground/40 font-normal">(Optional)</span></Label>
+              <Input value={fields.middleName} onChange={(e) => fields.setMiddleName(e.target.value)} placeholder="Middle name" />
             </div>
-          </div>
+          </>
         ) : (
           <div className="space-y-2">
             <Label>Company Name</Label>
@@ -712,7 +762,7 @@ function EditProfileForm({
         {/* Next of Kin */}
         <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">Next of Kin Information</p>
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-4">
+          <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-4">
             <div className="space-y-2">
               <Label>Full Name</Label>
               <Input
@@ -766,7 +816,7 @@ function MenuSection({ title, children }: { title: string; children: React.React
   return (
     <div>
       <p className="text-foreground font-semibold text-sm mb-2 px-1">{title}</p>
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
         {children}
       </div>
     </div>

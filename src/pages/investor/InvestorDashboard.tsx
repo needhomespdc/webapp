@@ -100,7 +100,7 @@ export default function InvestorDashboard() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden bg-white dark:bg-foreground/5">
           <CardContent className="p-4 pb-7 relative z-10">
             <div className="flex items-center justify-between mb-1">
               <p className="text-foreground/50 text-xs">Wallet Balance</p>
@@ -128,7 +128,7 @@ export default function InvestorDashboard() {
           </svg>
         </Card>
 
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden bg-white dark:bg-foreground/5">
           <CardContent className="p-4 pb-7 relative z-10">
             <div className="flex items-center justify-between mb-1">
               <p className="text-foreground/50 text-xs">Portfolio Value</p>
@@ -156,7 +156,7 @@ export default function InvestorDashboard() {
           </svg>
         </Card>
 
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden bg-white dark:bg-foreground/5">
           <CardContent className="p-4 pb-7 relative z-10">
             <div className="flex items-center justify-between mb-1">
               <p className="text-foreground/50 text-xs">Active Investments</p>
@@ -184,7 +184,7 @@ export default function InvestorDashboard() {
           </svg>
         </Card>
 
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden bg-white dark:bg-foreground/5">
           <CardContent className="p-4 pb-7 relative z-10">
             <div className="flex items-center justify-between mb-1">
               <p className="text-foreground/50 text-xs">Total Returns</p>
@@ -216,7 +216,7 @@ export default function InvestorDashboard() {
       {/* Quick actions */}
       <div className="grid grid-cols-3 gap-3">
         <Link to="/investor/marketplace">
-          <Card className="hover:border-accent/40 transition-colors cursor-pointer">
+          <Card className="hover:border-accent/40 transition-colors cursor-pointer bg-white dark:bg-foreground/5">
             <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiStore2LineIcon />
@@ -232,7 +232,7 @@ export default function InvestorDashboard() {
           </Card>
         </Link>
         <Link to="/investor/wallet">
-          <Card className="hover:border-accent/40 transition-colors cursor-pointer">
+          <Card className="hover:border-accent/40 transition-colors cursor-pointer bg-white dark:bg-foreground/5">
             <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiWalletIcon />
@@ -248,7 +248,7 @@ export default function InvestorDashboard() {
           </Card>
         </Link>
         <Link to="/investor/favorites">
-          <Card className="hover:border-accent/40 transition-colors cursor-pointer">
+          <Card className="hover:border-accent/40 transition-colors cursor-pointer bg-white dark:bg-foreground/5">
             <CardContent className="p-2.5 flex items-center gap-3 flex-col sm:flex-row">
               <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
                 <RiHeartIcon />
@@ -267,7 +267,7 @@ export default function InvestorDashboard() {
 
       {/* Recent investments + transactions — side-by-side once both have data */}
       <div className={cn(hasBothRecent && 'grid grid-cols-1 lg:grid-cols-2 gap-6')}>
-      <Card>
+      <Card className="bg-white dark:bg-foreground/5">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Recent Investments</CardTitle>
@@ -355,7 +355,7 @@ export default function InvestorDashboard() {
 
       {/* Recent transactions */}
       {txData && txData.length > 0 && (
-        <Card>
+        <Card className="bg-white dark:bg-foreground/5">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Recent Transactions</CardTitle>

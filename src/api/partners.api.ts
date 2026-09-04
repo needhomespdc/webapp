@@ -14,19 +14,19 @@ export const partnersApi = {
       `/partners/me/promotable-properties?page=${page}&limit=${limit}`
     ),
 
-  getReferralAnalytics: (period = '30d'): Promise<ApiResponse<ReferralAnalytics>> =>
-    api.get<ApiResponse<ReferralAnalytics>>(`/partners/me/referral-analytics?period=${period}`),
+  getReferralAnalytics: (period = '30d'): Promise<ReferralAnalytics> =>
+    api.get<ReferralAnalytics>(`/partners/me/referral-analytics?period=${period}`),
 
-  getCommissionWallet: (): Promise<ApiResponse<CommissionWallet>> =>
-    api.get<ApiResponse<CommissionWallet>>('/partners/me/commission-wallet'),
+  getCommissionWallet: (): Promise<CommissionWallet> =>
+    api.get<CommissionWallet>('/partners/me/commission-wallet'),
 
   getCommissionEntries: (page = 1, limit = 10): Promise<PaginatedResponse<CommissionEntry>> =>
     api.get<PaginatedResponse<CommissionEntry>>(
       `/partners/me/commission-entries?page=${page}&limit=${limit}`
     ),
 
-  getCommissionEntry: (commissionEntryId: string): Promise<ApiResponse<CommissionEntry>> =>
-    api.get<ApiResponse<CommissionEntry>>(`/partners/me/commission-entries/${commissionEntryId}`),
+  getCommissionEntry: (commissionEntryId: string): Promise<CommissionEntry> =>
+    api.get<CommissionEntry>(`/partners/me/commission-entries/${commissionEntryId}`),
 
   requestPayout: (payload: {
     amount: number;

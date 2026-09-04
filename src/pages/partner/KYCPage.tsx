@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import {
@@ -15,17 +15,23 @@ import {
   RiIdCardLine,
   RiImageLine,
   RiLockLine,
+  RiArrowRightLine,
+  RiMoneyDollarCircleLine,
+  RiArrowUpLine,
+  RiGiftLine,
+  RiCustomerService2Line,
 } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import { useKYCStatus, useVerifyNIN, useVerifyLiveness } from '@/hooks/useKYC';
-import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const SECURITY_POINTS = [
   'Your NIN and selfie are encrypted during verification.',
@@ -45,6 +51,60 @@ const WHAT_YOU_NEED = [
     icon: RiImageLine,
     title: 'Selfie Verification',
     desc: 'A clear front-facing photo to match your NIN record',
+  },
+];
+
+const STATUS_CONTENT = {
+  not_submitted: {
+    label: 'Not Submitted',
+    desc: 'Complete your verification to get full access.',
+    bg: 'bg-accent/10',
+    iconColor: 'text-accent',
+    textColor: 'text-foreground',
+  },
+  pending: {
+    label: 'Under Review',
+    desc: "We're reviewing your documents. This usually takes 1–2 business days.",
+    bg: 'bg-amber-500/10',
+    iconColor: 'text-amber-400',
+    textColor: 'text-amber-400',
+  },
+  approved: {
+    label: 'Verified',
+    desc: 'Your identity is verified. All partner features are unlocked.',
+    bg: 'bg-green-500/15',
+    iconColor: 'text-green-400',
+    textColor: 'text-green-400',
+  },
+  rejected: {
+    label: 'Verification Failed',
+    desc: 'Your verification was rejected. Please re-submit your documents.',
+    bg: 'bg-red-500/10',
+    iconColor: 'text-red-400',
+    textColor: 'text-red-400',
+  },
+};
+
+const PARTNER_BENEFITS = [
+  {
+    icon: RiMoneyDollarCircleLine,
+    title: 'Withdraw Commission Earnings',
+    desc: 'Unlock payouts of your commissions directly to your bank account.',
+  },
+  {
+    icon: RiArrowUpLine,
+    title: 'Higher Payout Limits',
+    desc: 'Access higher withdrawal limits for your commission earnings.',
+  },
+  {
+    icon: RiShieldLine,
+    title: 'Secure & Trusted',
+    desc: 'Keep your account safe and build trust with your clients.',
+  },
+  {
+    icon: RiGiftLine,
+    title: 'Exclusive Partner Benefits',
+    desc: 'Access special rewards, resources, and priority partner support.',
   },
 ];
 
@@ -170,7 +230,7 @@ function SelfieStep({
       <div
         onClick={!cameraActive && !capturedImg && !cameraError ? startCamera : undefined}
         className={cn(
-          'relative w-full md:mx-auto aspect-4/3 rounded-2xl overflow-hidden bg-foreground/5 border border-foreground/10',
+          'relative w-full md:mx-auto aspect-4/3 rounded-2xl overflow-hidden bg-white dark:bg-foreground/5 border border-foreground/10',
           !cameraActive && !capturedImg && !cameraError && 'cursor-pointer hover:bg-foreground/8 transition-colors'
         )}
       >
@@ -230,7 +290,7 @@ function SelfieStep({
   );
 }
 
-// ─── Individual KYC flow ──────────────────────────────────────────────────────
+// ─── Partner KYC flow ─────────────────────────────────────────────────────────
 
 type FlowStep = 'nin' | 'selfie' | 'success';
 
@@ -375,7 +435,7 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
           </p>
         </div>
 
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
           <p className="text-foreground font-semibold text-sm mb-1">Once approved you can</p>
           {['Withdraw your commission earnings', 'Request payout to your bank account', 'Access all partner features'].map((item) => (
             <div key={item} className="flex items-center gap-3">
@@ -385,7 +445,7 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
+        <div className="flex items-center justify-center gap-2 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
           <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
           <span className="text-foreground/50 text-sm">Powered by QoreID</span>
         </div>
@@ -417,70 +477,50 @@ export default function PartnerKYCPage() {
   if (isLoading) return <Loader fullPage={false} />;
 
   const kycStatus = status?.status ?? user?.kycStatus ?? 'not_submitted';
+  const canStart = kycStatus === 'not_submitted' || kycStatus === 'rejected';
 
   if (flowActive) {
     return <PartnerKYCFlow onClose={() => setFlowActive(false)} />;
   }
 
-  const ctaConfig = {
-    not_submitted: { label: 'Start Verification', active: true },
-    pending: { label: 'Under Review', active: false },
-    approved: { label: 'KYC Approved', active: false },
-    rejected: { label: 'Retry Verification', active: true },
-  } as const;
-  const cta = ctaConfig[kycStatus as keyof typeof ctaConfig] ?? ctaConfig.not_submitted;
+  const statusContent = STATUS_CONTENT[kycStatus as keyof typeof STATUS_CONTENT] ?? STATUS_CONTENT.not_submitted;
+  const ctaLabel = kycStatus === 'rejected' ? 'Retry Verification' : 'Start Verification';
 
-  const statusStyle = {
-    approved: { bg: 'bg-green-500/15', icon: 'text-green-400' },
-    rejected: { bg: 'bg-red-500/10', icon: 'text-red-400' },
-    pending: { bg: 'bg-amber-500/10', icon: 'text-amber-400' },
-    not_submitted: { bg: 'bg-accent/10', icon: 'text-accent' },
-  }[kycStatus] ?? { bg: 'bg-accent/10', icon: 'text-accent' };
-
-  const Hero = ({ align }: { align: 'center' | 'left' }) => (
-    <div className={cn('flex flex-col pt-2 pb-2', align === 'center' ? 'items-center text-center' : 'items-start text-left')}>
-      <div className={cn('w-20 h-20 rounded-full flex items-center justify-center mb-4', statusStyle.bg)}>
-        <RiShieldCheckLine className={cn('h-10 w-10', statusStyle.icon)} />
+  const StatusCard = () => (
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-5 flex items-center gap-4">
+      <div className={cn('w-16 h-16 rounded-full flex items-center justify-center shrink-0', statusContent.bg)}>
+        <RiShieldCheckLine className={cn('h-8 w-8', statusContent.iconColor)} />
       </div>
-      <h1 className="text-2xl font-bold text-foreground">Identity Verification (KYC)</h1>
-      <p className="text-foreground/50 text-sm mt-2 leading-relaxed max-w-sm">
-        Verify your identity to unlock commission withdrawals and payouts on NeedHomes.
-      </p>
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground/50 text-xs font-medium uppercase tracking-wide mb-0.5">Verification Status</p>
+        <p className={cn('text-xl font-bold', statusContent.textColor)}>{statusContent.label}</p>
+        <div className="flex items-start gap-1.5 mt-1">
+          <span className="w-2 h-2 rounded-full bg-accent shrink-0 mt-1" />
+          <p className="text-foreground/50 text-sm leading-snug">{statusContent.desc}</p>
+        </div>
+      </div>
     </div>
   );
-
-  const StatusRow = () => (
-    <div className="flex items-center gap-2.5">
-      <div className="w-2 h-2 rounded-full bg-foreground/20" />
-      <span className="text-foreground/50 text-sm">Status</span>
-      <StatusBadge status={kycStatus} />
-    </div>
-  );
-
-  const RejectionBanner = () => status?.rejectionReason ? (
-    <p className="text-red-400 text-sm bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-3">
-      {status.rejectionReason}
-    </p>
-  ) : null;
 
   const WhatYouNeed = () => {
     if (kycStatus === 'approved') return null;
     return (
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-        <div className="px-4 pt-4 pb-3">
-          <p className="text-foreground font-semibold text-sm">What you'll need</p>
+      <div>
+        <p className="text-foreground font-semibold text-sm mb-3">What you'll need</p>
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+          {WHAT_YOU_NEED.map(({ icon: Icon, title, desc }, i) => (
+            <div key={title} className={cn('flex items-center gap-3 px-4 py-4', i < WHAT_YOU_NEED.length - 1 && 'border-b border-foreground/10')}>
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                <Icon className="text-accent h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-foreground font-semibold text-sm">{title}</p>
+                <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
+              </div>
+              <RiArrowRightLine className="h-4 w-4 text-foreground/30 shrink-0" />
+            </div>
+          ))}
         </div>
-        {WHAT_YOU_NEED.map(({ icon: Icon, title, desc }, i) => (
-          <div key={title} className={cn('flex items-start gap-3 px-4 py-4', i < WHAT_YOU_NEED.length - 1 && 'border-b border-foreground/10')}>
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              <Icon className="text-accent h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-foreground font-semibold text-sm">{title}</p>
-              <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
-            </div>
-          </div>
-        ))}
       </div>
     );
   };
@@ -499,75 +539,115 @@ export default function PartnerKYCPage() {
           </li>
         ))}
       </ul>
+      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
+        <RiLockLine className="text-white/30 h-3 w-3 shrink-0" />
+        <span className="text-white/40 text-xs">Powered by QoreID</span>
+      </div>
     </div>
   );
 
-  const CtaButton = ({ fullWidth }: { fullWidth?: boolean }) => (
-    <Button
-      className={cn(
-        'h-12 rounded-2xl font-semibold',
-        fullWidth ? 'w-full' : 'w-auto px-8',
-        cta.active ? 'bg-accent hover:bg-accent/90 text-white' : 'bg-foreground/8 text-foreground/30 cursor-default'
-      )}
-      disabled={!cta.active}
-      onClick={() => setFlowActive(true)}
-    >
-      {cta.label}
-    </Button>
-  );
-
-  const DesktopStatusNotice = () => {
-    if (kycStatus === 'approved') return (
-      <div className="bg-green-500/8 border border-green-500/20 rounded-2xl px-4 py-4 space-y-2.5">
-        <p className="text-green-400 font-semibold text-sm">Your identity is verified</p>
-        {['Withdraw commission earnings', 'Request payout to your bank account', 'Access all partner features'].map((item) => (
-          <div key={item} className="flex items-center gap-2.5">
-            <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
-            <span className="text-foreground/70 text-sm">{item}</span>
+  const WhyVerify = () => (
+    <div>
+      <p className="text-foreground font-semibold text-sm mb-3">Why verify your account?</p>
+      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+        {PARTNER_BENEFITS.map(({ icon: Icon, title, desc }, i) => (
+          <div key={title} className={cn('flex items-start gap-3 px-4 py-4', i < PARTNER_BENEFITS.length - 1 && 'border-b border-foreground/10')}>
+            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              <Icon className="text-accent h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-foreground font-semibold text-sm">{title}</p>
+              <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
+            </div>
           </div>
         ))}
       </div>
-    );
-    if (kycStatus === 'pending') return (
-      <div className="bg-amber-500/8 border border-amber-500/20 rounded-2xl px-4 py-4">
-        <p className="text-amber-400 font-semibold text-sm mb-1">Under review</p>
-        <p className="text-foreground/50 text-sm leading-relaxed">
-          We're reviewing your submission. This usually takes 1–2 business days.
-        </p>
+    </div>
+  );
+
+  const NeedHelp = () => (
+    <div className="flex items-center gap-3 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4">
+      <div className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center shrink-0">
+        <RiCustomerService2Line className="h-5 w-5 text-foreground/50" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-foreground font-semibold text-sm">Need Help?</p>
+        <p className="text-foreground/50 text-xs mt-0.5">Chat with our support team</p>
+      </div>
+      <Link to="/partner/support" className="text-accent text-xs font-semibold hover:underline shrink-0">
+        Start a chat →
+      </Link>
+    </div>
+  );
+
+  const RejectionBanner = () => status?.rejectionReason ? (
+    <p className="text-red-400 text-sm bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-3">
+      {status.rejectionReason}
+    </p>
+  ) : null;
+
+  const ReadyCTA = () => {
+    if (!canStart) return null;
+    return (
+      <div className="flex items-center gap-4 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+        <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+          <RiShieldCheckLine className="h-6 w-6 text-accent" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-foreground font-semibold text-sm">Ready to get verified?</p>
+          <p className="text-foreground/50 text-xs mt-0.5 leading-snug">
+            It takes only a few minutes and you'll unlock all partner features.
+          </p>
+        </div>
+        <Button
+          className="bg-accent hover:bg-accent/90 text-white h-10 rounded-xl px-4 text-sm font-semibold shrink-0"
+          onClick={() => setFlowActive(true)}
+        >
+          {kycStatus === 'rejected' ? 'Retry' : 'Start'}
+        </Button>
       </div>
     );
-    return null;
   };
 
   return (
     <div className="pb-4 md:pb-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground">Identity Verification (KYC)</h1>
+        <p className="text-foreground/50 text-sm mt-1">
+          Verify your identity to unlock commission withdrawals and payouts on NeedHomes.
+        </p>
+      </div>
+
       {/* Mobile */}
-      <div className="md:hidden space-y-6">
-        <Hero align="center" />
-        <StatusRow />
+      <div className="md:hidden space-y-5">
+        <StatusCard />
         <RejectionBanner />
         <WhatYouNeed />
         <SecurityPrivacy />
-        <p className="text-center text-foreground/30 text-xs">Powered by QoreID</p>
-        <CtaButton fullWidth />
+        <WhyVerify />
+        <NeedHelp />
+        {canStart && (
+          <Button
+            className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
+            onClick={() => setFlowActive(true)}
+          >
+            {ctaLabel}
+          </Button>
+        )}
       </div>
 
       {/* Desktop two-column */}
-      <div className="hidden md:grid md:grid-cols-[1fr_340px] md:gap-10 md:items-start md:pt-4 max-w-4xl mx-auto">
-        <div className="space-y-6">
-          <Hero align="left" />
-          <StatusRow />
+      <div className="hidden md:grid md:grid-cols-[1fr_300px] md:gap-8 md:items-start">
+        <div className="space-y-5">
+          <StatusCard />
           <RejectionBanner />
-          <DesktopStatusNotice />
-          <CtaButton />
-        </div>
-        <div className="flex flex-col gap-4">
           <WhatYouNeed />
           <SecurityPrivacy />
-          <div className="flex items-center justify-center gap-2">
-            <RiLockLine className="text-foreground/30 h-3 w-3 shrink-0" />
-            <span className="text-foreground/40 text-xs">Powered by QoreID</span>
-          </div>
+          <ReadyCTA />
+        </div>
+        <div className="space-y-4">
+          <WhyVerify />
+          <NeedHelp />
         </div>
       </div>
     </div>

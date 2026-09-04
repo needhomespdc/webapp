@@ -326,7 +326,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
             <div>
               <p className="text-foreground font-bold text-sm mb-0.5">Quantity to resell</p>
               <p className="text-foreground/50 text-xs mb-3">Select how many whole units you want to list.</p>
-              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl flex items-center justify-between px-4 py-3">
+              <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl flex items-center justify-between px-4 py-3">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
@@ -354,7 +354,7 @@ function CreateResaleSheet({ open, onOpenChange, eligible, eligibleLoading }: Cr
               <p className="text-foreground/50 text-xs mb-3">
                 Enter the minimum and maximum price you are willing to accept.
               </p>
-              <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-4">
+              <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 space-y-4">
                 <div>
                   <p className="text-foreground/50 text-xs mb-2">Minimum price per unit</p>
                   <div className="bg-background border border-foreground/10 rounded-xl flex items-center h-13 px-3 gap-2">
@@ -542,7 +542,7 @@ function ResaleListingCard({ listing, onViewDetails }: { listing: ResaleListing;
   return (
     <div
       onClick={onViewDetails}
-      className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:border-foreground/20 transition-colors active:scale-[0.99]"
+      className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:border-foreground/20 transition-colors active:scale-[0.99]"
     >
       {/* Top row */}
       <div className="flex items-start gap-3">
@@ -663,7 +663,7 @@ export default function Resales() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
             <RiStoreLine className="text-accent h-5 w-5" />
           </div>
@@ -674,7 +674,7 @@ export default function Resales() {
             </p>
           </div>
         </div>
-        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
+        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center shrink-0">
             <RiTimeLine className="text-blue-400 h-5 w-5" />
           </div>
@@ -711,7 +711,7 @@ export default function Resales() {
               {[1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)}
             </div>
           ) : !filtered.length ? (
-            <div className="bg-foreground/5 border border-foreground/10 rounded-2xl py-10 px-4 flex flex-col items-center text-center gap-3">
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl py-10 px-4 flex flex-col items-center text-center gap-3">
               <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-foreground/5">
                 <RiBook2Line className="h-7 w-7 text-foreground/30" />
               </div>

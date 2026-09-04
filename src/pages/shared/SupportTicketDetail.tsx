@@ -118,9 +118,9 @@ export default function SupportTicketDetail() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-6rem)] bg-background md:border md:border-foreground/10 md:rounded-2xl overflow-hidden">
+      <div className="flex flex-col h-[calc(100vh-6rem)] bg-white dark:bg-background md:border md:border-foreground/10 md:rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 px-3 py-3 border-b border-foreground/10 bg-background shrink-0">
+        <div className="flex items-center gap-3 px-3 py-3 border-b border-foreground/10 bg-white dark:bg-background shrink-0">
           <button
             onClick={() => navigate(`${roleBase}/support/tickets`)}
             className="text-foreground/50 hover:text-foreground transition-colors shrink-0"
@@ -215,7 +215,7 @@ export default function SupportTicketDetail() {
         </div>
 
         {/* Input bar */}
-        <div className="px-3 py-3 border-t border-foreground/10 bg-background shrink-0">
+        <div className="px-3 py-3 border-t border-foreground/10 bg-white dark:bg-background shrink-0">
           {isTicketClosed ? (
             <p className="text-center text-xs text-foreground/40 py-1">This conversation has been closed.</p>
           ) : (

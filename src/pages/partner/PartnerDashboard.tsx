@@ -14,7 +14,6 @@ import {
   RiTimeLine,
   RiArrowDownSLine,
   RiCheckLine,
-  RiInformationLine,
   RiEyeLine,
   RiEyeOffLine,
 } from 'react-icons/ri';
@@ -70,18 +69,18 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex flex-col gap-3">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
         {icon}
       </div>
       <div>
-        <p className="text-foreground/50 text-xs leading-none mb-1.5">{label}</p>
+        <p className="text-foreground text-xs leading-none mb-1.5">{label}</p>
         {loading ? (
           <Skeleton className="h-6 w-20" />
         ) : (
           <p className="text-foreground font-bold text-lg leading-none">{value}</p>
         )}
-        <p className="text-foreground/30 text-[10px] mt-1">{sub}</p>
+        <p className="text-foreground/50 text-[10px] mt-1">{sub}</p>
       </div>
     </div>
   );
@@ -205,8 +204,8 @@ export default function PartnerDashboard() {
 
   const periodLabel = PERIODS.find((p) => p.value === period)?.label ?? 'This Month';
   const conversionRate =
-    analytics && analytics.totalClicks > 0
-      ? ((analytics.totalConversions / analytics.totalClicks) * 100).toFixed(1)
+    analytics && analytics.totals?.clicks > 0
+      ? ((analytics.totals.leads / analytics.totals.clicks) * 100).toFixed(1)
       : '0.0';
 
   return (
@@ -228,8 +227,13 @@ export default function PartnerDashboard() {
         {/* Top row: label + period pill */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
-            <p className="text-white/60 text-xs">Pending Earnings</p>
-            <RiInformationLine className="h-3.5 w-3.5 text-white/30" />
+            <p className="text-white/60 text-xs">Wallet Balance</p>
+            <button
+              onClick={() => setShowBalance((v) => !v)}
+              className="text-white/40 hover:text-white/70 transition-colors"
+            >
+              {showBalance ? <RiEyeLine className="h-3.5 w-3.5" /> : <RiEyeOffLine className="h-3.5 w-3.5" />}
+            </button>
           </div>
           <button
             onClick={() => setPeriodOpen(true)}
@@ -240,7 +244,7 @@ export default function PartnerDashboard() {
           </button>
         </div>
 
-        {/* Balance + eye toggle */}
+        {/* Balance */}
         <div className="flex items-center gap-2 mb-2">
           {walletLoading ? (
             <Skeleton className="h-9 w-44 bg-white/10" />
@@ -250,12 +254,6 @@ export default function PartnerDashboard() {
           ) : (
             <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
           )}
-          <button
-            onClick={() => setShowBalance((v) => !v)}
-            className="text-white/40 hover:text-white/70 transition-colors ml-1 shrink-0"
-          >
-            {showBalance ? <RiEyeLine className="h-4 w-4" /> : <RiEyeOffLine className="h-4 w-4" />}
-          </button>
         </div>
 
         {/* Trend sub-line */}
@@ -274,7 +272,7 @@ export default function PartnerDashboard() {
           icon={<RiGroupLine className="h-5 w-5" />}
           iconBg="bg-accent/15 text-accent"
           label="Total Referrals"
-          value={analytics?.totalClicks ?? 0}
+          value={analytics?.totals?.clicks ?? 0}
           sub={periodLabel}
           loading={analyticsLoading}
         />
@@ -282,7 +280,7 @@ export default function PartnerDashboard() {
           icon={<RiCheckboxCircleLine className="h-5 w-5" />}
           iconBg="bg-green-600/15 text-green-400"
           label="Successful Sales"
-          value={analytics?.totalConversions ?? 0}
+          value={analytics?.totals?.leads ?? 0}
           sub={periodLabel}
           loading={analyticsLoading}
         />
@@ -290,7 +288,8 @@ export default function PartnerDashboard() {
           icon={<RiCoinLine className="h-5 w-5" />}
           iconBg="bg-violet-500/15 text-violet-400"
           label="Total Earned"
-          value={<CurrencyDisplay amount={analytics?.totalLifetimeEarnings ?? 0} size="sm" className="text-foreground font-bold text-lg" />}
+          // value={<CurrencyDisplay amount={analytics?.totalLifetimeEarnings ?? 0} size="sm" className="text-foreground font-bold text-lg" />}
+          value={<CurrencyDisplay amount={0} size="sm" className="text-foreground font-bold text-lg" />}
           sub="All Time"
           loading={analyticsLoading}
         />
@@ -310,42 +309,42 @@ export default function PartnerDashboard() {
           <p className="text-foreground font-semibold text-base">Quick Actions</p>
         </div>
         
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <Link to="/partner/properties">
-            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
-              <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
+            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
+              <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiLinksLine className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-foreground text-xs font-semibold">Get Referral Link</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Share your link</p>
+                  <p className="text-foreground text-xs font-semibold">Share property</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight hidden sm:flex">Promote listings</p>
                 </div>
               </CardContent>
             </Card>
           </Link>
           <Link to="/partner/properties">
-            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
-              <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
+            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
+              <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiBuilding2Line className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-foreground text-xs font-semibold">Browse Properties</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Find to promote</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight hidden sm:flex">Find properties to promote</p>
                 </div>
               </CardContent>
             </Card>
           </Link>
           <Link to="/partner/favorites">
-            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full">
-              <CardContent className="p-3 flex flex-col items-center text-center gap-2.5">
+            <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
+              <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
                   <RiHeartLine className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-foreground text-xs font-semibold">Favorites</p>
-                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">Saved properties</p>
+                  <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight hidden sm:flex">Saved properties</p>
                 </div>
               </CardContent>
             </Card>
@@ -355,7 +354,7 @@ export default function PartnerDashboard() {
 
       {/* Performance overview + Recent sales — side by side on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        <Card>
+        <Card className="bg-white dark:bg-foreground/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <p className="text-foreground font-semibold text-base">Performance Overview</p>
@@ -376,30 +375,32 @@ export default function PartnerDashboard() {
             )}
 
             {/* Legend */}
-            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-foreground/10">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="w-2 h-2 rounded-full bg-accent inline-block" />
-                  <p className="text-foreground/50 text-xs">Clicks</p>
-                </div>
-                <p className="text-foreground font-bold text-lg leading-none">{analytics?.totalClicks ?? 0}</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                  <p className="text-foreground/50 text-xs">Sales</p>
-                </div>
-                <p className="text-foreground font-bold text-lg leading-none">{analytics?.totalConversions ?? 0}</p>
-              </div>
-              <div className="ml-auto text-right">
-                <p className="text-foreground/40 text-xs mb-1">Conv. Rate</p>
-                <p className="text-accent font-bold text-lg leading-none">{conversionRate}%</p>
-              </div>
+            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-foreground/10">
+              {[
+                { dot: 'bg-accent', label: 'Clicks', value: analytics?.totals?.clicks ?? 0, pct: analytics?.trends?.clicksPercent ?? 0 },
+                { dot: 'bg-green-400', label: 'Leads', value: analytics?.totals?.leads ?? 0, pct: analytics?.trends?.leadsPercent ?? 0 },
+                { dot: 'bg-violet-400', label: 'Sales', value: analytics?.totals?.shares ?? 0, pct: analytics?.trends?.sharesPercent ?? 0 },
+              ].map(({ dot, label, value, pct }) => {
+                const up = pct >= 0;
+                return (
+                  <div key={label} className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`w-2 h-2 rounded-full ${dot} inline-block shrink-0`} />
+                      <p className="text-foreground/50 text-xs">{label}</p>
+                    </div>
+                    <p className="text-foreground font-bold text-lg leading-none">{value}</p>
+                    <div className={`flex items-center gap-0.5 mt-1 text-[10px] font-semibold ${up ? 'text-green-400' : 'text-red-400'}`}>
+                      <RiArrowUpLine className={`h-3 w-3 shrink-0 ${up ? '' : 'rotate-180'}`} />
+                      {Math.abs(pct).toFixed(1)}%
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-foreground/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-foreground font-semibold text-base">Recent Sales</p>

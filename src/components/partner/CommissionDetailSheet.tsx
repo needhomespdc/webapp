@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { RiArrowRightLine, RiInformationLine } from 'react-icons/ri';
+import { RiArrowRightLine, RiInformationLine, RiArrowDownLine } from 'react-icons/ri';
 import { HiBuildingOffice2 } from 'react-icons/hi2';
 import { useCommissionEntry } from '@/hooks/usePartner';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -8,16 +8,40 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import type { CommissionEntry } from '@/types';
 
 interface CommissionDetailSheetProps {
   entryId: string | null;
+  initialEntry?: CommissionEntry;
   onClose: () => void;
 }
 
-export function CommissionDetailSheet({ entryId, onClose }: CommissionDetailSheetProps) {
+const STATUS_COLOR: Record<string, string> = {
+  completed:  'text-emerald-500',
+  pending:    'text-amber-500',
+  processing: 'text-amber-500',
+  failed:     'text-red-500',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  completed:  'Completed',
+  pending:    'Pending',
+  processing: 'Processing',
+  failed:     'Failed',
+};
+
+export function CommissionDetailSheet({ entryId, initialEntry, onClose }: CommissionDetailSheetProps) {
   const isMobile = useMediaQuery('(max-width: 639px)');
   const navigate = useNavigate();
-  const { entry, isLoading } = useCommissionEntry(entryId);
+  const { entry: fetchedEntry, isLoading } = useCommissionEntry(entryId);
+
+  // Show initialEntry immediately; fetchedEntry takes over once loaded
+  const entry = fetchedEntry ?? initialEntry;
+  const showSkeleton = isLoading && !entry;
+
+  const isPayout = entry?.type === 'payout';
+  const statusLabel = entry ? (STATUS_LABEL[entry.status] ?? entry.status) : '';
+  const statusCls   = entry ? (STATUS_COLOR[entry.status] ?? 'text-foreground/60') : '';
 
   const content = (
     <div className="flex flex-col flex-1 min-h-0">
@@ -30,65 +54,67 @@ export function CommissionDetailSheet({ entryId, onClose }: CommissionDetailShee
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-4">
-        {isLoading || !entry ? (
+        {showSkeleton || !entry ? (
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-3 py-4">
-              <Skeleton className="w-20 h-20 rounded-2xl" />
-              <Skeleton className="h-5 w-40" />
+              <Skeleton className="w-20 h-20 rounded-full" />
+              <Skeleton className="h-5 w-32" />
               <Skeleton className="h-8 w-48" />
             </div>
-            <Skeleton className="h-52 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
           </div>
         ) : (
           <>
-            {/* Hero */}
+            {/* ── Hero ──────────────────────────────────────────────────── */}
             <div className="flex flex-col items-center text-center py-4 gap-2">
               {entry.propertyImageUrl ? (
                 <img
                   src={entry.propertyImageUrl}
                   alt={entry.propertyTitle}
-                  className="w-20 h-20 rounded-2xl object-cover"
+                  className="w-20 h-20 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
-                  <HiBuildingOffice2 className="h-9 w-9" />
+                <div className={cn(
+                  'w-20 h-20 rounded-full flex items-center justify-center',
+                  isPayout ? 'bg-red-500/15' : 'bg-accent/15'
+                )}>
+                  {isPayout
+                    ? <RiArrowDownLine className="h-9 w-9 text-red-400" />
+                    : <HiBuildingOffice2 className="h-9 w-9 text-accent" />
+                  }
                 </div>
               )}
 
               <div>
                 <p className="text-base font-semibold text-foreground">{entry.propertyTitle}</p>
                 <div className="flex items-center flex-wrap justify-center gap-2 mt-1">
-                  {entry.location && (
-                    <p className="text-sm text-foreground/50">{entry.location}</p>
+                  {entry.subtitle && (
+                    <p className="text-sm text-foreground/50 max-w-xs">{entry.subtitle}</p>
                   )}
                   <span className={cn(
                     'text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                    entry.status === 'completed'
-                      ? 'bg-green-600/15 text-green-400'
-                      : entry.status === 'pending' || entry.status === 'processing'
-                      ? 'bg-amber-500/15 text-amber-500'
-                      : 'bg-foreground/10 text-foreground/60'
+                    isPayout ? 'bg-red-500/15 text-red-400' : 'bg-accent/15 text-accent'
                   )}>
-                    {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+                    {isPayout ? 'Payout' : 'Earned'}
                   </span>
                 </div>
               </div>
 
-              <p className="text-2xl font-bold text-green-400 mt-1">
-                +{formatCurrency(entry.amount)}
+              <p className={cn('text-2xl font-bold mt-1', isPayout ? 'text-red-400' : 'text-green-400')}>
+                {isPayout ? '-' : '+'}{formatCurrency(entry.amount)}
               </p>
               <p className="text-sm text-foreground/50">
                 {formatDate(entry.occurredAt, { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
             </div>
 
-            {/* Detail fields */}
+            {/* ── Detail rows ───────────────────────────────────────────── */}
             <div className="bg-foreground/5 rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-foreground/10">
-                <p className="text-sm font-semibold text-foreground">Commission Details</p>
+                <p className="text-sm font-semibold text-foreground">Transaction Details</p>
               </div>
               <div className="divide-y divide-foreground/10">
-                <DetailRow label="Reference ID" value={entry.reference} />
+                <DetailRow label="Reference" value={entry.reference} />
                 <DetailRow label="Property" value={entry.propertyTitle} />
                 {entry.location && (
                   <DetailRow label="Location" value={entry.location} />
@@ -104,27 +130,39 @@ export function CommissionDetailSheet({ entryId, onClose }: CommissionDetailShee
                 )}
                 <DetailRow
                   label="Commission Amount"
-                  value={`+${formatCurrency(entry.amount)}`}
-                  valueClass="text-accent font-semibold"
+                  value={`${isPayout ? '-' : '+'}${formatCurrency(entry.amount)}`}
+                  valueClass={cn('font-semibold', isPayout ? 'text-red-400' : 'text-accent')}
                 />
+                {entry.feeAmount > 0 && (
+                  <DetailRow label="Fee" value={`-${formatCurrency(entry.feeAmount)}`} valueClass="text-foreground/60" />
+                )}
+                {entry.processingFee != null && entry.processingFee > 0 && (
+                  <DetailRow label="Processing Fee" value={`-${formatCurrency(entry.processingFee)}`} valueClass="text-foreground/60" />
+                )}
+                {entry.leadSource && (
+                  <DetailRow label="Lead Source" value={entry.leadSource} />
+                )}
                 <DetailRow
-                  label="Status"
-                  value={entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
-                />
-                <DetailRow
-                  label="Date"
+                  label="Date & Time"
                   value={formatDate(entry.occurredAt, {
                     month: 'short', day: 'numeric', year: 'numeric',
                     hour: '2-digit', minute: '2-digit',
                   })}
                 />
-                {entry.leadSource && (
-                  <DetailRow label="Lead Source" value={entry.leadSource} />
+                {entry.processedAt && entry.processedAt !== entry.occurredAt && (
+                  <DetailRow
+                    label="Processed At"
+                    value={formatDate(entry.processedAt, {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  />
                 )}
+                <DetailRow label="Status" value={statusLabel} valueClass={cn('font-semibold', statusCls)} />
               </div>
             </div>
 
-            {/* Need Help */}
+            {/* ── Need Help ─────────────────────────────────────────────── */}
             <button
               onClick={() => { onClose(); navigate('/partner/support'); }}
               className="w-full flex items-center gap-3 bg-foreground/5 rounded-xl p-4 text-left hover:bg-foreground/10 transition-colors"

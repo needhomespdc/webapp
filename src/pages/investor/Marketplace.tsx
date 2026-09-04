@@ -47,8 +47,6 @@ function parseCsv(value: string | null): string[] {
 export default function Marketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Seed every piece of state from the URL once, so a shared link reproduces
-  // exactly this view (search, model tab, sort, filters, page).
   const [modelType, setModelType] = useState(() => searchParams.get('type') ?? '');
   const [searchInput, setSearchInput] = useState(() => searchParams.get('q') ?? '');
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1);
@@ -67,8 +65,6 @@ export default function Marketplace() {
   // 3 seconds after the user stops typing, fire the search request.
   const debouncedSearch = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
 
-  // Keep the URL in sync with the active view (replace, not push, so paging
-  // through results doesn't spam browser history).
   useEffect(() => {
     const params = new URLSearchParams();
     if (modelType) params.set('type', modelType);
@@ -101,8 +97,7 @@ export default function Marketplace() {
   // const favSet = new Set(favoriteIds);
   const activeAmountRange = AMOUNT_RANGES.find((r) => r.value === filters.amountRange);
 
-  // Client-side safety net: re-applies propertyKind/returnType/amount in case the
-  // backend doesn't filter on those query params yet (see properties.api.ts).
+  // Client-side safety net: re-applies propertyKind/returnType/amount in case the backend doesn't filter on those query params yet (see properties.api.ts).
   const properties = fetchedProperties.filter((p) => {
     if (filters.propertyKinds.length && !filters.propertyKinds.includes(p.propertyKind)) return false;
     if (filters.returnTypes.length && !filters.returnTypes.includes(p.returnType)) return false;

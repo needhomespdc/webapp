@@ -92,7 +92,7 @@ export default function Invest() {
           <Link
             key={path.type}
             to={`/investor/marketplace?type=${path.type}`}
-            className="group relative rounded-2xl bg-foreground/5 border border-foreground/10 hover:border-accent/40 p-5 transition-all flex flex-col"
+            className="group relative rounded-2xl bg-white dark:bg-foreground/5 border border-foreground/10 hover:border-accent/40 p-5 transition-all flex flex-col"
           >
             {path.popular && (
               <span className="absolute top-5 right-5 bg-purple-500/15 text-purple-400 text-[10px] font-semibold px-2.5 py-1 rounded-full">

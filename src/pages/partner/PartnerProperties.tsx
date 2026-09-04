@@ -71,7 +71,7 @@ function PartnerPropertyCard({ property, isFavorited, onToggleFavorite, onShare 
   const isSoldOut = property.inventoryAvailable === 0 || property.status === 'sold_out';
 
   return (
-    <div className={`rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden transition-all ${isSoldOut ? 'opacity-80' : 'hover:border-foreground/20'}`}>
+    <div className={`rounded-2xl bg-white dark:bg-foreground/5 border border-foreground/10 overflow-hidden transition-all ${isSoldOut ? 'opacity-80' : 'hover:border-foreground/20'}`}>
       {/* Image — links to detail page */}
       <Link to={`/partner/properties/${property.slug}`} className="block relative h-44 bg-foreground/5 overflow-hidden">
         {property.primaryImageUrl ? (
@@ -132,7 +132,7 @@ function PartnerPropertyCard({ property, isFavorited, onToggleFavorite, onShare 
         {hasStats && (
           <div className="grid grid-cols-2 gap-2 mt-2.5">
             {listingStats.slice(0, 2).map((stat, i) => (
-              <div key={i} className="bg-foreground/5 border border-foreground/10 rounded-lg px-2 py-1.5 text-center">
+              <div key={i} className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-lg px-2 py-1.5 text-center">
                 <p className="text-foreground text-xs font-bold">{stat.value}</p>
                 <p className="text-foreground/40 text-[10px] capitalize">{stat.label}</p>
               </div>
@@ -144,8 +144,8 @@ function PartnerPropertyCard({ property, isFavorited, onToggleFavorite, onShare 
         <div className="flex items-center justify-between mt-2.5">
           <div>
             <p className="text-foreground/40 text-[10px]">Your Commission</p>
-            {property.commissionEarning != null ? (
-              <p className="text-green-400 text-sm font-bold mt-0.5">{formatCurrency(property.commissionEarning)}</p>
+            {property.estimatedCommission != null ? (
+              <p className="text-green-400 text-sm font-bold mt-0.5">{formatCurrency(property.estimatedCommission)}</p>
             ) : (
               <p className="text-foreground/30 text-xs mt-0.5">—</p>
             )}

@@ -7,8 +7,6 @@ import {
   RiFileCopy2Line,
   RiCheckLine,
   RiMapPinLine,
-  // RiLinksLine,
-  // RiInformationLine,
   RiEyeLine,
   RiArrowDownSLine,
   RiArrowRightSLine,
@@ -20,7 +18,7 @@ import {
 } from 'react-icons/ri';
 import { HiOutlineUsers, HiOutlineWallet } from 'react-icons/hi2';
 import { useAuth } from '@/hooks/useAuth';
-import { useReferralAnalytics, usePromotableProperties, useCommissionEntries } from '@/hooks/usePartner';
+import { useReferralAnalytics, usePromotableProperties } from '@/hooks/usePartner';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -164,13 +162,41 @@ function GeneralShareModal({
   );
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function timeAgo(date: string): string {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function activityLabel(eventType: string, channel: string | null): string {
+  if (eventType === 'share') {
+    if (channel === 'whatsapp') return 'Shared via WhatsApp';
+    if (channel === 'copy') return 'Shared via Copy Link';
+    return 'Shared';
+  }
+  if (eventType === 'view') return 'Viewed property';
+  if (eventType === 'click') return 'Clicked link';
+  return eventType;
+}
+
+const ACTIVITY_BADGE: Record<string, { label: string; cls: string }> = {
+  share: { label: 'Shared', cls: 'bg-accent/15 text-accent' },
+  view: { label: 'Viewed', cls: 'bg-blue-500/15 text-blue-400' },
+  click: { label: 'Clicked', cls: 'bg-violet-500/15 text-violet-400' },
+};
+
 // ─── Quick Share property card ────────────────────────────────────────────────
 
 function QuickShareCard({ property, onShare }: { property: Property; onShare: () => void }) {
   const badgeColor = MODEL_COLORS[property.investmentModelType] ?? 'bg-black/50';
 
   return (
-    <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-foreground/5 border border-foreground/10 overflow-hidden">
       <Link to={`/partner/properties/${property.slug}`} className="block relative h-40 overflow-hidden bg-foreground/5">
         {property.primaryImageUrl ? (
           <img
@@ -205,9 +231,9 @@ function QuickShareCard({ property, onShare }: { property: Property; onShare: ()
         </div>
         <div className="flex items-center justify-between mt-2">
           <p className="text-accent text-sm font-semibold">From {formatCurrency(property.minInvestment)}</p>
-          {property.commissionRate != null && (
+          {property.commissionRatePercent != null && (
             <span className="bg-green-500/15 text-green-400 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-              {property.commissionRate.toFixed(1)}% Comm.
+              {property.commissionRatePercent.toFixed(1)}% Comm.
             </span>
           )}
         </div>
@@ -230,7 +256,8 @@ export default function Share() {
 
   const { analytics, isLoading: analyticsLoading } = useReferralAnalytics(period);
   const { properties, isLoading: propertiesLoading } = usePromotableProperties(1, 8);
-  const { entries: commissionEntries, isLoading: entriesLoading } = useCommissionEntries(1, 3);
+  const recentActivity = analytics?.recentActivity ?? [];
+  console.log("RECENT ACTIVITIES", analytics)
 
   const referralCode = (user?.referralCode ?? '').toLowerCase();
   const shareLink = `https://needhomes.ng/r/${referralCode}`;
@@ -264,21 +291,21 @@ export default function Share() {
     {
       icon: RiEyeLine,
       label: 'Views',
-      value: analyticsLoading ? '—' : String(analytics?.totalClicks ?? 0),
+      value: analyticsLoading ? '—' : String(analytics?.totals?.views ?? 0),
       iconBg: 'bg-violet-500/20',
       iconColor: 'text-violet-400',
     },
     {
       icon: RiShareLine,
       label: 'Shares',
-      value: analyticsLoading ? '—' : String(analytics?.totalShares ?? 0),
+      value: analyticsLoading ? '—' : String(analytics?.totals?.shares ?? 0),
       iconBg: 'bg-blue-500/20',
       iconColor: 'text-blue-400',
     },
     {
       icon: HiOutlineUsers,
       label: 'Leads',
-      value: analyticsLoading ? '—' : String(analytics?.totalConversions ?? 0),
+      value: analyticsLoading ? '—' : String(analytics?.totals?.leads ?? 0),
       iconBg: 'bg-green-500/20',
       iconColor: 'text-green-400',
     },
@@ -287,8 +314,8 @@ export default function Share() {
       label: 'Est. Earnings',
       value: analyticsLoading
         ? '—'
-        : analytics?.totalLifetimeEarnings
-          ? formatCurrency(analytics.totalLifetimeEarnings)
+        // : analytics?.totalLifetimeEarnings
+        //   ? formatCurrency(analytics.totalLifetimeEarnings)
           : '₦0',
       iconBg: 'bg-accent/20',
       iconColor: 'text-accent',
@@ -331,13 +358,15 @@ export default function Share() {
       </div>
 
       {/* ── Your Performance ────────────────────────────────────────────── */}
-      <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-foreground font-semibold text-base">Your Performance</h2>
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-foreground font-semibold text-base">Your Performance 
+            {/* <span className="text-foreground/40 font-normal text-sm">{currentPeriodLabel}</span> */}
+          </h2>
           <div className="relative">
             <button
               onClick={() => setPeriodOpen((v) => !v)}
-              className="flex items-center gap-1.5 bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-1.5 text-sm text-foreground font-medium"
+              className="flex items-center gap-1.5 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-1.5 text-sm text-foreground font-medium"
             >
               {currentPeriodLabel}
               <RiArrowDownSLine className={cn('h-4 w-4 text-foreground/50 transition-transform', periodOpen && 'rotate-180')} />
@@ -361,107 +390,114 @@ export default function Share() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {stats.map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center gap-2">
-              <div className={cn('w-11 h-11 rounded-full flex items-center justify-center shrink-0', stat.iconBg)}>
+            <div key={stat.label} className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4 flex items-center gap-3">
+              <div className={cn('w-10 h-10 rounded-full flex items-center justify-center shrink-0', stat.iconBg)}>
                 <stat.icon className={cn('h-5 w-5', stat.iconColor)} />
               </div>
-              <div className="text-center">
-                <p className="text-foreground font-bold text-sm leading-tight">{stat.value}</p>
-                <p className="text-foreground/40 text-[10px] mt-0.5 leading-tight">{stat.label}</p>
+              <div className="min-w-0">
+                <p className="text-foreground font-bold text-base leading-tight truncate">{stat.value}</p>
+                <p className="text-foreground/40 text-xs mt-0.5 leading-tight">{stat.label}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Quick Share Popular Properties ───────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-foreground font-semibold text-base">Quick Share Popular Properties</h2>
-          <Link to="/partner/properties" className="text-accent text-sm font-medium">View All</Link>
+      {/* ── Quick Share + Recent Activity — side-by-side on desktop ────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+
+        {/* Quick Share Popular Properties */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-foreground font-semibold text-base">Quick Share Popular Properties</h2>
+            <Link to="/partner/properties" className="text-accent text-sm font-medium flex items-center gap-1">
+              View All <RiArrowRightSLine className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {propertiesLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+            </div>
+          ) : filteredProperties.length === 0 ? (
+            <p className="text-foreground/40 text-sm py-4 text-center">No properties match your search.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {filteredProperties.slice(0, 4).map((property) => (
+                <QuickShareCard
+                  key={property.id}
+                  property={property}
+                  onShare={() => setShareTarget({ slug: property.slug, title: property.title })}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {propertiesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+        {/* Recent Share Activity */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-foreground font-semibold text-base">Recent Share Activity</h2>
+            {/* <Link to="/partner/properties" className="text-accent text-sm font-medium flex items-center gap-1">
+              View All <RiArrowRightSLine className="h-4 w-4" />
+            </Link> */}
           </div>
-        ) : filteredProperties.length === 0 ? (
-          <p className="text-foreground/40 text-sm py-4 text-center">No properties match your search.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {filteredProperties.slice(0, 4).map((property) => (
-              <QuickShareCard
-                key={property.id}
-                property={property}
-                onShare={() => setShareTarget({ slug: property.slug, title: property.title })}
-              />
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* ── Recent Share Activity ────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-foreground font-semibold text-base">Recent Share Activity</h2>
-          <Link to="/partner/commissions" className="text-accent text-sm font-medium">View All</Link>
-        </div>
-
-        {entriesLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
-          </div>
-        ) : commissionEntries.length === 0 ? (
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-6 text-center">
-            <p className="text-foreground/40 text-sm">No recent activity yet.</p>
-            <p className="text-foreground/30 text-xs mt-1">Share properties to start earning commission.</p>
-          </div>
-        ) : (
-          <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-            {commissionEntries.map((entry, i) => (
-              <div
-                key={entry.id}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3',
-                  i < commissionEntries.length - 1 && 'border-b border-foreground/10'
-                )}
-              >
-                <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
-                  <RiShareLine className="h-4 w-4 text-violet-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-foreground text-sm font-medium truncate">{entry.propertyTitle}</p>
-                  <p className="text-foreground/40 text-xs mt-0.5">
-                    {/* {formatCurrency(entry.commissionAmount)} commission */}
-                    0 commission
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span
+          {analyticsLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-14 rounded-2xl" />)}
+            </div>
+          ) : recentActivity.length === 0 ? (
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-6 text-center">
+              <p className="text-foreground/40 text-sm">No recent activity yet.</p>
+              <p className="text-foreground/30 text-xs mt-1">Share properties to start tracking activity.</p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+              {recentActivity.slice(0, 6).map((event, i) => {
+                const badge = ACTIVITY_BADGE[event.eventType] ?? ACTIVITY_BADGE.share;
+                return (
+                  <div
+                    key={event.id}
                     className={cn(
-                      'text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                      entry.status === 'paid'
-                        ? 'bg-green-500/15 text-green-400'
-                        : entry.status === 'approved'
-                          ? 'bg-blue-500/15 text-blue-400'
-                          : 'bg-foreground/10 text-foreground/40'
+                      'flex items-center gap-3 px-4 py-3',
+                      i < Math.min(recentActivity.length, 3) - 1 && 'border-b border-foreground/10'
                     )}
                   >
-                    {entry.status === 'paid'
-                      ? 'Paid'
-                      : entry.status === 'approved'
-                        ? 'Lead Generated'
-                        : 'Pending'}
-                  </span>
-                  {/* <p className="text-foreground/30 text-[10px]">{formatDate(entry.createdAt)}</p> */}
-                </div>
-                <RiArrowRightSLine className="h-4 w-4 text-foreground/30 shrink-0" />
-              </div>
-            ))}
-          </div>
-        )}
+                    <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                      <RiShareLine className="h-3.5 w-3.5 text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground text-xs font-semibold truncate">
+                        {event.propertyTitle ?? 'Unknown Property'}
+                      </p>
+                      <p className="text-foreground/40 text-[10px] mt-0.5 truncate">
+                        {activityLabel(event.eventType, event.channel)}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', badge.cls)}>
+                        {badge.label}
+                      </span>
+                      <p className="text-foreground/30 text-[10px]">{timeAgo(event.occurredAt)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {recentActivity.length > 3 && (
+                <Link
+                  to="/partner/properties"
+                  className="flex items-center justify-center gap-1 py-3 border-t border-foreground/10 text-accent text-xs font-semibold hover:opacity-70 transition-opacity"
+                >
+                  See all activity <RiArrowRightSLine className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {shareTarget && (

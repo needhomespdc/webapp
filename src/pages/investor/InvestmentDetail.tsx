@@ -325,7 +325,7 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
   }
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex items-start gap-4">
         {/* Left */}
         <div className="flex-1 min-w-0">
@@ -388,7 +388,7 @@ function ProgressSection({
   theme: ModelTheme;
 }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-base mb-5">Investment Progress</h2>
 
       <div className="flex items-start">
@@ -453,7 +453,7 @@ function ProgressSection({
 
 function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <p className="text-foreground/50 text-[11px] font-semibold mb-3 uppercase tracking-widest">
         Project Manager
       </p>
@@ -495,7 +495,7 @@ function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme
 
 function DevelopmentStageSection({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-sm mb-3">Current Development Stage</h2>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
@@ -580,7 +580,7 @@ function InvestmentInfoSection({ inv }: { inv: Investment }) {
   const showCalIcon = type === 'co_development' || type === 'save_to_own';
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-foreground font-bold text-sm">{sectionTitle}</h2>
         {showCalIcon && (
@@ -629,7 +629,7 @@ function AboutSection({ inv }: { inv: Investment }) {
   const label = inv.aboutLabel
     ?? (inv.type === 'land_banking' ? 'About This Land' : 'About This Property');
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-sm mb-2">{label}</h2>
       <p className="text-foreground/60 text-sm leading-relaxed">{inv.description}</p>
     </div>
@@ -709,7 +709,7 @@ function DocumentsSection({ inv }: { inv: Investment }) {
   const totalRows = apiDocs.length + fixedDocs.length;
 
   return (
-    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
         <h2 className="text-foreground font-bold text-sm">Investment Documents</h2>
         <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center">
@@ -826,46 +826,73 @@ export default function InvestmentDetail() {
         <span className="text-foreground/70 font-medium truncate">{inv.title}</span>
       </div>
 
-      {/* Header card */}
+      {/* Header card — full width on all breakpoints */}
       <HeaderCard inv={inv} theme={theme} />
 
-      {/* Financial card */}
-      <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+      {/* Financial card — mobile only; desktop version is in the sidebar */}
+      <div className="xl:hidden">
+        <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+      </div>
 
-      {/* Progress timeline (land_banking / fractional) */}
-      {(inv.progressTimeline?.length ?? 0) > 0 && (
-        <ProgressSection steps={inv.progressTimeline!} infoText={inv.progressInfoText} theme={theme} />
-      )}
+      {/* Two-column layout: main content + sticky sidebar on xl */}
+      <div className="flex flex-col xl:flex-row gap-4 items-start">
 
-      {/* Project Manager — appears early for outright / co_dev / fractional */}
-      {hasPM && !pmAtBottom && (
-        <>
-          <p className="text-foreground font-semibold text-sm">{pmLabel}</p>
-          <ProjectManagerCard inv={inv} theme={theme} />
-        </>
-      )}
+        {/* ── Main column ── */}
+        <div className="w-full xl:flex-1 min-w-0 space-y-4">
+          {/* Progress timeline (land_banking / fractional) */}
+          {(inv.progressTimeline?.length ?? 0) > 0 && (
+            <ProgressSection steps={inv.progressTimeline!} infoText={inv.progressInfoText} theme={theme} />
+          )}
 
-      {/* Current Development Stage */}
-      {inv.currentDevelopmentStageTitle && (
-        <DevelopmentStageSection inv={inv} theme={theme} />
-      )}
+          {/* Project Manager — mobile, early (non-land-banking) */}
+          {hasPM && !pmAtBottom && (
+            <div className="xl:hidden space-y-2">
+              <p className="text-foreground font-semibold text-sm">{pmLabel}</p>
+              <ProjectManagerCard inv={inv} theme={theme} />
+            </div>
+          )}
 
-      {/* Investment / Purchase Information */}
-      <InvestmentInfoSection inv={inv} />
+          {/* Development Stage — mobile only */}
+          {inv.currentDevelopmentStageTitle && (
+            <div className="xl:hidden">
+              <DevelopmentStageSection inv={inv} theme={theme} />
+            </div>
+          )}
 
-      {/* About section */}
-      {inv.description && <AboutSection inv={inv} />}
+          {/* Investment / Purchase Information */}
+          <InvestmentInfoSection inv={inv} />
 
-      {/* Investment Documents */}
-      <DocumentsSection inv={inv} />
+          {/* About section */}
+          {inv.description && <AboutSection inv={inv} />}
 
-      {/* Project Manager — appears at bottom for land_banking */}
-      {hasPM && pmAtBottom && (
-        <>
-          <p className="text-foreground font-semibold text-sm">{pmLabel}</p>
-          <ProjectManagerCard inv={inv} theme={theme} />
-        </>
-      )}
+          {/* Investment Documents */}
+          <DocumentsSection inv={inv} />
+
+          {/* Project Manager — mobile, bottom (land_banking) */}
+          {hasPM && pmAtBottom && (
+            <div className="xl:hidden space-y-2">
+              <p className="text-foreground font-semibold text-sm">{pmLabel}</p>
+              <ProjectManagerCard inv={inv} theme={theme} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Sidebar — desktop only ── */}
+        <div className="hidden xl:flex xl:w-72 shrink-0 flex-col gap-4 sticky top-20">
+          <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+
+          {inv.currentDevelopmentStageTitle && (
+            <DevelopmentStageSection inv={inv} theme={theme} />
+          )}
+
+          {hasPM && (
+            <div className="space-y-2">
+              <p className="text-foreground font-semibold text-sm">{pmLabel}</p>
+              <ProjectManagerCard inv={inv} theme={theme} />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Fixed action bar */}
       <ActionBar inv={inv} theme={theme} onPaymentsOpen={() => setOpenSheet('payments')} />

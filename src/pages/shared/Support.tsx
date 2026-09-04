@@ -93,7 +93,7 @@ export default function Support() {
                 'group flex flex-col gap-3 p-4 rounded-2xl border transition-all',
                 isDisabled
                   ? 'bg-foreground/3 border-foreground/8 opacity-60 cursor-not-allowed'
-                  : 'bg-foreground/5 border-foreground/10 hover:border-accent/40 hover:bg-foreground/8 cursor-pointer'
+                  : 'bg-white dark:bg-foreground/5 border-foreground/10 hover:border-accent/40 hover:bg-foreground/8 cursor-pointer'
               )}
             >
               <div className="flex items-start justify-between gap-2">
