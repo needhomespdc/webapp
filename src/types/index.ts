@@ -12,6 +12,7 @@ export interface User {
   role: UserRole;
   investorType?: InvestorType;
   firstName?: string;
+  middleName?: string;
   lastName?: string;
   companyName?: string;
   email: string;

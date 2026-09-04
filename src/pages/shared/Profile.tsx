@@ -78,6 +78,7 @@ export default function Profile() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [firstName, setFirstName] = useState(user?.firstName ?? '');
+  const [middleName, setMiddleName] = useState(user?.middleName ?? '');
   const [lastName, setLastName] = useState(user?.lastName ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? '');
@@ -452,7 +453,7 @@ export default function Profile() {
           <SheetContent side="bottom" className="rounded-t-2xl p-0 h-[92vh] flex flex-col overflow-hidden">
             <EditProfileForm
               user={user}
-              fields={{ firstName, setFirstName, lastName, setLastName, phone, setPhone,
+              fields={{ firstName, setFirstName, middleName, setMiddleName, lastName, setLastName, phone, setPhone,
                 dateOfBirth, setDateOfBirth, country, setCountry, state, setState,
                 city, setCity, street, setStreet, employmentStatus, setEmploymentStatus,
                 nextOfKinName, setNextOfKinName, nextOfKinAddress, setNextOfKinAddress,
@@ -460,7 +461,7 @@ export default function Profile() {
               isPending={updateProfileMutation.isPending}
               onCancel={() => setEditOpen(false)}
               onSave={() => updateProfileMutation.mutate({
-                firstName, lastName, phone,
+                firstName, middleName, lastName, phone,
                 ...(dateOfBirth ? { dateOfBirth } : {}),
                 ...(employmentStatus ? { employmentStatus } : {}),
                 ...(nextOfKinName ? { nextOfKinName } : {}),
@@ -479,7 +480,7 @@ export default function Profile() {
             </DialogHeader>
             <EditProfileForm
               user={user}
-              fields={{ firstName, setFirstName, lastName, setLastName, phone, setPhone,
+              fields={{ firstName, setFirstName, middleName, setMiddleName, lastName, setLastName, phone, setPhone,
                 dateOfBirth, setDateOfBirth, country, setCountry, state, setState,
                 city, setCity, street, setStreet, employmentStatus, setEmploymentStatus,
                 nextOfKinName, setNextOfKinName, nextOfKinAddress, setNextOfKinAddress,
@@ -487,7 +488,7 @@ export default function Profile() {
               isPending={updateProfileMutation.isPending}
               onCancel={() => setEditOpen(false)}
               onSave={() => updateProfileMutation.mutate({
-                firstName, lastName, phone,
+                firstName, middleName, lastName, phone,
                 ...(dateOfBirth ? { dateOfBirth } : {}),
                 ...(employmentStatus ? { employmentStatus } : {}),
                 ...(nextOfKinName ? { nextOfKinName } : {}),
@@ -620,6 +621,7 @@ export default function Profile() {
 
 interface EditProfileFields {
   firstName: string; setFirstName: (v: string) => void;
+  middleName: string; setMiddleName: (v: string) => void;
   lastName: string; setLastName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
   dateOfBirth: string; setDateOfBirth: (v: string) => void;
@@ -655,16 +657,22 @@ function EditProfileForm({
 
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-4">
         {isIndividual ? (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>First Name</Label>
-              <Input value={fields.firstName} onChange={(e) => fields.setFirstName(e.target.value)} placeholder="First name" />
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>First Name</Label>
+                <Input value={fields.firstName} onChange={(e) => fields.setFirstName(e.target.value)} placeholder="First name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name</Label>
+                <Input value={fields.lastName} onChange={(e) => fields.setLastName(e.target.value)} placeholder="Last name" />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Last Name</Label>
-              <Input value={fields.lastName} onChange={(e) => fields.setLastName(e.target.value)} placeholder="Last name" />
+              <Label>Middle Name <span className="text-foreground/40 font-normal">(Optional)</span></Label>
+              <Input value={fields.middleName} onChange={(e) => fields.setMiddleName(e.target.value)} placeholder="Middle name" />
             </div>
-          </div>
+          </>
         ) : (
           <div className="space-y-2">
             <Label>Company Name</Label>
