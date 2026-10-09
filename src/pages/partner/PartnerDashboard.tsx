@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   RiArrowRightLine,
@@ -17,14 +17,6 @@ import {
   RiEyeLine,
   RiEyeOffLine,
 } from 'react-icons/ri';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { KYCStatusBanner } from '@/components/shared/KYCStatusBanner';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -35,7 +27,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { getGreeting } from '@/utils/helpers';
-import type { ReferralAnalytics, CommissionEntry } from '@/types';
+import type { CommissionEntry } from '@/types';
 
 const PERIODS = [
   { value: 'today', label: 'Today' },
@@ -86,70 +78,9 @@ function StatCard({
   );
 }
 
-// ─── Performance Chart (Recharts) ────────────────────────────────────────────
-
-function PerformanceChart({ data }: { data: ReferralAnalytics['clicksByPeriod'] }) {
-  if (!data.length) {
-    return (
-      <div className="h-[160px] flex items-center justify-center">
-        <p className="text-foreground/30 text-sm">No data for this period</p>
-      </div>
-    );
-  }
-
-  const chartData = data.map((d) => ({
-    clicks: d.clicks,
-    label: formatDate(d.date, { month: 'short', day: 'numeric' }),
-  }));
-
-  return (
-    <ResponsiveContainer width="100%" height={160}>
-      <AreaChart data={chartData} margin={{ top: 10, right: 4, left: -28, bottom: 0 }}>
-        <defs>
-          <linearGradient id="clicksGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#F97316" stopOpacity={0.28} />
-            <stop offset="95%" stopColor="#F97316" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis
-          dataKey="label"
-          tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.4 }}
-          axisLine={false}
-          tickLine={false}
-          interval="preserveStartEnd"
-        />
-        <YAxis
-          tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.4 }}
-          axisLine={false}
-          tickLine={false}
-          width={28}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '0.75rem',
-            fontSize: '12px',
-            padding: '6px 12px',
-          }}
-          labelStyle={{ color: 'hsl(var(--foreground))', opacity: 0.5, marginBottom: 2 }}
-          itemStyle={{ color: '#F97316', fontWeight: 600 }}
-          formatter={(value) => [Number(value).toLocaleString(), 'Clicks']}
-          cursor={{ stroke: '#F97316', strokeWidth: 1, strokeDasharray: '4 2', opacity: 0.5 }}
-        />
-        <Area
-          type="monotone"
-          dataKey="clicks"
-          stroke="#F97316"
-          strokeWidth={2}
-          fill="url(#clicksGradient)"
-          dot={false}
-          activeDot={{ r: 4, fill: '#F97316', strokeWidth: 0 }}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  );
-}
+// ─── Performance Chart ───────────────────────────────────────────────────────
+// Lazily loaded so recharts downloads separately; the dashboard renders first.
+const PerformanceChart = lazy(() => import('@/components/partner/PerformanceChart'));
 
 // ─── Commission Status Badge ──────────────────────────────────────────────────
 
@@ -371,7 +302,9 @@ export default function PartnerDashboard() {
             {analyticsLoading ? (
               <Skeleton className="h-[140px] w-full" />
             ) : (
-              <PerformanceChart data={analytics?.clicksByPeriod ?? []} />
+              <Suspense fallback={<Skeleton className="h-[160px] w-full rounded-xl" />}>
+                <PerformanceChart data={analytics?.clicksByPeriod ?? []} />
+              </Suspense>
             )}
 
             {/* Legend */}

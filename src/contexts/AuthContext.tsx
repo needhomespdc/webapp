@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import authApi from '@/api/auth.api';
 import {
@@ -12,19 +12,8 @@ import {
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { User } from '@/types';
+import { AuthContext } from './auth.context';
 
-export interface AuthContextValue {
-  user: User | null;
-  accessToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<string>;
-  updateProfile: (data: Partial<User>) => void;
-}
-
-export const AuthContext = createContext<AuthContextValue | null>(null);
 
 // Shown when the app opens while NeedHomes can't be reached. The user's session is kept,
 // so Retry signs them straight back in once the connection returns.

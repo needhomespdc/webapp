@@ -28,12 +28,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { ReferralShareModal } from '@/components/partner/ReferralShareModal';
+import { MarketplaceFilterSheet } from '@/components/property/MarketplaceFilterSheet';
 import {
-  MarketplaceFilterSheet,
   EMPTY_FILTERS,
   AMOUNT_RANGES,
   type MarketplaceFilterValues,
-} from '@/components/property/MarketplaceFilterSheet';
+} from '@/components/property/marketplaceFilters';
 import type { Property } from '@/types';
 
 const PERIOD_OPTIONS = [
@@ -257,7 +257,6 @@ export default function Share() {
   const { analytics, isLoading: analyticsLoading } = useReferralAnalytics(period);
   const { properties, isLoading: propertiesLoading } = usePromotableProperties(1, 8);
   const recentActivity = analytics?.recentActivity ?? [];
-  console.log("RECENT ACTIVITIES", analytics)
 
   const referralCode = (user?.referralCode ?? '').toLowerCase();
   const shareLink = `https://needhomes.ng/r/${referralCode}`;

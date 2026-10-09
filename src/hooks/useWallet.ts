@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { walletApi } from '@/api/wallet.api';
 import type { TxApiFilters } from '@/api/wallet.api';
 import { queryKeys } from '@/lib/queryKeys';
-import { useWalletContext } from '@/contexts/WalletContext';
+import { useWalletContext } from '@/contexts/wallet.context';
 
 export function useWallet() {
   const { wallet, isLoadingWallet, refreshWallet } = useWalletContext();

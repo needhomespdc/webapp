@@ -11,12 +11,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/lib/fetchClient';
 import { PropertyCard } from '@/components/property/PropertyCard';
+import { MarketplaceFilterSheet } from '@/components/property/MarketplaceFilterSheet';
 import {
-  MarketplaceFilterSheet,
   EMPTY_FILTERS,
   AMOUNT_RANGES,
   type MarketplaceFilterValues,
-} from '@/components/property/MarketplaceFilterSheet';
+} from '@/components/property/marketplaceFilters';
 import { MarketplaceSortSheet } from '@/components/property/MarketplaceSortSheet';
 import type { PropertyFilters } from '@/api/properties.api';
 

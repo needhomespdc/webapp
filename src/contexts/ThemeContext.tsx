@@ -1,16 +1,8 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react';
-
-export type Theme = 'light' | 'dark';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ThemeContext, type Theme } from './theme.context';
 
 const STORAGE_KEY = 'needhomes_theme';
 
-interface ThemeContextValue {
-  theme: Theme;
-  toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
-}
-
-export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'dark';

@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/lib/queryKeys';
-import { useNotificationContext } from '@/contexts/NotificationContext';
+import { useNotificationContext } from '@/contexts/notification.context';
 
 export function useNotifications() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotificationContext();

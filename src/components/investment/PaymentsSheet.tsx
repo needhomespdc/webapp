@@ -12,6 +12,7 @@ import { useInvestmentPayments } from '@/hooks/useInvestment';
 import { investmentsApi } from '@/api/investments.api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from '@/hooks/useToast';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { Investment } from '@/types';
 
 const MODEL_BADGE: Record<string, string> = {
@@ -38,7 +39,8 @@ interface Props {
 
 export function PaymentsSheet({ inv, isOpen, onClose }: Props) {
   // const navigate = useNavigate();
-  const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  // Same mobile breakpoint and hook as every other sheet (also updates when the window resizes)
+  const isMobile = useMediaQuery('(max-width: 639px)');
   const { paymentEntries } = useInvestmentPayments(isOpen ? inv.id : undefined);
 
   const downloadReceipt = async () => {

@@ -1,16 +1,9 @@
-import { createContext, useContext, useCallback } from 'react';
+import { useCallback } from 'react';
+import { WalletContext } from './wallet.context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { walletApi } from '@/api/wallet.api';
 import { useAuth } from '@/hooks/useAuth';
-import type { Wallet } from '@/types';
 
-interface WalletContextValue {
-  wallet: Wallet | null;
-  isLoadingWallet: boolean;
-  refreshWallet: () => void;
-}
-
-const WalletContext = createContext<WalletContextValue | null>(null);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
@@ -35,10 +28,4 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       {children}
     </WalletContext.Provider>
   );
-}
-
-export function useWalletContext() {
-  const ctx = useContext(WalletContext);
-  if (!ctx) throw new Error('useWalletContext must be used within WalletProvider');
-  return ctx;
 }

@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
+import { withSuspense } from './withSuspense';
 import { RootRedirect } from './RootRedirect';
 import { InvestorRoute } from './InvestorRoute';
 import { PartnerRoute } from './PartnerRoute';
@@ -46,22 +47,6 @@ const SupportTicketDetail = lazy(() => import('@/pages/shared/SupportTicketDetai
 const Profile = lazy(() => import('@/pages/shared/Profile'));
 const AddBankAccount = lazy(() => import('@/pages/shared/AddBankAccount'));
 
-
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-}
-
-function withSuspense(Component: React.ComponentType) {
-  return (
-    <Suspense fallback={<PageLoader />}>
-      <Component />
-    </Suspense>
-  );
-}
 
 export const router = createBrowserRouter([
   {

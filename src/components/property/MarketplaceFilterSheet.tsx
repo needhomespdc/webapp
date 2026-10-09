@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
+import { AMOUNT_RANGES, EMPTY_FILTERS, type MarketplaceFilterValues } from './marketplaceFilters';
 
 const PROPERTY_KINDS: { value: string; label: string }[] = [
   { value: 'duplex', label: 'Duplex' },
@@ -22,24 +23,6 @@ const RETURN_TYPES: { value: string; label: string }[] = [
   { value: 'rental_yield', label: 'Rental yield' },
 ];
 
-export const AMOUNT_RANGES: { value: string; label: string; min?: number; max?: number }[] = [
-  { value: 'under_100k', label: 'Under ₦100k', max: 100_000 },
-  { value: '100k_500k', label: '₦100k - ₦500k', min: 100_000, max: 500_000 },
-  { value: '500k_1m', label: '₦500k - ₦1M', min: 500_000, max: 1_000_000 },
-  { value: 'over_1m', label: '₦1M+', min: 1_000_000 },
-];
-
-export interface MarketplaceFilterValues {
-  propertyKinds: string[];
-  returnTypes: string[];
-  amountRange: string | null;
-}
-
-export const EMPTY_FILTERS: MarketplaceFilterValues = {
-  propertyKinds: [],
-  returnTypes: [],
-  amountRange: null,
-};
 
 interface MarketplaceFilterSheetProps {
   open: boolean;

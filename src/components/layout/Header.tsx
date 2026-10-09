@@ -13,7 +13,7 @@ import {
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { useAuth } from '@/hooks/useAuth';
-import { useNotificationContext } from '@/contexts/NotificationContext';
+import { useNotificationContext } from '@/contexts/notification.context';
 import { cn } from '@/lib/utils';
 import type { NavItem } from './AppShell';
 
