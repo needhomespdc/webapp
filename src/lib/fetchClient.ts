@@ -1,17 +1,35 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.needhomes.ng/api';
 const REFRESH_TOKEN_STORAGE_KEY = 'needhomes_refresh_token';
 
-function readPersistedRefreshToken(): string | null {
+/**
+ * Where the refresh token lives depends on "Remember me" at login:
+ * - ticked   → localStorage: survives closing the tab/browser and is shared by every tab,
+ *              for as long as the backend's refresh token lasts (30 days when rememberMe is true)
+ * - unticked → sessionStorage: this tab only, gone when the tab closes
+ * Rotated tokens stay in whichever storage the session started in.
+ */
+type TokenStorage = 'local' | 'session';
+
+function storageFor(kind: TokenStorage): Storage {
+  return kind === 'local' ? localStorage : sessionStorage;
+}
+
+function readPersistedRefreshToken(): { token: string | null; kind: TokenStorage } {
   try {
-    return sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    const remembered = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (remembered) return { token: remembered, kind: 'local' };
+    return { token: sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY), kind: 'session' };
   } catch {
-    return null;
+    return { token: null, kind: 'session' };
   }
 }
 
 let accessToken: string | null = null;
-// Seed from sessionStorage so a page reload can restore the session.
-let refreshTokenValue: string | null = readPersistedRefreshToken();
+// Seed from storage so a page reload (or, when remembered, a new tab or browser restart)
+// can restore the session.
+const persisted = readPersistedRefreshToken();
+let refreshTokenValue: string | null = persisted.token;
+let refreshTokenStorage: TokenStorage = persisted.kind;
 let refreshPromise: Promise<string> | null = null;
 let onUnauthorized: (() => void) | null = null;
 
@@ -30,20 +48,18 @@ export function getAccessToken(): string | null {
  * The token itself comes back in the login response body, so the client must
  * hold onto it and send it explicitly on every refresh.
  *
- * Always persisted to sessionStorage so a reload restores the session — the
- * "Remember Me" checkbox is sent to the backend (it may affect server-side
- * refresh-token expiry) but no longer gates client-side persistence.
+ * Pass `remember` at login to choose the storage (see above); later calls (token rotation)
+ * keep the current choice. `null` clears the token from both storages (logout / expired).
  */
-export function setRefreshToken(token: string | null) {
+export function setRefreshToken(token: string | null, remember?: boolean) {
   refreshTokenValue = token;
+  if (remember !== undefined) refreshTokenStorage = remember ? 'local' : 'session';
   try {
-    if (token) {
-      sessionStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token);
-    } else {
-      sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
-    }
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (token) storageFor(refreshTokenStorage).setItem(REFRESH_TOKEN_STORAGE_KEY, token);
   } catch {
-    // sessionStorage unavailable (e.g. private browsing) — falls back to memory-only.
+    // Storage unavailable (e.g. some private browsing modes) — falls back to memory-only.
   }
 }
 

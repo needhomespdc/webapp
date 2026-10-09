@@ -30,12 +30,13 @@ import {
   useCorporateVerifyCAC,
   useCorporateVerifyAccountManager,
 } from '@/hooks/useKYC';
-import type { CorporateVerificationResult } from '@/api/kyc.api';
+import { readVerification, type MismatchedField } from '@/utils/kycVerification';
+import { KYCMismatchNotice } from '@/components/shared/KYCMismatchNotice';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
 import { toast } from '@/hooks/useToast';
-import { ApiError, unwrapEnvelope } from '@/lib/fetchClient';
+import { ApiError } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -335,16 +336,31 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [dob, setDob] = useState(user?.dateOfBirth ?? '');
 
+  const [mismatch, setMismatch] = useState<{ message: string; fields: MismatchedField[] } | null>(null);
+
   const verifyNINMutation = useVerifyNIN();
   const queryClient = useQueryClient();
 
   const handleVerifyNIN = () => {
     if (nin.length < 11) { toast.error('Enter a valid 11-digit NIN'); return; }
     if (!firstname.trim() || !lastname.trim()) { toast.error('First name and last name are required'); return; }
+    setMismatch(null);
     verifyNINMutation.mutate(
-      { nin, firstname, lastname },
+      // phone and dob are optional for the backend but help QoreID match the record
+      { nin, firstname, lastname, ...(phone ? { phone } : {}), ...(dob ? { dob } : {}) },
       {
-        onSuccess: () => setStep('selfie'),
+        // The backend reports a mismatch as 200 { verified: false }, so check it before moving on
+        onSuccess: (res) => {
+          const result = readVerification(res);
+          if (result.verified) {
+            setStep('selfie');
+          } else {
+            setMismatch({
+              message: result.message ?? 'We could not verify your NIN details.',
+              fields: result.mismatchedFields ?? [],
+            });
+          }
+        },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'NIN verification failed'),
       }
     );
@@ -429,6 +445,8 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
+          {mismatch && <KYCMismatchNotice message={mismatch.message} fields={mismatch.fields} />}
+
           <Button
             className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
             onClick={handleVerifyNIN}
@@ -502,24 +520,6 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
 // so the response is checked rather than treating any 200 as a pass.
 
 type CorporateStep = 'cac' | 'manager' | 'selfie' | 'success';
-type MismatchedField = NonNullable<CorporateVerificationResult['mismatchedFields']>[number];
-
-function readVerification(res: unknown): CorporateVerificationResult {
-  return unwrapEnvelope<CorporateVerificationResult>(res) ?? { verified: false };
-}
-
-function MismatchNotice({ message, fields }: { message: string; fields: MismatchedField[] }) {
-  return (
-    <div className="bg-red-500/8 border border-red-500/20 rounded-xl px-4 py-3 space-y-1.5">
-      <p className="text-red-400 text-sm font-medium">{message}</p>
-      {fields.map((f) => (
-        <p key={f.field} className="text-red-400/80 text-xs leading-relaxed">
-          <span className="font-medium">{f.label}:</span> {f.message}
-        </p>
-      ))}
-    </div>
-  );
-}
 
 function CorporateFlow({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
@@ -630,7 +630,7 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {mismatch && <MismatchNotice message={mismatch.message} fields={mismatch.fields} />}
+          {mismatch && <KYCMismatchNotice message={mismatch.message} fields={mismatch.fields} />}
 
           <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl px-4 py-3">
             <p className="text-amber-500 text-xs leading-relaxed">
@@ -726,7 +726,7 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {mismatch && <MismatchNotice message={mismatch.message} fields={mismatch.fields} />}
+          {mismatch && <KYCMismatchNotice message={mismatch.message} fields={mismatch.fields} />}
 
           <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl px-4 py-3">
             <p className="text-amber-500 text-xs leading-relaxed">

@@ -29,6 +29,8 @@ import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
+import { readVerification, type MismatchedField } from '@/utils/kycVerification';
+import { KYCMismatchNotice } from '@/components/shared/KYCMismatchNotice';
 import { cn } from '@/lib/utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -304,16 +306,30 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
   const [lastname, setLastname] = useState(user?.lastName ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [dob, setDob] = useState(user?.dateOfBirth ?? '');
+  const [mismatch, setMismatch] = useState<{ message: string; fields: MismatchedField[] } | null>(null);
 
   const verifyNINMutation = useVerifyNIN();
 
   const handleVerifyNIN = () => {
     if (nin.length < 11) { toast.error('Enter a valid 11-digit NIN'); return; }
     if (!firstname.trim() || !lastname.trim()) { toast.error('First name and last name are required'); return; }
+    setMismatch(null);
     verifyNINMutation.mutate(
-      { nin, firstname, lastname },
+      // phone and dob are optional for the backend but help QoreID match the record
+      { nin, firstname, lastname, ...(phone ? { phone } : {}), ...(dob ? { dob } : {}) },
       {
-        onSuccess: () => setStep('selfie'),
+        // The backend reports a mismatch as 200 { verified: false }, so check it before moving on
+        onSuccess: (res) => {
+          const result = readVerification(res);
+          if (result.verified) {
+            setStep('selfie');
+          } else {
+            setMismatch({
+              message: result.message ?? 'We could not verify your NIN details.',
+              fields: result.mismatchedFields ?? [],
+            });
+          }
+        },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'NIN verification failed'),
       }
     );
@@ -397,6 +413,8 @@ function PartnerKYCFlow({ onClose }: { onClose: () => void }) {
               />
             </div>
           </div>
+
+          {mismatch && <KYCMismatchNotice message={mismatch.message} fields={mismatch.fields} />}
 
           <Button
             className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"

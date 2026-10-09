@@ -61,8 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [connectionError, setConnectionError] = useState(false);
   const [restoreAttempt, setRestoreAttempt] = useState(0);
 
-  // Attempt to restore the session on mount. The refresh token is persisted
-  // in sessionStorage (see fetchClient.ts), so a reload restores it here. If
+  // Attempt to restore the session on mount. The refresh token is persisted in
+  // localStorage ("Remember me") or sessionStorage (see fetchClient.ts), so a reload
+  // restores it here. If
   // there's no persisted token, or the backend rejects it (expired/revoked),
   // this fails fast and the user lands on /login via the route guards.
   useEffect(() => {
@@ -110,17 +111,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string, rememberMe = false) => {
-      // rememberMe is still sent to the backend (it may extend the issued
-      // refresh token's server-side expiry) but no longer gates client-side
-      // persistence — the refresh token is always kept in localStorage so a
-      // reload restores the session regardless of this flag.
+      // rememberMe makes the backend issue a 30-day refresh token (7 days otherwise) and
+      // decides where the browser keeps it, below.
       const res = await authApi.login({ email, password, rememberMe });
       const {
         accessToken: token,
         refreshToken: refreshTokenFromResponse,
         user: loggedInUser,
       } = unwrapEnvelope<{ accessToken: string; refreshToken: string; user: User }>(res);
-      setRefreshToken(refreshTokenFromResponse);
+      // "Remember me" keeps the session across tabs and browser restarts (see fetchClient.ts)
+      setRefreshToken(refreshTokenFromResponse, rememberMe);
       storeToken(token);
       setUser(loggedInUser);
     },
