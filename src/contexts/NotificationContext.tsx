@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@/api/notifications.api';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,14 +13,7 @@ import type {
   NotificationsAllReadPayload,
 } from '@/types/socket.types';
 
-interface NotificationContextValue {
-  unreadCount: number;
-  notifications: Notification[];
-  markRead: (id: string) => void;
-  markAllRead: () => void;
-}
-
-const NotificationContext = createContext<NotificationContextValue | null>(null);
+import { NotificationContext } from './notification.context';
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -111,10 +104,4 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       {children}
     </NotificationContext.Provider>
   );
-}
-
-export function useNotificationContext() {
-  const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error('useNotificationContext must be used within NotificationProvider');
-  return ctx;
 }

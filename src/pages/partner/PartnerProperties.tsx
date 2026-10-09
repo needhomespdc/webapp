@@ -19,12 +19,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MarketplaceSortSheet } from '@/components/property/MarketplaceSortSheet';
+import { MarketplaceFilterSheet } from '@/components/property/MarketplaceFilterSheet';
 import {
-  MarketplaceFilterSheet,
   EMPTY_FILTERS,
   AMOUNT_RANGES,
   type MarketplaceFilterValues,
-} from '@/components/property/MarketplaceFilterSheet';
+} from '@/components/property/marketplaceFilters';
 import { ReferralShareModal } from '@/components/partner/ReferralShareModal';
 import { toast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/lib/fetchClient';

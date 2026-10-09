@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import {
   RiShieldCheckLine,
@@ -14,32 +14,28 @@ import {
   RiShieldLine,
   RiIdCardLine,
   RiImageLine,
-  RiUploadCloud2Line,
   RiLockLine,
-  RiCloseLine,
   RiBuildingLine,
-  RiTimeLine,
   RiArrowRightLine,
   RiWallet3Line,
   RiArrowUpLine,
   RiCustomerService2Line,
 } from 'react-icons/ri';
-import { mediaApi } from '@/api/media.api';
 import { useAuth } from '@/hooks/useAuth';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import {
   useKYCStatus,
   useVerifyNIN,
   useVerifyLiveness,
-  useSubmitKYC,
+  useCorporateVerifyCAC,
   useCorporateVerifyAccountManager,
-  useCorporateSubmitCAC,
 } from '@/hooks/useKYC';
+import type { CorporateVerificationResult } from '@/api/kyc.api';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/shared/Loader';
 import { toast } from '@/hooks/useToast';
-import { ApiError } from '@/lib/fetchClient';
+import { ApiError, unwrapEnvelope } from '@/lib/fetchClient';
 import { cn } from '@/lib/utils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -67,19 +63,19 @@ const WHAT_YOU_NEED = [
 
 const CORPORATE_WHAT_YOU_NEED = [
   {
-    icon: RiUser3Line,
-    title: 'Account Manager NIN',
-    desc: 'NIN, first name, and last name of the authorised company account manager',
-  },
-  {
     icon: RiBuildingLine,
     title: 'CAC Registration Number',
-    desc: "Your company's Corporate Affairs Commission registration number",
+    desc: "Your company's Corporate Affairs Commission (RC) number, verified with the CAC registry",
   },
   {
-    icon: RiUploadCloud2Line,
-    title: 'CAC Certificate',
-    desc: 'A scanned copy of your CAC certificate (PDF or image, max 10 MB)',
+    icon: RiUser3Line,
+    title: 'Account Manager NIN',
+    desc: "The 11-digit NIN, first name and last name of your company's authorised account manager",
+  },
+  {
+    icon: RiImageLine,
+    title: 'Account Manager Selfie',
+    desc: "A clear front-facing photo of the account manager to match their NIN record",
   },
 ];
 
@@ -175,12 +171,16 @@ function SelfieStep({
   lastname,
   onBack,
   onVerified,
+  stepLabel = 'Step 2 of 2',
+  description = 'We will match your selfie with the photo on your NIN record.',
 }: {
   nin: string;
   firstname: string;
   lastname: string;
   onBack: () => void;
   onVerified: (photoBase64: string) => void;
+  stepLabel?: string;
+  description?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -248,11 +248,11 @@ function SelfieStep({
 
   return (
     <div className="space-y-5">
-      <StepHeader onBack={onBack} stepLabel="Step 2 of 2" />
+      <StepHeader onBack={onBack} stepLabel={stepLabel} />
       <div>
         <h2 className="text-2xl font-bold text-foreground">Take a selfie</h2>
         <p className="text-foreground/50 text-sm mt-1">
-          We will match your selfie with the photo on your NIN record.
+          {description}
         </p>
       </div>
 
@@ -493,57 +493,168 @@ function IndividualFlow({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Corporate KYC (KYB) flow ─────────────────────────────────────────────────
+// Follows the backend's QoreID KYB flow (docs/API.md):
+//   1. POST /kyc/corporate/verify-cac              — CAC registration number
+//   2. POST /kyc/corporate/verify-account-manager  — account manager NIN (needs step 1)
+//   3. POST /kyc/verify-liveness                   — account manager selfie with the same NIN;
+//                                                     auto-approves KYB on a face match
+// Steps 1 and 2 report a failed match as 200 { verified: false, message, mismatchedFields },
+// so the response is checked rather than treating any 200 as a pass.
 
-type CorporateStep = 'manager' | 'cac' | 'success';
+type CorporateStep = 'cac' | 'manager' | 'selfie' | 'success';
+type MismatchedField = NonNullable<CorporateVerificationResult['mismatchedFields']>[number];
+
+function readVerification(res: unknown): CorporateVerificationResult {
+  return unwrapEnvelope<CorporateVerificationResult>(res) ?? { verified: false };
+}
+
+function MismatchNotice({ message, fields }: { message: string; fields: MismatchedField[] }) {
+  return (
+    <div className="bg-red-500/8 border border-red-500/20 rounded-xl px-4 py-3 space-y-1.5">
+      <p className="text-red-400 text-sm font-medium">{message}</p>
+      {fields.map((f) => (
+        <p key={f.field} className="text-red-400/80 text-xs leading-relaxed">
+          <span className="font-medium">{f.label}:</span> {f.message}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 function CorporateFlow({ onClose }: { onClose: () => void }) {
-  const [step, setStep] = useState<CorporateStep>('manager');
+  const navigate = useNavigate();
+  const [step, setStep] = useState<CorporateStep>('cac');
+  const [cacNumber, setCacNumber] = useState('');
   const [nin, setNin] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
-  const [cacNumber, setCacNumber] = useState('');
-  const [cacFile, setCacFile] = useState<File | null>(null);
+  const [phone, setPhone] = useState('');
+  const [dob, setDob] = useState('');
+  const [mismatch, setMismatch] = useState<{ message: string; fields: MismatchedField[] } | null>(null);
 
+  const verifyCacMutation = useCorporateVerifyCAC();
   const verifyManagerMutation = useCorporateVerifyAccountManager();
-  const submitCacMutation = useCorporateSubmitCAC();
-  const submitKYCMutation = useSubmitKYC();
   const queryClient = useQueryClient();
-  const uploadMutation = useMutation({ mutationFn: (file: File) => mediaApi.upload(file) });
+
+  const goTo = (next: CorporateStep) => {
+    setMismatch(null);
+    setStep(next);
+  };
+
+  const handleVerifyCac = () => {
+    const value = cacNumber.trim();
+    if (!/^[A-Za-z0-9/-]{1,50}$/.test(value)) {
+      toast.error('Enter a valid CAC number (letters, numbers, / and - only)');
+      return;
+    }
+    setMismatch(null);
+    verifyCacMutation.mutate(
+      { cacNumber: value },
+      {
+        onSuccess: (res) => {
+          const result = readVerification(res);
+          if (result.verified) {
+            toast.success(result.message ?? 'CAC verified successfully.');
+            goTo('manager');
+          } else {
+            setMismatch({
+              message: result.message ?? 'We could not verify this CAC number.',
+              fields: result.mismatchedFields ?? [],
+            });
+          }
+        },
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'CAC verification failed'),
+      }
+    );
+  };
 
   const handleVerifyManager = () => {
     if (nin.length < 11) { toast.error('Enter a valid 11-digit NIN'); return; }
     if (!firstname.trim() || !lastname.trim()) { toast.error('First and last name are required'); return; }
+    setMismatch(null);
     verifyManagerMutation.mutate(
-      { nin, firstname, lastname },
       {
-        onSuccess: () => setStep('cac'),
+        nin,
+        firstname: firstname.trim(),
+        lastname: lastname.trim(),
+        ...(phone ? { phone } : {}),
+        ...(dob ? { dob } : {}),
+      },
+      {
+        onSuccess: (res) => {
+          const result = readVerification(res);
+          if (result.verified) {
+            toast.success(result.message ?? 'Account manager verified.');
+            goTo('selfie');
+          } else {
+            setMismatch({
+              message: result.message ?? "We could not verify the account manager's NIN.",
+              fields: result.mismatchedFields ?? [],
+            });
+          }
+        },
         onError: (err) => toast.error(err instanceof ApiError ? err.message : 'NIN verification failed'),
       }
     );
   };
 
-  const handleSubmitCac = async () => {
-    if (!cacNumber.trim()) { toast.error('Enter your CAC registration number'); return; }
-    if (!cacFile) { toast.error('Upload your CAC certificate'); return; }
-    try {
-      const uploadRes = await uploadMutation.mutateAsync(cacFile);
-      await submitCacMutation.mutateAsync({ cacNumber, cacDocumentUrl: uploadRes.data.url });
-      await submitKYCMutation.mutateAsync();
-      queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
-      setStep('success');
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Submission failed. Please try again.');
-    }
+  const handleLivenessVerified = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.kyc.status });
+    goTo('success');
   };
 
-  const isSubmitting =
-    uploadMutation.isPending || submitCacMutation.isPending || submitKYCMutation.isPending;
+  if (step === 'cac') {
+    return (
+      <FlowCard>
+        <div className="space-y-5">
+          <StepHeader onBack={onClose} stepLabel="Step 1 of 3" />
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Verify your company</h2>
+            <p className="text-foreground/50 text-sm mt-1">
+              Enter your Corporate Affairs Commission (CAC) registration number. We'll check it against the CAC registry.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-foreground/70 text-sm">CAC Registration Number</Label>
+            <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-3.5">
+              <RiBuildingLine className="text-foreground/40 h-5 w-5 shrink-0" />
+              <input
+                type="text"
+                value={cacNumber}
+                maxLength={50}
+                onChange={(e) => setCacNumber(e.target.value.toUpperCase())}
+                placeholder="e.g. RC1234567"
+                className="flex-1 bg-transparent text-foreground text-sm focus:outline-none placeholder:text-foreground/30 uppercase"
+              />
+            </div>
+          </div>
+
+          {mismatch && <MismatchNotice message={mismatch.message} fields={mismatch.fields} />}
+
+          <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl px-4 py-3">
+            <p className="text-amber-500 text-xs leading-relaxed">
+              The company name on your NeedHomes account must match the name registered with the CAC.
+            </p>
+          </div>
+
+          <Button
+            className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
+            onClick={handleVerifyCac}
+            disabled={verifyCacMutation.isPending || !cacNumber.trim()}
+          >
+            {verifyCacMutation.isPending ? 'Verifying…' : 'Continue'}
+          </Button>
+        </div>
+      </FlowCard>
+    );
+  }
 
   if (step === 'manager') {
     return (
       <FlowCard>
         <div className="space-y-5">
-          <StepHeader onBack={onClose} stepLabel="Step 1 of 2" />
+          <StepHeader onBack={() => goTo('cac')} stepLabel="Step 2 of 3" />
           <div>
             <h2 className="text-2xl font-bold text-foreground">Verify Account Manager</h2>
             <p className="text-foreground/50 text-sm mt-1">
@@ -598,9 +709,28 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
             </div>
           ))}
 
+          <div className="space-y-1.5">
+            <Label className="text-foreground/70 text-sm">Phone Number <span className="text-foreground/40">(optional)</span></Label>
+            <PhoneNumberInput value={phone} onChange={setPhone} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-foreground/70 text-sm">Date of Birth <span className="text-foreground/40">(optional)</span></Label>
+            <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-3.5">
+              <RiCalendarLine className="text-foreground/40 h-5 w-5 shrink-0" />
+              <input
+                type="date" value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                className="flex-1 bg-transparent text-foreground text-sm focus:outline-none scheme-dark"
+              />
+            </div>
+          </div>
+
+          {mismatch && <MismatchNotice message={mismatch.message} fields={mismatch.fields} />}
+
           <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl px-4 py-3">
             <p className="text-amber-500 text-xs leading-relaxed">
-              The account manager must be an authorised signatory. Their NIN details will be verified against government records.
+              The account manager must be an authorised signatory. Their NIN details will be verified against government records, and they'll take a selfie next.
             </p>
           </div>
 
@@ -616,91 +746,16 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
     );
   }
 
-  if (step === 'cac') {
+  if (step === 'selfie') {
     return (
       <FlowCard>
-        <div className="space-y-5">
-          <StepHeader onBack={() => setStep('manager')} stepLabel="Step 2 of 2" />
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Submit CAC Document</h2>
-            <p className="text-foreground/50 text-sm mt-1">
-              Provide your company registration details for verification.
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-foreground/70 text-sm">CAC Registration Number</Label>
-            <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/15 rounded-xl px-4 py-3.5">
-              <RiBuildingLine className="text-foreground/40 h-5 w-5 shrink-0" />
-              <input
-                type="text"
-                value={cacNumber}
-                onChange={(e) => setCacNumber(e.target.value)}
-                placeholder="e.g. RC1234567"
-                className="flex-1 bg-transparent text-foreground text-sm focus:outline-none placeholder:text-foreground/30 uppercase"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-foreground/70 text-sm">CAC Certificate</Label>
-            <label className={cn(
-              'flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-colors',
-              cacFile
-                ? 'border-accent/40 bg-accent/3'
-                : 'border-foreground/15 hover:border-accent/30 hover:bg-foreground/3'
-            )}>
-              {cacFile ? (
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                    <RiFileTextLine className="text-accent h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-foreground text-sm font-medium truncate">{cacFile.name}</p>
-                    <p className="text-foreground/40 text-xs mt-0.5">
-                      {(cacFile.size / 1024).toFixed(0)} KB
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); setCacFile(null); }}
-                    className="text-foreground/30 hover:text-red-400 transition-colors shrink-0 p-1"
-                  >
-                    <RiCloseLine className="h-5 w-5" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="w-14 h-14 rounded-2xl bg-foreground/5 flex items-center justify-center">
-                    <RiUploadCloud2Line className="h-7 w-7 text-foreground/30" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-foreground/70 text-sm font-medium">Click to upload CAC Certificate</p>
-                    <p className="text-foreground/40 text-xs mt-0.5">PDF or image · Max 10 MB</p>
-                  </div>
-                </>
-              )}
-              <input
-                type="file"
-                accept="application/pdf,image/*"
-                className="hidden"
-                onChange={(e) => setCacFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
-          </div>
-
-          <Button
-            className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
-            onClick={handleSubmitCac}
-            disabled={isSubmitting || !cacNumber.trim() || !cacFile}
-          >
-            {uploadMutation.isPending
-              ? 'Uploading document…'
-              : submitCacMutation.isPending || submitKYCMutation.isPending
-              ? 'Submitting…'
-              : 'Submit for Review'}
-          </Button>
-        </div>
+        <SelfieStep
+          nin={nin} firstname={firstname.trim()} lastname={lastname.trim()}
+          onBack={() => goTo('manager')}
+          onVerified={handleLivenessVerified}
+          stepLabel="Step 3 of 3"
+          description="The account manager takes a selfie. We'll match it with the photo on their NIN record."
+        />
       </FlowCard>
     );
   }
@@ -708,40 +763,36 @@ function CorporateFlow({ onClose }: { onClose: () => void }) {
   return (
     <FlowCard>
       <div className="space-y-6 text-center pt-4">
-        <div className="w-24 h-24 rounded-full bg-amber-500/15 flex items-center justify-center mx-auto">
-          <RiTimeLine className="h-12 w-12 text-amber-400" />
+        <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center mx-auto">
+          <RiCheckLine className="h-12 w-12 text-white" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Submitted for Review</h2>
+          <h2 className="text-2xl font-bold text-foreground">Business verification complete</h2>
           <p className="text-foreground/50 text-sm mt-2 leading-relaxed">
-            Your corporate KYB documents have been submitted. Our team will review them within 1–3 business days.
+            Your company and account manager are verified. You can now invest, fund your wallet, and withdraw.
           </p>
         </div>
 
         <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl px-4 py-4 text-left space-y-3">
-          <p className="text-foreground font-semibold text-sm mb-1">What happens next</p>
-          {[
-            'Our compliance team will review your CAC documents',
-            "You'll receive an email notification once verified",
-            'After approval you can invest and transact freely',
-          ].map((item) => (
-            <div key={item} className="flex items-start gap-3">
-              <RiCheckLine className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-foreground font-semibold text-sm mb-1">You can now</p>
+          {['Invest in properties', 'Fund your wallet', 'Withdraw to your bank account'].map((item) => (
+            <div key={item} className="flex items-center gap-3">
+              <RiCheckLine className="h-4 w-4 text-green-400 shrink-0" />
               <span className="text-foreground/70 text-sm">{item}</span>
             </div>
           ))}
         </div>
 
         <div className="flex items-center justify-center gap-2 bg-white dark:bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3">
-          <RiShieldLine className="text-accent h-4 w-4 shrink-0" />
-          <span className="text-foreground/50 text-sm">Secured by NeedHomes Compliance</span>
+          <RiShieldLine className="text-green-400 h-4 w-4 shrink-0" />
+          <span className="text-foreground/50 text-sm">Powered by QoreID</span>
         </div>
 
         <Button
           className="w-full h-12 bg-accent hover:bg-accent/90 text-white rounded-xl font-semibold"
-          onClick={onClose}
+          onClick={() => navigate('/investor/dashboard')}
         >
-          Back to KYC Page
+          Go to Dashboard
         </Button>
       </div>
     </FlowCard>

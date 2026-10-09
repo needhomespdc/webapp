@@ -10,7 +10,7 @@ import {
   RiTimeLine,
   RiDownload2Line,
 } from 'react-icons/ri';
-import Lottie from 'lottie-react';
+import Lottie from '@/components/shared/LazyLottie';
 import successAnimation from '@/assets/lottie/success-confetti.json';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';

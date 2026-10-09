@@ -1,4 +1,4 @@
-import Lottie from 'lottie-react';
+import Lottie from '@/components/shared/LazyLottie';
 import successAnimation from '@/assets/lottie/success-confetti.json';
 import { RiFileTextLine, RiDownload2Line } from 'react-icons/ri';
 import { Button } from '@/components/ui/button';

@@ -6,6 +6,7 @@ import {
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import type { Investment } from '@/types';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 function SimpleAreaChart({
   startValue,
@@ -64,8 +65,8 @@ const PERF_TITLE: Record<string, string> = {
 };
 
 export function PerformanceSheet({ inv, isOpen, onClose }: Props) {
-  const isMobile =
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  // Same mobile breakpoint and hook as every other sheet (also updates when the window resizes)
+  const isMobile = useMediaQuery('(max-width: 639px)');
 
   const appreciation = inv.currentValue - inv.totalInvested;
   const changePercent = inv.currentValueChangePercent ?? 0;

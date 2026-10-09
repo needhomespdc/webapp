@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
+import { withSuspense } from './withSuspense';
 import { RootRedirect } from './RootRedirect';
 import { InvestorRoute } from './InvestorRoute';
 import { PartnerRoute } from './PartnerRoute';
@@ -44,25 +45,8 @@ const SupportTickets = lazy(() => import('@/pages/shared/SupportTickets'));
 const SupportNewTicket = lazy(() => import('@/pages/shared/SupportNewTicket'));
 const SupportTicketDetail = lazy(() => import('@/pages/shared/SupportTicketDetail'));
 const Profile = lazy(() => import('@/pages/shared/Profile'));
-const Settings = lazy(() => import('@/pages/shared/Settings'));
 const AddBankAccount = lazy(() => import('@/pages/shared/AddBankAccount'));
 
-
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-}
-
-function withSuspense(Component: React.ComponentType) {
-  return (
-    <Suspense fallback={<PageLoader />}>
-      <Component />
-    </Suspense>
-  );
-}
 
 export const router = createBrowserRouter([
   {
@@ -102,7 +86,6 @@ export const router = createBrowserRouter([
           { path: '/investor/support/tickets', element: withSuspense(SupportTickets) },
           { path: '/investor/support/tickets/new', element: withSuspense(SupportNewTicket) },
           { path: '/investor/support/tickets/:ticketId', element: withSuspense(SupportTicketDetail) },
-          // { path: '/investor/settings', element: withSuspense(Settings) },
           { path: '/investor/profile', element: withSuspense(Profile) },
         ],
       },
@@ -125,7 +108,6 @@ export const router = createBrowserRouter([
           { path: '/partner/support/tickets', element: withSuspense(SupportTickets) },
           { path: '/partner/support/tickets/new', element: withSuspense(SupportNewTicket) },
           { path: '/partner/support/tickets/:ticketId', element: withSuspense(SupportTicketDetail) },
-          { path: '/partner/settings', element: withSuspense(Settings) },
           { path: '/partner/profile', element: withSuspense(Profile) },
         ],
       },

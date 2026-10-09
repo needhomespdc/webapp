@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import authApi from '@/api/auth.api';
 import {
@@ -7,21 +7,34 @@ import {
   refreshAccessToken as performRefresh,
   setUnauthorizedHandler,
   unwrapEnvelope,
+  isSessionRejected,
 } from '@/lib/fetchClient';
+import { WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { User } from '@/types';
+import { AuthContext } from './auth.context';
 
-export interface AuthContextValue {
-  user: User | null;
-  accessToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<string>;
-  updateProfile: (data: Partial<User>) => void;
+
+// Shown when the app opens while NeedHomes can't be reached. The user's session is kept,
+// so Retry signs them straight back in once the connection returns.
+function ConnectionErrorScreen({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="max-w-sm text-center">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <WifiOff className="h-7 w-7" />
+        </div>
+        <h1 className="text-xl font-semibold text-foreground">Can't reach NeedHomes</h1>
+        <p className="mt-2 text-sm text-foreground/60">
+          Check your internet connection and try again. You're still signed in.
+        </p>
+        <Button className="mt-6 w-full" onClick={onRetry}>
+          Try again
+        </Button>
+      </div>
+    </div>
+  );
 }
-
-export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -42,8 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return token;
   }, [storeToken]);
 
+  // True when restoring the session failed only because NeedHomes couldn't be reached
+  // (offline, timeout, server error). The session itself is still valid, so instead of
+  // dropping the user on /login we show a "can't connect" screen with a Retry button.
+  const [connectionError, setConnectionError] = useState(false);
+  const [restoreAttempt, setRestoreAttempt] = useState(0);
+
   // Attempt to restore the session on mount. The refresh token is persisted
-  // in localStorage (see fetchClient.ts), so a reload restores it here. If
+  // in sessionStorage (see fetchClient.ts), so a reload restores it here. If
   // there's no persisted token, or the backend rejects it (expired/revoked),
   // this fails fast and the user lands on /login via the route guards.
   useEffect(() => {
@@ -53,8 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await refreshToken();
         const res = await authApi.getMe();
         if (!cancelled) setUser(unwrapEnvelope<User>(res));
-      } catch {
-        if (!cancelled) storeToken(null);
+      } catch (err) {
+        if (cancelled) return;
+        if (isSessionRejected(err)) {
+          // Expired, revoked or no session at all: treat as signed out
+          setRefreshToken(null);
+          storeToken(null);
+        } else {
+          // Couldn't reach the server: keep the stored session and let the user retry
+          storeToken(null);
+          setConnectionError(true);
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -62,7 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [refreshToken, storeToken]);
+  }, [refreshToken, storeToken, restoreAttempt]);
+
+  const retryRestore = useCallback(() => {
+    setConnectionError(false);
+    setIsLoading(true);
+    setRestoreAttempt((n) => n + 1);
+  }, []);
 
   // When a request's silent-refresh-then-retry also fails (refresh token itself expired),
   // clear local state reactively — route guards redirect to /login, no manual navigation needed.
@@ -121,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateProfile,
       }}
     >
-      {children}
+      {connectionError ? <ConnectionErrorScreen onRetry={retryRestore} /> : children}
     </AuthContext.Provider>
   );
 }

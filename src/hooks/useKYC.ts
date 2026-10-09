@@ -23,10 +23,6 @@ export function useKYCStatus() {
   return { status: query.data, isLoading: query.isLoading, error: query.error };
 }
 
-export function useCreateKYCSession() {
-  return useMutation({ mutationFn: kycApi.createSession });
-}
-
 export function useSubmitKYC() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -41,6 +37,10 @@ export function useVerifyNIN() {
 
 export function useVerifyLiveness() {
   return useMutation({ mutationFn: kycApi.verifyLiveness });
+}
+
+export function useCorporateVerifyCAC() {
+  return useMutation({ mutationFn: kycApi.corporateVerifyCAC });
 }
 
 export function useCorporateVerifyAccountManager() {

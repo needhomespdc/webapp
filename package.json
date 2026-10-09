@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "packageManager": "npm@10.9.2",
+  "packageManager": "npm@11.19.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -24,7 +24,6 @@
     "@radix-ui/react-tabs": "^1.1.12",
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.7",
-    "@sumsub/websdk-react": "^2.6.3",
     "@tanstack/react-query": "^5.80.7",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
