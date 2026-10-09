@@ -67,6 +67,36 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The request never got a proper answer: no internet, DNS failure, timeout or a dropped
+ * connection. Kept separate from ApiError so a flaky network is never mistaken for an
+ * expired session (which used to log users out on every network blip).
+ */
+export class NetworkError extends Error {
+  constructor(message = 'Unable to reach NeedHomes. Check your internet connection and try again.') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+/**
+ * True only when the server itself refused the refresh token (expired, revoked or missing).
+ * Network failures and server-side errors (5xx) are NOT a reason to end the session.
+ */
+export function isSessionRejected(err: unknown): boolean {
+  return err instanceof ApiError && [400, 401, 403].includes(err.status);
+}
+
+// fetch() rejects with a TypeError when the network fails; turn that into a NetworkError
+async function safeFetch(input: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    throw new NetworkError();
+  }
+}
+
 function getMessage(body: unknown): string | undefined {
   return (body as { message?: string } | null)?.message;
 }
@@ -92,7 +122,7 @@ function buildHeaders(options: RequestInit): Headers {
 }
 
 async function rawFetch(path: string, options: RequestInit): Promise<Response> {
-  return fetch(`${BASE_URL}${path}`, {
+  return safeFetch(`${BASE_URL}${path}`, {
     ...options,
     headers: buildHeaders(options),
     credentials: 'include',
@@ -119,7 +149,7 @@ export async function refreshAccessToken(): Promise<string> {
       if (!refreshTokenValue) {
         throw new ApiError(401, null, 'No refresh token available');
       }
-      const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      const res = await safeFetch(`${BASE_URL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -131,6 +161,7 @@ export async function refreshAccessToken(): Promise<string> {
       }
       const data = body as RefreshTokenBody;
       const token = data?.data?.accessToken ?? data?.accessToken ?? '';
+      if (!token) throw new ApiError(401, body, 'Session expired');
       const rotatedRefreshToken = data?.data?.refreshToken ?? data?.refreshToken;
       accessToken = token;
       if (rotatedRefreshToken) setRefreshToken(rotatedRefreshToken);
@@ -142,19 +173,30 @@ export async function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
+/**
+ * Get a fresh access token after a 401. Logs the user out ONLY if the server rejected the
+ * refresh token; a network failure or server error is rethrown so the caller can show a
+ * "connection problem" message while the user stays signed in (the next action retries).
+ */
+async function refreshOrEndSession(): Promise<void> {
+  try {
+    await refreshAccessToken();
+  } catch (err) {
+    if (isSessionRejected(err)) {
+      accessToken = null;
+      setRefreshToken(null);
+      onUnauthorized?.();
+    }
+    throw err;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const res = await rawFetch(path, options);
 
   if (res.status === 401 && !isRetry && !NO_REFRESH_PATHS.includes(path)) {
-    try {
-      await refreshAccessToken();
-      return request<T>(path, options, true);
-    } catch (err) {
-      accessToken = null;
-      setRefreshToken(null);
-      onUnauthorized?.();
-      throw err;
-    }
+    await refreshOrEndSession();
+    return request<T>(path, options, true);
   }
 
   const body = await parseBody(res);
@@ -167,16 +209,9 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
 async function requestBlob(path: string, options: RequestInit = {}, isRetry = false): Promise<Blob> {
   const res = await rawFetch(path, options);
 
-  if (res.status === 401 && !isRetry) {
-    try {
-      await refreshAccessToken();
-      return requestBlob(path, options, true);
-    } catch (err) {
-      accessToken = null;
-      setRefreshToken(null);
-      onUnauthorized?.();
-      throw err;
-    }
+  if (res.status === 401 && !isRetry && !NO_REFRESH_PATHS.includes(path)) {
+    await refreshOrEndSession();
+    return requestBlob(path, options, true);
   }
 
   if (!res.ok) {

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import Lottie from 'lottie-react';
+import Lottie from '@/components/shared/LazyLottie';
 import {
   RiArrowLeftLine,
   RiMapPinLine,

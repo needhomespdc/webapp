@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import Lottie from 'lottie-react';
+import Lottie from '@/components/shared/LazyLottie';
 import {
   RiArrowLeftLine,
   RiMapPinLine,
@@ -144,10 +144,14 @@ export function SaveToOwnSheet({
     (config.legalFee as number | undefined) ?? (property.managementFees?.total ?? 0);
   const legalFeeLabel =
     property.managementFees?.items?.[0]?.label ?? 'Legal Fee';
-  const durationOptions =
-    (config.durationOptions as number[] | undefined) ??
-    (config.reservationDurations as number[] | undefined) ??
-    [3, 6, 12];
+  // Memoised: a fresh [3, 6, 12] array on every render made the callbacks below re-create each time
+  const durationOptions = useMemo(
+    () =>
+      (config.durationOptions as number[] | undefined) ??
+      (config.reservationDurations as number[] | undefined) ??
+      [3, 6, 12],
+    [config.durationOptions, config.reservationDurations]
+  );
 
   useEffect(() => {
     if (durationOptions.length > 0) {

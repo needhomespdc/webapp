@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -22,7 +22,7 @@ import {
   RiLinksLine,
   RiMoneyDollarBoxLine,
 } from 'react-icons/ri';
-import { Country, State } from 'country-state-city';
+import { useCountryData } from '@/hooks/useCountryData';
 import authApi from '@/api/auth.api';
 import { mediaApi } from '@/api/media.api';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
@@ -82,13 +82,13 @@ export default function Profile() {
   const [lastName, setLastName] = useState(user?.lastName ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? '');
-  const [country, setCountry] = useState(() => {
-    const stored = user?.country ?? '';
-    if (!stored) return 'NG';
-    // support both ISO code and full name stored from earlier saves
-    if (stored.length <= 3) return stored;
-    return Country.getAllCountries().find((c) => c.name === stored)?.isoCode ?? 'NG';
-  });
+  // Stored as an ISO code; older saves used the full country name, which is converted to
+  // its code once the (lazily loaded) country data arrives.
+  const { ready: countryDataReady, toIsoCode } = useCountryData();
+  const [country, setCountry] = useState(() => user?.country || 'NG');
+  useEffect(() => {
+    if (countryDataReady && country.length > 3) setCountry(toIsoCode(country) ?? 'NG');
+  }, [countryDataReady, country, toIsoCode]);
   const [state, setState] = useState(user?.state ?? '');
   const [city, setCity] = useState(user?.city ?? '');
   const [street, setStreet] = useState(user?.street ?? '');
@@ -646,6 +646,8 @@ function EditProfileForm({
   onSave: () => void;
 }) {
   const isIndividual = user.role === 'partner' || (user.role === 'investor' && user.investorType === 'individual');
+  const { ready: countryDataReady, countries, getStates } = useCountryData();
+  const stateOptions = useMemo(() => getStates(fields.country), [getStates, fields.country]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -698,10 +700,9 @@ function EditProfileForm({
         <div className="space-y-2">
           <Label>Country</Label>
           <SelectDropdown<SelectOption>
-            options={Country.getAllCountries().map((c) => ({ value: c.isoCode, label: c.name }))}
-            value={Country.getAllCountries()
-              .map((c) => ({ value: c.isoCode, label: c.name }))
-              .find((o) => o.value === fields.country) ?? null}
+            options={countries}
+            value={countries.find((o) => o.value === fields.country) ?? null}
+            isLoading={!countryDataReady}
             onChange={(opt) => {
               fields.setCountry((opt as SelectOption | null)?.value ?? '');
               fields.setState('');
@@ -730,7 +731,8 @@ function EditProfileForm({
         <div className="space-y-2">
           <Label>State</Label>
           <SelectDropdown<SelectOption>
-            options={State.getStatesOfCountry(fields.country).map((s) => ({ value: s.name, label: s.name }))}
+            options={stateOptions}
+            isLoading={!countryDataReady}
             value={fields.state ? { value: fields.state, label: fields.state } : null}
             onChange={(opt) => fields.setState((opt as SelectOption | null)?.value ?? '')}
             placeholder="Select state"

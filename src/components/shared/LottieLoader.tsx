@@ -1,4 +1,4 @@
-import Lottie from 'lottie-react';
+import Lottie from '@/components/shared/LazyLottie';
 import loaderAnimation from '@/assets/lottie/loader.json';
 
 interface LottieLoaderProps {

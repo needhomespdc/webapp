@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
-import { ApiError, getApiErrorMessage } from '@/lib/fetchClient';
+import { ApiError, NetworkError, getApiErrorMessage } from '@/lib/fetchClient';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -49,7 +49,7 @@ export default function Login() {
       let message: string;
       if (err instanceof ApiError && (err.status === 502 || err.status === 503 || err.status === 504)) {
         message = 'Server is temporarily unavailable. Please try again in a moment.';
-      } else if (err instanceof TypeError) {
+      } else if (err instanceof NetworkError || err instanceof TypeError) {
         message = 'Network error. Please check your connection and try again.';
       } else {
         message = getApiErrorMessage(err, 'Login failed. Please check your credentials.');

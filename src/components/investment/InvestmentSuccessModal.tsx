@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import Lottie from 'lottie-react';
+import Lottie from '@/components/shared/LazyLottie';
 import confettiAnimation from '@/assets/lottie/success-confetti.json';
 import { RiArrowRightLine, RiFileTextLine } from 'react-icons/ri';
 import {

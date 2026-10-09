@@ -9,7 +9,7 @@ import {
   RiWifiOffLine,
 } from 'react-icons/ri';
 import { Button } from '@/components/ui/button';
-import { ApiError } from '@/lib/fetchClient';
+import { ApiError, NetworkError } from '@/lib/fetchClient';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -67,11 +67,13 @@ function categorise(error: Error): ErrorMeta {
     };
   }
 
-  // TypeError: Failed to fetch → network / offline
+  // Network / offline: fetchClient reports it as a NetworkError; a raw TypeError
+  // ("Failed to fetch") can still come from fetch calls made outside fetchClient.
   if (
-    error instanceof TypeError &&
-    (error.message.toLowerCase().includes('fetch') ||
-      error.message.toLowerCase().includes('network'))
+    error instanceof NetworkError ||
+    (error instanceof TypeError &&
+      (error.message.toLowerCase().includes('fetch') ||
+        error.message.toLowerCase().includes('network')))
   ) {
     return {
       category: 'network',
