@@ -288,6 +288,27 @@ export interface Investment {
   progressTimeline?: InvestmentProgressStep[];
   progressInfoText?: string | null;
   currentValueChangePercent?: number | null;
+  quantity?: number;
+  propertyId?: string;
+  /** Frozen property snapshot from checkout (shape not documented) */
+  snapshot?: Record<string, unknown> | null;
+  payouts?: InvestmentPayout[];
+}
+
+/** One fractional payout (docs: InvestmentPayoutResponse) */
+export interface InvestmentPayout {
+  id: string;
+  title?: string;
+  amount: number;
+  cycleKey?: string;
+  payoutType?: string;
+  payoutTypeLabel?: string;
+  status: string;
+  statusLabel?: string;
+  paidAt?: string | null;
+  periodStart?: string;
+  periodEnd?: string;
+  receiptUrl?: string | null;
 }
 
 export interface InvestmentMilestone {
@@ -532,6 +553,10 @@ export interface ExitDetail {
   documents?: ExitDetailDocument[];
   rejectionReason?: string | null;
   adminNote?: string | null;
+  investmentType?: string;
+  investmentTypeLabel?: string;
+  /** Save-to-own: what was still owed when the exit was requested */
+  outstandingBalance?: number;
 }
 
 export type ResaleStatus = 'pending' | 'approved' | 'rejected' | 'sold' | 'cancelled';
@@ -659,9 +684,6 @@ export interface ReferralAnalytics {
   previousTotals: ReferralAnalyticsTotals;
   trends: ReferralAnalyticsTrends;
   recentActivity: ReferralActivityEvent[];
-  // TODO: confirm exact API field names for these
-  clicksByPeriod: { date: string; clicks: number }[];
-  totalLifetimeEarnings?: number;
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────────────

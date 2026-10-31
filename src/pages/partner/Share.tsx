@@ -18,7 +18,7 @@ import {
 } from 'react-icons/ri';
 import { HiOutlineUsers, HiOutlineWallet } from 'react-icons/hi2';
 import { useAuth } from '@/hooks/useAuth';
-import { useReferralAnalytics, usePromotableProperties } from '@/hooks/usePartner';
+import { useReferralAnalytics, usePromotableProperties, useCommissionWallet } from '@/hooks/usePartner';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -116,7 +116,7 @@ function GeneralShareModal({
           <a
             key={label}
             href={href(link, title)}
-            target="_blank"
+            target={label === 'Email' ? undefined : '_blank'}
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5"
             onClick={() => onOpenChange(false)}
@@ -256,6 +256,7 @@ export default function Share() {
 
   const { analytics, isLoading: analyticsLoading } = useReferralAnalytics(period);
   const { properties, isLoading: propertiesLoading } = usePromotableProperties(1, 8);
+  const { wallet, isLoading: walletLoading } = useCommissionWallet();
   const recentActivity = analytics?.recentActivity ?? [];
 
   const referralCode = (user?.referralCode ?? '').toLowerCase();
@@ -311,11 +312,7 @@ export default function Share() {
     {
       icon: HiOutlineWallet,
       label: 'Est. Earnings',
-      value: analyticsLoading
-        ? '—'
-        // : analytics?.totalLifetimeEarnings
-        //   ? formatCurrency(analytics.totalLifetimeEarnings)
-          : '₦0',
+      value: walletLoading ? '—' : formatCurrency(wallet?.totalEarned ?? 0),
       iconBg: 'bg-accent/20',
       iconColor: 'text-accent',
     },

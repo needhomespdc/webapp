@@ -36,13 +36,6 @@ const PERIODS = [
   { value: 'all_time', label: 'All Time' },
 ];
 
-const PERIOD_FROM_LABEL: Record<string, string> = {
-  today: 'from yesterday',
-  this_week: 'from last week',
-  this_month: 'from last month',
-  all_time: 'all time',
-};
-
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({
@@ -129,8 +122,7 @@ export default function PartnerDashboard() {
   const [showBalance, setShowBalance] = useState(true);
 
   const { analytics, isLoading: analyticsLoading } = useReferralAnalytics(period);
-  // const { wallet, isLoading: walletLoading } = useCommissionWallet();
-  const { isLoading: walletLoading } = useCommissionWallet();
+  const { wallet, isLoading: walletLoading } = useCommissionWallet();
   const { entries, isLoading: entriesLoading } = useCommissionEntries(1, 3);
 
   const periodLabel = PERIODS.find((p) => p.value === period)?.label ?? 'This Month';
@@ -180,20 +172,25 @@ export default function PartnerDashboard() {
           {walletLoading ? (
             <Skeleton className="h-9 w-44 bg-white/10" />
           ) : showBalance ? (
-            // <CurrencyDisplay amount={wallet?.balance ?? 0} size="xl" className="text-white" />
-            <CurrencyDisplay amount={0} size="xl" className="text-white" />
+            <CurrencyDisplay amount={wallet?.availableBalance ?? 0} size="xl" className="text-white" />
           ) : (
             <p className="text-3xl font-black text-white/30 tracking-widest">••••••</p>
           )}
         </div>
 
-        {/* Trend sub-line */}
+        {/* Pending commissions sub-line */}
         <div className="flex items-center gap-1.5">
-          <RiArrowUpLine className="text-accent h-3.5 w-3.5 shrink-0" />
-          <p className="text-white/60 text-xs">
-            <span className="text-accent font-semibold">{conversionRate}%</span>
-            {' '}{PERIOD_FROM_LABEL[period] ?? 'from last month'}
-          </p>
+          <RiTimeLine className="text-accent h-3.5 w-3.5 shrink-0" />
+          {walletLoading ? (
+            <Skeleton className="h-3.5 w-32 bg-white/10" />
+          ) : (
+            <p className="text-white/60 text-xs">
+              <span className="text-accent font-semibold">
+                {showBalance ? formatCurrency(wallet?.pendingCommissions ?? 0) : '••••'}
+              </span>
+              {' '}pending commission
+            </p>
+          )}
         </div>
       </div>
 
@@ -210,7 +207,7 @@ export default function PartnerDashboard() {
         <StatCard
           icon={<RiCheckboxCircleLine className="h-5 w-5" />}
           iconBg="bg-green-600/15 text-green-400"
-          label="Successful Sales"
+          label="Leads"
           value={analytics?.totals?.leads ?? 0}
           sub={periodLabel}
           loading={analyticsLoading}
@@ -219,10 +216,9 @@ export default function PartnerDashboard() {
           icon={<RiCoinLine className="h-5 w-5" />}
           iconBg="bg-violet-500/15 text-violet-400"
           label="Total Earned"
-          // value={<CurrencyDisplay amount={analytics?.totalLifetimeEarnings ?? 0} size="sm" className="text-foreground font-bold text-lg" />}
-          value={<CurrencyDisplay amount={0} size="sm" className="text-foreground font-bold text-lg" />}
+          value={<CurrencyDisplay amount={wallet?.totalEarned ?? 0} size="sm" className="text-foreground font-bold text-lg" />}
           sub="All Time"
-          loading={analyticsLoading}
+          loading={walletLoading}
         />
         <StatCard
           icon={<RiPercentLine className="h-5 w-5" />}
@@ -241,7 +237,7 @@ export default function PartnerDashboard() {
         </div>
         
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <Link to="/partner/properties">
+          <Link to="/partner/share">
             <Card className="hover:border-accent/40 transition-colors cursor-pointer h-full bg-white dark:bg-foreground/5">
               <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
@@ -303,7 +299,11 @@ export default function PartnerDashboard() {
               <Skeleton className="h-[140px] w-full" />
             ) : (
               <Suspense fallback={<Skeleton className="h-[160px] w-full rounded-xl" />}>
-                <PerformanceChart data={analytics?.clicksByPeriod ?? []} />
+                <PerformanceChart
+                  totals={analytics?.totals}
+                  previousTotals={analytics?.previousTotals}
+                  showPrevious={period !== 'all_time'}
+                />
               </Suspense>
             )}
 
@@ -312,7 +312,7 @@ export default function PartnerDashboard() {
               {[
                 { dot: 'bg-accent', label: 'Clicks', value: analytics?.totals?.clicks ?? 0, pct: analytics?.trends?.clicksPercent ?? 0 },
                 { dot: 'bg-green-400', label: 'Leads', value: analytics?.totals?.leads ?? 0, pct: analytics?.trends?.leadsPercent ?? 0 },
-                { dot: 'bg-violet-400', label: 'Sales', value: analytics?.totals?.shares ?? 0, pct: analytics?.trends?.sharesPercent ?? 0 },
+                { dot: 'bg-violet-400', label: 'Shares', value: analytics?.totals?.shares ?? 0, pct: analytics?.trends?.sharesPercent ?? 0 },
               ].map(({ dot, label, value, pct }) => {
                 const up = pct >= 0;
                 return (
@@ -322,10 +322,13 @@ export default function PartnerDashboard() {
                       <p className="text-foreground/50 text-xs">{label}</p>
                     </div>
                     <p className="text-foreground font-bold text-lg leading-none">{value}</p>
-                    <div className={`flex items-center gap-0.5 mt-1 text-[10px] font-semibold ${up ? 'text-green-400' : 'text-red-400'}`}>
-                      <RiArrowUpLine className={`h-3 w-3 shrink-0 ${up ? '' : 'rotate-180'}`} />
-                      {Math.abs(pct).toFixed(1)}%
-                    </div>
+                    {/* All time has no previous period to compare against */}
+                    {period !== 'all_time' && (
+                      <div className={`flex items-center gap-0.5 mt-1 text-[10px] font-semibold ${up ? 'text-green-400' : 'text-red-400'}`}>
+                        <RiArrowUpLine className={`h-3 w-3 shrink-0 ${up ? '' : 'rotate-180'}`} />
+                        {Math.abs(pct).toFixed(1)}%
+                      </div>
+                    )}
                   </div>
                 );
               })}

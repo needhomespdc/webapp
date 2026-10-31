@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { PinInput } from '@/components/shared/PinInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Lottie from '@/components/shared/LazyLottie';
 import {
@@ -53,58 +54,6 @@ const TERMS_SECTIONS = [
     body: 'Late or missed payments may incur penalty charges and could result in forfeiture of accrued units if the account remains delinquent beyond the grace period outlined in your investment terms.',
   },
 ];
-
-// ─── 4-box PIN input ──────────────────────────────────────────────────────────
-
-function PinInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const refs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleChange = (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const digit = e.target.value.replace(/\D/g, '').slice(-1);
-    const chars = value.padEnd(4, ' ').split('').slice(0, 4);
-    chars[i] = digit || ' ';
-    const next = chars.join('').replace(/\s+$/, '');
-    onChange(next);
-    if (digit && i < 3) refs.current[i + 1]?.focus();
-  };
-
-  const handleKeyDown = (i: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace') {
-      if (value[i] && value[i] !== ' ') {
-        const chars = value.padEnd(4, ' ').split('');
-        chars[i] = ' ';
-        onChange(chars.join('').replace(/\s+$/, ''));
-      } else if (i > 0) {
-        const chars = value.padEnd(4, ' ').split('');
-        chars[i - 1] = ' ';
-        onChange(chars.join('').replace(/\s+$/, ''));
-        refs.current[i - 1]?.focus();
-      }
-    }
-  };
-
-  return (
-    <div className="flex gap-3 justify-center">
-      {[0, 1, 2, 3].map((i) => (
-        <input
-          key={i}
-          ref={(el) => { refs.current[i] = el; }}
-          type="password"
-          inputMode="numeric"
-          maxLength={1}
-          value={value[i]?.trim() ?? ''}
-          onChange={(e) => handleChange(i, e)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-          className={cn(
-            'w-14 h-14 text-center text-2xl rounded-xl border-2 bg-foreground/5 focus:outline-none transition-colors',
-            value[i]?.trim() ? 'border-blue-500' : 'border-foreground/20 focus:border-blue-500/60'
-          )}
-          autoComplete="off"
-        />
-      ))}
-    </div>
-  );
-}
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
@@ -185,9 +134,8 @@ export function SaveToOwnSheet({
       propertyId: string;
       quantity: number;
       transactionPin: string;
-      savingsAmount?: number;
       paymentFrequency?: string;
-      paymentDurationMonths?: number;
+      paymentDuration?: number;
     }) => api.post<ApiResponse<Investment>>('/investments', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
@@ -248,9 +196,10 @@ export function SaveToOwnSheet({
         propertyId: property.id,
         quantity: 1,
         transactionPin: pin.replace(/\s/g, ''),
-        savingsAmount: chargedNow > 0 ? chargedNow : undefined,
+        // The API accepts only propertyId, quantity, transactionPin, paymentFrequency and paymentDuration
+        // (400 "should not exist" otherwise); it works out the first payment itself
         paymentFrequency: frequency,
-        paymentDurationMonths: selectedDuration,
+        paymentDuration: selectedDuration,
       },
       {
         onSuccess: (res) => {
@@ -566,7 +515,7 @@ export function SaveToOwnSheet({
         </p>
         <p className="text-blue-500 font-bold text-lg mb-8">{displayTotal}</p>
 
-        <PinInput value={pin} onChange={setPin} />
+        <PinInput value={pin} onChange={setPin} tone="blue" />
 
         {wallet?.hasTransactionPin ? (
           <p className="text-foreground/30 text-xs mt-6 text-center">

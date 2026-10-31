@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
   RiShieldCheckLine,
@@ -21,16 +21,18 @@ import {
   RiArrowDownSLine,
   RiLinksLine,
   RiMoneyDollarBoxLine,
+  RiDeleteBinLine,
+  RiNotification3Line,
 } from 'react-icons/ri';
 import { useCountryData } from '@/hooks/useCountryData';
 import authApi from '@/api/auth.api';
+import { notificationsApi } from '@/api/notifications.api';
 import { mediaApi } from '@/api/media.api';
 import { PhoneNumberInput } from '@/components/shared/PhoneNumberInput';
 import { SelectDropdown, type SelectOption } from '@/components/shared/SelectDropdown';
 import { useAuth } from '@/hooks/useAuth';
 import { useWallet } from '@/hooks/useWallet';
 import { PinSetModal } from '@/components/wallet/PinSetModal';
-import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,6 +69,50 @@ const SECURITY_QUESTIONS = [
   "What is your favourite food?",
   "What was your childhood nickname?",
 ];
+
+// KYC status shown on the profile card ("KYC: Not submitted") — approved shows a Verified badge instead
+const KYC_STATUS_LABEL: Record<string, string> = {
+  not_submitted: 'Not submitted',
+  pending: 'Under review',
+  rejected: 'Rejected',
+};
+
+// Notification settings, matching the mobile app's "Manage Alerts" screen (groups, labels, defaults).
+// Keys confirmed in the API docs / Postman collection: investment_updates, payout_received,
+// security_alerts, payment_reminders. The others follow the same naming and still need confirming
+// against the mobile app / backend. A key missing from the API response uses its default.
+type NotificationSetting = { key: string; label: string; desc: string; defaultOn: boolean };
+const NOTIFICATION_SETTING_GROUPS: { title: string; settings: NotificationSetting[] }[] = [
+  {
+    title: 'Channels',
+    settings: [
+      { key: 'push_notifications', label: 'Push Notifications', desc: 'Receive alerts on this device', defaultOn: true },
+      { key: 'email_notifications', label: 'Email Notifications', desc: 'Get updates in your inbox', defaultOn: true },
+      { key: 'sms_notifications', label: 'SMS Notifications', desc: 'Receive text message alerts', defaultOn: false },
+    ],
+  },
+  {
+    title: 'Investments',
+    settings: [
+      { key: 'investment_updates', label: 'Investment Updates', desc: 'Project progress and portfolio changes', defaultOn: true },
+      { key: 'payout_received', label: 'Payouts & Returns', desc: 'Dividends, resale proceeds, and earnings', defaultOn: true },
+      { key: 'new_listings', label: 'New Listings', desc: 'Properties open for investment', defaultOn: true },
+      { key: 'project_milestones', label: 'Project Milestones', desc: 'Construction and development milestones', defaultOn: true },
+      { key: 'payment_reminders', label: 'Payment Reminders', desc: 'Upcoming and overdue installment payments', defaultOn: true },
+      { key: 'wallet_activity', label: 'Wallet Activity', desc: 'Funding and withdrawal updates', defaultOn: true },
+    ],
+  },
+  {
+    title: 'Account',
+    settings: [
+      { key: 'support_messages', label: 'Support Messages', desc: 'Replies from NeedHomes support', defaultOn: true },
+      { key: 'security_alerts', label: 'Security Alerts', desc: 'Login activity and account protection', defaultOn: true },
+      { key: 'kyc_updates', label: 'KYC Updates', desc: 'Verification status and document requests', defaultOn: true },
+      { key: 'marketing_promotions', label: 'Marketing & Promotions', desc: 'Offers, referrals, and product news', defaultOn: false },
+    ],
+  },
+];
+const ALL_NOTIFICATION_SETTINGS = NOTIFICATION_SETTING_GROUPS.flatMap((g) => g.settings);
 
 export default function Profile() {
   const { user, logout, updateProfile } = useAuth();
@@ -116,6 +162,9 @@ export default function Profile() {
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [referralSettingsOpen, setReferralSettingsOpen] = useState(false);
+  const [removeAvatarOpen, setRemoveAvatarOpen] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
   const [leadAlerts, setLeadAlerts] = useState(true);
   const [conversionAlerts, setConversionAlerts] = useState(true);
 
@@ -166,6 +215,44 @@ export default function Profile() {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleRemoveAvatar = async () => {
+    setIsRemovingAvatar(true);
+    try {
+      // The backend errors on null, so an empty string clears the photo (the app treats '' as no photo)
+      await authApi.updateProfile({ profilePictureUrl: '' });
+      updateProfile({ ...user!, profilePictureUrl: undefined });
+      toast.success('Profile photo removed');
+      setRemoveAvatarOpen(false);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Failed to remove photo');
+    } finally {
+      setIsRemovingAvatar(false);
+    }
+  };
+
+  // Notification preferences: loaded when the settings panel opens; each switch saves straight away
+  const queryClient = useQueryClient();
+  const prefsQueryKey = ['notifications', 'preferences'] as const;
+  const { data: notificationPrefs, isLoading: prefsLoading, isError: prefsError } = useQuery({
+    queryKey: prefsQueryKey,
+    queryFn: async () => unwrapEnvelope<Record<string, boolean>>(await notificationsApi.getPreferences()) ?? {},
+    enabled: notificationSettingsOpen,
+  });
+  const updatePrefsMutation = useMutation({
+    mutationFn: (prefs: Record<string, boolean>) => notificationsApi.updatePreferences(prefs),
+    onMutate: async (prefs) => {
+      await queryClient.cancelQueries({ queryKey: prefsQueryKey });
+      const previous = queryClient.getQueryData<Record<string, boolean>>(prefsQueryKey);
+      queryClient.setQueryData(prefsQueryKey, prefs);
+      return { previous };
+    },
+    onError: (err, _prefs, context) => {
+      if (context?.previous) queryClient.setQueryData(prefsQueryKey, context.previous);
+      toast.error(err instanceof ApiError ? err.message : 'Failed to update notification settings');
+    },
+    onSuccess: () => toast.success('Notification settings saved'),
+  });
 
   const changePasswordMutation = useMutation({
     mutationFn: authApi.changePassword,
@@ -251,6 +338,17 @@ export default function Profile() {
             >
               <RiPencilLine className="text-background text-sm" />
             </button>
+            {user.profilePictureUrl && (
+              <button
+                onClick={() => setRemoveAvatarOpen(true)}
+                disabled={isUploadingAvatar || isRemovingAvatar}
+                aria-label="Remove profile photo"
+                title="Remove photo"
+                className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-foreground/80 flex items-center justify-center shadow-md border-2 border-primary hover:bg-red-500 transition-colors"
+              >
+                <RiDeleteBinLine className="text-background text-sm" />
+              </button>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -271,7 +369,18 @@ export default function Profile() {
                   Verified
                 </span>
               ) : (
-                <StatusBadge status={user.kycStatus} />
+                <button
+                  onClick={() => navigate(isInvestor ? '/investor/kyc' : '/partner/kyc')}
+                  className={cn(
+                    'inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full border transition-colors',
+                    user.kycStatus === 'rejected'
+                      ? 'text-red-300 bg-red-500/15 border-red-500/25 hover:bg-red-500/25'
+                      : 'text-amber-300 bg-amber-500/15 border-amber-500/25 hover:bg-amber-500/25'
+                  )}
+                >
+                  KYC: {KYC_STATUS_LABEL[user.kycStatus] ?? 'Not submitted'}
+                  <RiArrowRightLine className="text-sm" />
+                </button>
               )}
               {!isInvestor && (
                 <span className="text-xs text-white/40 capitalize bg-white/10 px-2 py-0.5 rounded-full">{user.role}</span>
@@ -377,6 +486,16 @@ export default function Profile() {
               />
             </MenuSection>
           )}
+          <MenuSection title="Notifications">
+            <MenuItem
+              icon={<RiNotification3Line />}
+              iconBg="bg-amber-500/15"
+              iconColor="text-amber-500"
+              label="Notification Settings"
+              desc="Choose which notifications you receive"
+              onClick={() => setNotificationSettingsOpen(true)}
+            />
+          </MenuSection>
           <MenuSection title="Support & Information">
             <MenuItem
               icon={<RiHeadphoneLine />}
@@ -392,7 +511,7 @@ export default function Profile() {
               iconColor="text-emerald-500"
               label="FAQs"
               desc="Frequently asked questions and guides"
-              onClick={() => {}}
+              onClick={() => window.open('https://needhomespdc.com/', '_blank', 'noopener,noreferrer')}
             />
             <MenuItem
               icon={<RiFileTextLine />}
@@ -417,6 +536,68 @@ export default function Profile() {
         <div className="md:hidden">{accountMenu}</div>
 
       </div>
+
+      {/* Notification Settings — centred dialog, same groups as the mobile app's "Manage Alerts" */}
+      <Dialog open={notificationSettingsOpen} onOpenChange={setNotificationSettingsOpen}>
+        {/* Title stays fixed; only the list below scrolls */}
+        <DialogContent className="max-w-md rounded-2xl max-h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
+          <DialogHeader className="shrink-0 px-6 pr-12 pt-6 pb-4 border-b border-foreground/10 text-left">
+            <DialogTitle>Manage Alerts</DialogTitle>
+            <DialogDescription>
+              Choose how you want to receive updates about your investments, payouts, and account activity.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-5">
+          {prefsLoading ? (
+            <p className="text-foreground/50 text-sm">Loading your settings…</p>
+          ) : prefsError ? (
+            <p className="text-red-400 text-sm">Couldn't load your notification settings. Please try again.</p>
+          ) : (
+            (() => {
+              // Every setting's current value: saved value from the API, otherwise its default
+              const current = Object.fromEntries(
+                ALL_NOTIFICATION_SETTINGS.map((n) => [n.key, notificationPrefs?.[n.key] ?? n.defaultOn])
+              );
+              return (
+                <div className="space-y-5">
+                  {NOTIFICATION_SETTING_GROUPS.map((group) => (
+                    <div key={group.title}>
+                      <p className="text-foreground/60 font-semibold text-xs mb-2 px-1">{group.title}</p>
+                      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden divide-y divide-foreground/8">
+                        {group.settings.map(({ key, label, desc }) => (
+                          <div key={key} className="flex items-center justify-between px-4 py-3.5">
+                            <div className="flex-1 min-w-0 pr-4">
+                              <p className="text-sm font-medium text-foreground">{label}</p>
+                              <p className="text-xs text-foreground/45 mt-0.5 leading-snug">{desc}</p>
+                            </div>
+                            <Switch
+                              checked={current[key]}
+                              disabled={updatePrefsMutation.isPending}
+                              onCheckedChange={(checked) => updatePrefsMutation.mutate({ ...current, [key]: checked })}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmModal
+        open={removeAvatarOpen}
+        onOpenChange={setRemoveAvatarOpen}
+        title="Remove profile photo"
+        description="Your photo will be removed and your initials shown instead."
+        confirmLabel="Remove"
+        variant="destructive"
+        isLoading={isRemovingAvatar}
+        onConfirm={handleRemoveAvatar}
+      />
 
       {/* Referral Settings — bottom Sheet on mobile, right Sheet on desktop */}
       <Sheet open={referralSettingsOpen} onOpenChange={setReferralSettingsOpen}>

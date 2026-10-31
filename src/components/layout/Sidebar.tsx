@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { RiLogoutBoxLine, RiShieldCheckLine, RiCustomerService2Line, RiArrowDownSLine, RiLinksLine } from 'react-icons/ri';
 import { useAuth } from '@/hooks/useAuth';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { cn } from '@/lib/utils';
 import type { NavItem } from './AppShell';
+import { NavMenuItem } from './NavMenuItem';
 
 interface SidebarProps {
   navItems: NavItem[];
@@ -73,27 +74,7 @@ export function Sidebar({ navItems }: SidebarProps) {
           className="h-full px-3 py-4 space-y-1 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden"
         >
           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
-                  isActive
-                    ? 'bg-accent/15 text-accent'
-                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span className="text-xl">
-                    {isActive && item.activeIcon ? item.activeIcon : item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </>
-              )}
-            </NavLink>
+            <NavMenuItem key={item.to} item={item} />
           ))}
 
           {/* Share nudge — shown once KYC is approved */}

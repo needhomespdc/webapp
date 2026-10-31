@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { usePropertyBySlug } from '@/hooks/useProperty';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
 import { useReferralLink } from '@/hooks/useReferralLink';
+import { usePromotableCommission } from '@/hooks/usePartner';
 import { Loader } from '@/components/shared/Loader';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/useToast';
@@ -484,12 +485,20 @@ export default function PartnerPropertyDetail() {
   const { property, isLoading } = usePropertyBySlug(slug);
   const { favoriteIds } = useFavoriteIds();
   const toggleFavMutation = useToggleFavorite();
-  const { link, copy } = useReferralLink(slug ?? '');
+  const { link, copy } = useReferralLink(slug ?? '', property?.title);
+  const commission = usePromotableCommission(slug);
 
   const isFav = favoriteIds.includes(property?.id ?? '');
 
   if (isLoading) return <Loader fullPage />;
   if (!property) return null;
+
+  // by-slug has no commission fields, so take them from the partner's promotable-properties list.
+  const commissionProperty = {
+    ...property,
+    estimatedCommission: property.estimatedCommission ?? commission.estimatedCommission,
+    commissionRatePercent: property.commissionRatePercent ?? commission.commissionRatePercent,
+  };
 
   const images = property.images?.length
     ? property.images
@@ -623,7 +632,7 @@ export default function PartnerPropertyDetail() {
           {/* Commission card — full width inside grid */}
           {/* <div className="sm:col-span-2"> */}
           <div className="">
-            <CommissionCard property={property} link={link} onCopy={copy} onShare={() => setShareOpen(true)} />
+            <CommissionCard property={commissionProperty}link={link} onCopy={copy} onShare={() => setShareOpen(true)} />
           </div>
 
           {/* Property Highlights — always first */}
@@ -766,8 +775,8 @@ export default function PartnerPropertyDetail() {
         <div className="max-w-screen-sm mx-auto flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-foreground/50 text-xs">Your Commission</p>
-            <p className={cn('font-bold text-lg leading-tight', property.estimatedCommission != null ? 'text-green-400' : 'text-foreground/30')}>
-              {property.estimatedCommission != null ? formatCurrency(property.estimatedCommission) : '—'}
+            <p className={cn('font-bold text-lg leading-tight', commissionProperty.estimatedCommission != null ? 'text-green-400' : 'text-foreground/30')}>
+              {commissionProperty.estimatedCommission != null ? formatCurrency(commissionProperty.estimatedCommission) : '—'}
             </p>
           </div>
           <Button

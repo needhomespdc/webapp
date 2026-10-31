@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { PinInput } from '@/components/shared/PinInput';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Lottie from '@/components/shared/LazyLottie';
 import {
@@ -26,58 +27,6 @@ import { PinSetModal } from '@/components/wallet/PinSetModal';
 import type { Property, Investment } from '@/types';
 
 type Step = 'quantity' | 'payment' | 'pin' | 'processing';
-
-// ─── 4-box PIN input ──────────────────────────────────────────────────────────
-
-function PinInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const refs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleChange = (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const digit = e.target.value.replace(/\D/g, '').slice(-1);
-    const chars = value.padEnd(4, ' ').split('').slice(0, 4);
-    chars[i] = digit || ' ';
-    const next = chars.join('').replace(/\s+$/, '');
-    onChange(next);
-    if (digit && i < 3) refs.current[i + 1]?.focus();
-  };
-
-  const handleKeyDown = (i: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace') {
-      if (value[i] && value[i] !== ' ') {
-        const chars = value.padEnd(4, ' ').split('');
-        chars[i] = ' ';
-        onChange(chars.join('').replace(/\s+$/, ''));
-      } else if (i > 0) {
-        const chars = value.padEnd(4, ' ').split('');
-        chars[i - 1] = ' ';
-        onChange(chars.join('').replace(/\s+$/, ''));
-        refs.current[i - 1]?.focus();
-      }
-    }
-  };
-
-  return (
-    <div className="flex gap-3 justify-center">
-      {[0, 1, 2, 3].map((i) => (
-        <input
-          key={i}
-          ref={(el) => { refs.current[i] = el; }}
-          type="password"
-          inputMode="numeric"
-          maxLength={1}
-          value={value[i]?.trim() ?? ''}
-          onChange={(e) => handleChange(i, e)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-          className={cn(
-            'w-14 h-14 text-center text-2xl rounded-xl border-2 bg-foreground/5 focus:outline-none transition-colors',
-            value[i]?.trim() ? 'border-accent' : 'border-foreground/20 focus:border-accent/60'
-          )}
-          autoComplete="off"
-        />
-      ))}
-    </div>
-  );
-}
 
 // ─── Main component ────────────────────────────────────────────────────────────
 

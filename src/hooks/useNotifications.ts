@@ -21,6 +21,8 @@ export function useNotificationsList(status = 'all', limit = 20) {
 
   return {
     notifications: query.data?.pages.flatMap((p) => p.data) ?? [],
+    // The server's total unread count (the shared feed only holds the latest 20)
+    unreadCount: query.data?.pages[0]?.meta.unreadCount,
     isLoading: query.isLoading,
     isFetchingNextPage: query.isFetchingNextPage,
     hasNextPage: query.hasNextPage,

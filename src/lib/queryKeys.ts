@@ -34,6 +34,8 @@ export const queryKeys = {
     commissionEntry: (id: string) => ['partner', 'commission-entry', id] as const,
     wallet: ['partner', 'wallet'] as const,
     properties: (page: number) => ['partner', 'properties', page] as const,
+    trackingToken: (slug: string) => ['partner', 'tracking-token', slug] as const,
+    commission: (slug: string) => ['partner', 'commission', slug] as const,
   },
   notifications: {
     // Polled flat list backing the header bell badge — distinct from `list`
@@ -46,6 +48,11 @@ export const queryKeys = {
     eligible: ['exits', 'eligible'] as const,
     list: ['exits', 'list'] as const,
     detail: (id: string) => ['exits', id] as const,
+  },
+  buybacks: {
+    mine: ['buybacks', 'mine'] as const,
+    eligible: ['buybacks', 'eligible'] as const,
+    detail: (id: string) => ['buybacks', id] as const,
   },
   resales: {
     eligible: ['resales', 'eligible'] as const,

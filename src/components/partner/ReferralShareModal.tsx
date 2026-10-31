@@ -58,13 +58,24 @@ interface Props {
   propertyTitle: string;
 }
 
-function ShareBody({ link, title, onClose }: { link: string; title: string; onClose: () => void }) {
+function ShareBody({
+  link,
+  title,
+  onClose,
+  onShare,
+}: {
+  link: string;
+  title: string;
+  onClose: () => void;
+  onShare: (channel: string) => void;
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(link).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      onShare('copy');
     });
   };
 
@@ -75,10 +86,10 @@ function ShareBody({ link, title, onClose }: { link: string; title: string; onCl
           <a
             key={label}
             href={href(link, title)}
-            target="_blank"
+            target={label === 'Email' ? undefined : '_blank'}
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5"
-            onClick={onClose}
+            onClick={() => { onShare(label === 'X' ? 'twitter' : label.toLowerCase()); onClose(); }}
           >
             <span className={cn('w-12 h-12 rounded-full flex items-center justify-center text-white text-xl', bg)}>
               <Icon />
@@ -103,7 +114,7 @@ function ShareBody({ link, title, onClose }: { link: string; title: string; onCl
 
 export function ReferralShareModal({ open, onOpenChange, propertySlug, propertyTitle }: Props) {
   const isMobile = useMediaQuery('(max-width: 639px)');
-  const { link } = useReferralLink(propertySlug);
+  const { link, trackShare } = useReferralLink(propertySlug, propertyTitle);
 
   if (isMobile) {
     return (
@@ -112,7 +123,7 @@ export function ReferralShareModal({ open, onOpenChange, propertySlug, propertyT
           <SheetHeader>
             <SheetTitle>Share Property</SheetTitle>
           </SheetHeader>
-          <ShareBody link={link} title={propertyTitle} onClose={() => onOpenChange(false)} />
+          <ShareBody link={link} title={propertyTitle} onClose={() => onOpenChange(false)} onShare={trackShare} />
         </SheetContent>
       </Sheet>
     );
@@ -124,7 +135,7 @@ export function ReferralShareModal({ open, onOpenChange, propertySlug, propertyT
         <DialogHeader className="px-5 pt-5 pb-4 border-b border-foreground/10">
           <DialogTitle className="text-base font-semibold">Share Property</DialogTitle>
         </DialogHeader>
-        <ShareBody link={link} title={propertyTitle} onClose={() => onOpenChange(false)} />
+        <ShareBody link={link} title={propertyTitle} onClose={() => onOpenChange(false)} onShare={trackShare} />
       </DialogContent>
     </Dialog>
   );

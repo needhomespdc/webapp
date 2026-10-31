@@ -42,6 +42,12 @@ const investorNavItems = [
     to: '/investor/portfolio',
     icon: <AiOutlinePieChart />,
     activeIcon: <AiFillPieChart />,
+    children: [
+      { label: 'Investments', to: '/investor/portfolio' },
+      { label: 'Resell', to: '/investor/resales' },
+      { label: 'Buy Back', to: '/investor/buybacks' },
+      { label: 'Exit', to: '/investor/exits' },
+    ],
   },
   {
     label: 'Wallet',

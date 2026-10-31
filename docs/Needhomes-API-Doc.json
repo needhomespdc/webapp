@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "348688c6-8de4-4e98-b899-a6321115b991",
+    "_postman_id": "2abbb7cc-7c76-4a4f-9856-15bed0e33619",
     "name": "Needhomes API Doc",
     "description": "NeedHomes backend API. Import into a Postman workspace named \"Needhomes API Doc\".\n\nFolders: Public —, Account —, Investor —, Partner —, Admin —, Shared —\n\n1. Import the environment file and select it.\n2. Run Account — Authentication > Login to set accessToken.\n3. Partner routes: login with a partner account.\n4. Admin routes: login with an admin account.\n5. Real-time notifications: see Shared — Realtime (Socket.IO) (use a Socket.IO client; Postman HTTP requests cannot subscribe).\n\nBase URL: {{baseUrl}} (default http://localhost:3000)\nWebSocket base: {{wsBaseUrl}}\nAPI prefix: /api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -3686,6 +3686,41 @@
               ]
             },
             "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Supported Banks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/wallet/banks?search=gtbank",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "banks"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "gtbank"
+                }
+              ]
+            },
+            "description": "Filter and rank banks by relevance. Supports aliases such as gtbank, fcmb, uba.",
             "auth": {
               "type": "bearer",
               "bearer": [

@@ -6,8 +6,10 @@ import {
   RiPhoneLine,
   RiMailLine,
   RiArrowRightLine,
+  RiFileCopyLine,
 } from 'react-icons/ri';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/useToast';
 
 interface HelpOption {
   key: string;
@@ -19,7 +21,11 @@ interface HelpOption {
   comingSoon?: boolean;
   href?: string;
   action?: 'chat';
+  // Shown with a Copy button, for users with no mail app set up.
+  copyText?: string;
 }
+
+const SUPPORT_EMAIL = 'Support@Needhomespdc.com';
 
 const HELP_OPTIONS: HelpOption[] = [
   {
@@ -43,11 +49,12 @@ const HELP_OPTIONS: HelpOption[] = [
   {
     key: 'email',
     title: 'Send us an Email',
-    description: 'Support@Needhomespdc.com',
+    description: SUPPORT_EMAIL,
     icon: <RiMailLine className="h-6 w-6" />,
     iconBg: 'bg-violet-500/15',
     iconColor: 'text-violet-400',
-    href: 'mailto:Support@Needhomespdc.com',
+    href: `mailto:${SUPPORT_EMAIL}`,
+    copyText: SUPPORT_EMAIL,
   },
   {
     key: 'faq',
@@ -56,8 +63,8 @@ const HELP_OPTIONS: HelpOption[] = [
     icon: <RiQuestionnaireLine className="h-6 w-6" />,
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
-    // TODO: replace '#' with the real FAQ URL when available
-    href: '#',
+    // FAQs live on the marketing site (bug 012)
+    href: 'https://needhomespdc.com/',
   },
   {
     key: 'kb',
@@ -128,15 +135,35 @@ export default function Support() {
             );
           }
           if (opt.href) {
-            return (
+            // mailto: and tel: must open in the same tab; a new tab leaves a blank page instead of launching the app.
+            const link = (
               <a
                 key={opt.key}
                 href={opt.href}
-                target={opt.href.startsWith('http') || opt.href.startsWith('tel:') || opt.href.startsWith('mailto:') ? '_blank' : undefined}
+                target={opt.href.startsWith('http') ? '_blank' : undefined}
                 rel="noopener noreferrer"
               >
                 {inner}
               </a>
+            );
+            if (!opt.copyText) return link;
+            const copyText = opt.copyText;
+            return (
+              <div key={opt.key} className="relative">
+                {link}
+                <button
+                  type="button"
+                  aria-label={`Copy ${copyText}`}
+                  onClick={() => {
+                    navigator.clipboard.writeText(copyText);
+                    toast.success('Email address copied');
+                  }}
+                  className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-foreground/60 border border-foreground/10 hover:text-foreground hover:border-accent/40 transition-colors"
+                >
+                  <RiFileCopyLine className="h-3.5 w-3.5" />
+                  Copy
+                </button>
+              </div>
             );
           }
           return <div key={opt.key}>{inner}</div>;

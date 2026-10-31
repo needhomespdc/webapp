@@ -1,7 +1,26 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { PaymentsSheet } from '@/components/investment/PaymentsSheet';
 import { PerformanceSheet } from '@/components/investment/PerformanceSheet';
+import { MilestonesSheet } from '@/components/investment/MilestonesSheet';
+import { BuyBackSheet } from '@/components/buybacks/BuyBackSheet';
+import {
+  FractionalHeader,
+  FractionalInfo,
+  FractionalSummaryCards,
+  RecentPayouts,
+} from '@/components/investment/fractional/FractionalDetail';
+import {
+  SaveToOwnHeader,
+  SaveToOwnOverview,
+  SaveToOwnPaymentHistory,
+  SaveToOwnProgress,
+  SaveToOwnTotals,
+} from '@/components/investment/saveToOwn/SaveToOwnDetail';
+import { PayoutHistorySheet } from '@/components/investment/fractional/PayoutHistorySheet';
+import { ExitInvestmentSheet } from '@/components/exits/ExitInvestmentSheet';
+import { ExitDetailSheet } from '@/components/exits/ExitDetailSheet';
+import { BuyBackDetailSheet } from '@/components/buybacks/BuyBackDetailSheet';
 import {
   RiMapPinLine,
   RiCheckLine,
@@ -9,6 +28,7 @@ import {
   RiFileTextLine,
   RiDownload2Line,
   RiArrowRightSLine,
+  RiFileLine,
   RiInformationLine,
   RiCalendarLine,
   RiBuildingLine,
@@ -377,72 +397,80 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
 }
 
 // ─── Investment Progress (Land Banking / Fractional) ─────────────────────────
+// Oct 2026 design: first label left, middle centred, last right; green track; mint note card
 
 function ProgressSection({
   steps,
   infoText,
-  theme,
+  onDocuments,
 }: {
   steps: InvestmentProgressStep[];
   infoText?: string | null;
-  theme: ModelTheme;
+  onDocuments: () => void;
 }) {
+  const last = steps.length - 1;
   return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-      <h2 className="text-foreground font-bold text-base mb-5">Investment Progress</h2>
+    <div className="bg-card border border-foreground/5 rounded-3xl p-4">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <h2 className="text-foreground font-bold text-base">Investment Progress</h2>
+        <button
+          onClick={onDocuments}
+          aria-label="View investment documents"
+          className="w-9 h-9 -mr-2 rounded-full flex items-center justify-center text-foreground hover:bg-foreground/10 transition-colors"
+        >
+          <RiFileLine className="h-5 w-5" />
+        </button>
+      </div>
 
-      <div className="flex items-start">
+      {/* Track */}
+      <div className="flex items-center">
         {steps.map((step, i) => {
-          const prevCompleted = steps[i - 1]?.status === 'completed';
           const isCompleted = step.status === 'completed';
           const isCurrent = step.status === 'current';
-
           return (
-            <div key={i} className="flex-1 flex flex-col items-center">
-              <div className="flex items-center w-full">
-                {/* Left connector */}
-                {i > 0
-                  ? <div className={cn('flex-1 h-0.5', prevCompleted ? theme.accentBg : 'bg-foreground/15')} />
-                  : <div className="flex-1" />}
-
-                {/* Dot */}
-                <div className={cn(
-                  'w-9 h-9 rounded-full border-2 flex items-center justify-center shrink-0',
+            <Fragment key={i}>
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0',
                   isCompleted
-                    ? cn('border-transparent', theme.accentBg)
+                    ? 'bg-green-600 border-green-600'
                     : isCurrent
-                      ? 'bg-background border-green-500'
-                      : 'bg-background border-foreground/20',
-                )}>
-                  {isCompleted && <RiCheckLine className="h-4 w-4 text-white" />}
-                  {isCurrent && <div className="w-3 h-3 rounded-full bg-green-500" />}
-                </div>
-
-                {/* Right connector */}
-                {i < steps.length - 1
-                  ? <div className={cn('flex-1 h-0.5', isCompleted ? theme.accentBg : 'bg-foreground/15')} />
-                  : <div className="flex-1" />}
-              </div>
-
-              {/* Labels */}
-              <div className="mt-2 px-1 text-center">
-                <p className="text-foreground/60 text-[11px] font-medium">{step.title}</p>
-                {step.subtitle && (
-                  <p className={cn('text-[10px] font-semibold', theme.accentText)}>{step.subtitle}</p>
+                      ? 'bg-green-100 border-green-600 dark:bg-green-500/15'
+                      : 'bg-background border-foreground/15'
                 )}
-                {step.date && (
-                  <p className="text-foreground/40 text-[10px] mt-0.5">{step.date}</p>
-                )}
+              >
+                {isCompleted && <RiCheckLine className="h-4 w-4 text-white" />}
+                {isCurrent && <div className="w-2.5 h-2.5 rounded-sm bg-green-600" />}
               </div>
-            </div>
+              {i < last && (
+                <div className={cn('flex-1 h-0.5 mx-1', isCompleted ? 'bg-green-600' : 'bg-foreground/10')} />
+              )}
+            </Fragment>
           );
         })}
       </div>
 
+      {/* Labels */}
+      <div className="flex justify-between gap-2 mt-3 pb-4 border-b border-foreground/10">
+        {steps.map((step, i) => (
+          <div
+            key={i}
+            className={cn('min-w-0 flex-1', i === 0 ? 'text-left' : i === last ? 'text-right' : 'text-center')}
+          >
+            <p className="text-foreground font-bold text-sm">{step.title}</p>
+            <p className="text-foreground/50 text-xs mt-1">
+              {step.date ?? step.subtitle ?? (step.status === 'current' ? 'In Progress' : '')}
+            </p>
+          </div>
+        ))}
+      </div>
+
       {infoText && (
-        <div className={cn('mt-5 rounded-xl p-4 border', theme.lightBg, theme.borderLight)}>
-          <p className="text-foreground/70 text-sm leading-relaxed">{infoText}</p>
-          <button className={cn('text-sm font-semibold mt-2', theme.accentText)}>Learn More</button>
+        <div className="mt-4 rounded-3xl p-4 bg-emerald-100 dark:bg-emerald-500/15">
+          <p className="text-foreground text-sm leading-relaxed">{infoText}</p>
+          <button className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-medium mt-3">
+            Learn More <RiArrowRightSLine className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
@@ -493,7 +521,7 @@ function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme
 
 // ─── Current Development Stage ────────────────────────────────────────────────
 
-function DevelopmentStageSection({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
+function DevelopmentStageSection({ inv, theme, onOpen }: { inv: Investment; theme: ModelTheme; onOpen: () => void }) {
   return (
     <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <h2 className="text-foreground font-bold text-sm mb-3">Current Development Stage</h2>
@@ -508,7 +536,7 @@ function DevelopmentStageSection({ inv, theme }: { inv: Investment; theme: Model
         </div>
         <RiArrowRightSLine className="h-5 w-5 text-foreground/30 shrink-0" />
       </div>
-      <button className={cn('text-sm font-semibold mt-3', theme.accentText)}>
+      <button onClick={onOpen} className={cn('text-sm font-semibold mt-3', theme.accentText)}>
         View all development stages
       </button>
     </div>
@@ -741,17 +769,72 @@ function DocumentsSection({ inv }: { inv: Investment }) {
 
 // ─── Bottom action bar ─────────────────────────────────────────────────────────
 
-function ActionBar({ inv, theme, onPaymentsOpen }: { inv: Investment; theme: ModelTheme; onPaymentsOpen: () => void }) {
+function ActionBar({
+  inv,
+  theme,
+  onPaymentsOpen,
+  onBuyBack,
+  onExit,
+  onSaveNow,
+}: {
+  inv: Investment;
+  theme: ModelTheme;
+  onPaymentsOpen: () => void;
+  onBuyBack: () => void;
+  onExit: () => void;
+  onSaveNow: () => void;
+}) {
   const navigate = useNavigate();
   const canResell = !['exited', 'pending_resale', 'pending'].includes(inv.status);
   const hasBuyBack = inv.type === 'land_banking';
+
+  // Save-to-own (Oct 2026 design): Save Now plus an outline Exit
+  if (inv.type === 'save_to_own') {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
+        <div className="flex items-center gap-2 max-w-screen-sm mx-auto">
+          <Button
+            variant="outline"
+            className="flex-1 h-12 rounded-xl font-semibold border-accent text-accent bg-transparent hover:bg-accent/10 hover:text-accent"
+            disabled={!canResell}
+            onClick={onExit}
+          >
+            Exit
+          </Button>
+          <Button
+            className="flex-1 h-12 rounded-xl font-semibold text-white border-0 bg-accent hover:bg-accent/90"
+            onClick={onSaveNow}
+          >
+            Save Now
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Fractional (Oct 2026 design): no payments or resale, just Exit; payouts open from the page
+  if (inv.type === 'fractional') {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
+        <div className="max-w-screen-sm mx-auto">
+          <Button
+            className="w-full h-12 rounded-xl font-semibold text-white border-0 bg-accent hover:bg-accent/90"
+            disabled={!canResell}
+            onClick={onExit}
+          >
+            Exit Investment
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3 space-y-2">
       <div className="flex items-center gap-2 max-w-screen-sm mx-auto">
         <Button
           variant="outline"
-          className="flex-1 h-12 rounded-xl font-semibold border-foreground/20 text-foreground/60"
+          className="flex-1 h-12 rounded-xl font-semibold border-accent text-accent bg-transparent hover:bg-accent/10 hover:text-accent"
           onClick={onPaymentsOpen}
         >
           My Payments
@@ -759,7 +842,7 @@ function ActionBar({ inv, theme, onPaymentsOpen }: { inv: Investment; theme: Mod
         {canResell && (
           <Button
             className={cn('flex-1 h-12 rounded-xl font-semibold text-white border-0', theme.accentBtn)}
-            onClick={() => navigate('/investor/resales')}
+            onClick={() => navigate(`/investor/resales?resell=${inv.id}`)}
           >
             Resell
           </Button>
@@ -769,8 +852,9 @@ function ActionBar({ inv, theme, onPaymentsOpen }: { inv: Investment; theme: Mod
         <div className="max-w-screen-sm mx-auto">
           <Button
             variant="outline"
-            disabled
-            className="w-full h-12 rounded-xl font-semibold"
+            disabled={!canResell}
+            onClick={onBuyBack}
+            className="w-full h-12 rounded-xl font-semibold border-accent text-accent bg-transparent hover:bg-accent/10 hover:text-accent"
           >
             Buy Back
           </Button>
@@ -785,7 +869,9 @@ function ActionBar({ inv, theme, onPaymentsOpen }: { inv: Investment; theme: Mod
 export default function InvestmentDetail() {
   const { investmentId } = useParams<{ investmentId: string }>();
   const { investment: inv, isLoading } = useInvestmentDetail(investmentId);
-  const [openSheet, setOpenSheet] = useState<'payments' | 'performance' | null>(null);
+  const [openSheet, setOpenSheet] = useState<'payments' | 'performance' | 'milestones' | 'buyback' | 'payouts' | 'exit' | 'save' | null>(null);
+  const [exitId, setExitId] = useState<string | null>(null);
+  const [buybackId, setBuybackId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -807,6 +893,8 @@ export default function InvestmentDetail() {
   }
 
   const theme = MODEL_THEME[inv.type] ?? MODEL_THEME.fractional;
+  const isFractional = inv.type === 'fractional';
+  const isSaveToOwn = inv.type === 'save_to_own';
   const hasPM = !!inv.projectManagerName;
   const pmAtBottom = inv.type === 'land_banking';
   const pmLabel = inv.type === 'land_banking'
@@ -827,11 +915,23 @@ export default function InvestmentDetail() {
       </div>
 
       {/* Header card — full width on all breakpoints */}
-      <HeaderCard inv={inv} theme={theme} />
+      {isFractional ? (
+        <FractionalHeader inv={inv} statusChip={<StatusChip status={inv.status} label={inv.statusLabel} />} />
+      ) : isSaveToOwn ? (
+        <SaveToOwnHeader inv={inv} statusChip={<StatusChip status={inv.status} label={inv.statusLabel} />} />
+      ) : (
+        <HeaderCard inv={inv} theme={theme} />
+      )}
 
       {/* Financial card — mobile only; desktop version is in the sidebar */}
       <div className="xl:hidden">
-        <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+        {isFractional ? (
+          <FractionalSummaryCards inv={inv} />
+        ) : isSaveToOwn ? (
+          <SaveToOwnTotals inv={inv} onPayments={() => setOpenSheet('payments')} />
+        ) : (
+          <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+        )}
       </div>
 
       {/* Two-column layout: main content + sticky sidebar on xl */}
@@ -839,10 +939,6 @@ export default function InvestmentDetail() {
 
         {/* ── Main column ── */}
         <div className="w-full xl:flex-1 min-w-0 space-y-4">
-          {/* Progress timeline (land_banking / fractional) */}
-          {(inv.progressTimeline?.length ?? 0) > 0 && (
-            <ProgressSection steps={inv.progressTimeline!} infoText={inv.progressInfoText} theme={theme} />
-          )}
 
           {/* Project Manager — mobile, early (non-land-banking) */}
           {hasPM && !pmAtBottom && (
@@ -855,18 +951,46 @@ export default function InvestmentDetail() {
           {/* Development Stage — mobile only */}
           {inv.currentDevelopmentStageTitle && (
             <div className="xl:hidden">
-              <DevelopmentStageSection inv={inv} theme={theme} />
+              <DevelopmentStageSection inv={inv} theme={theme} onOpen={() => setOpenSheet('milestones')} />
             </div>
           )}
 
           {/* Investment / Purchase Information */}
-          <InvestmentInfoSection inv={inv} />
+          {isFractional ? (
+            <>
+              <FractionalInfo inv={inv} />
+              <RecentPayouts inv={inv} onViewAll={() => setOpenSheet('payouts')} />
+            </>
+          ) : isSaveToOwn ? (
+            <>
+              <SaveToOwnOverview inv={inv} />
+              <SaveToOwnProgress inv={inv} />
+              <div className="xl:hidden">
+                <SaveToOwnPaymentHistory inv={inv} onViewAll={() => setOpenSheet('payments')} />
+              </div>
+            </>
+          ) : (
+            <InvestmentInfoSection inv={inv} />
+          )}
+
+          {/* Progress timeline (land_banking / fractional), under Investment Information */}
+          {!isSaveToOwn && (inv.progressTimeline?.length ?? 0) > 0 && (
+            <ProgressSection
+              steps={inv.progressTimeline!}
+              infoText={inv.progressInfoText}
+              onDocuments={() =>
+                document.getElementById('investment-documents')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            />
+          )}
 
           {/* About section */}
           {inv.description && <AboutSection inv={inv} />}
 
           {/* Investment Documents */}
-          <DocumentsSection inv={inv} />
+          <div id="investment-documents" className="scroll-mt-20">
+            <DocumentsSection inv={inv} />
+          </div>
 
           {/* Project Manager — mobile, bottom (land_banking) */}
           {hasPM && pmAtBottom && (
@@ -879,10 +1003,16 @@ export default function InvestmentDetail() {
 
         {/* ── Sidebar — desktop only ── */}
         <div className="hidden xl:flex xl:w-72 shrink-0 flex-col gap-4 sticky top-20">
-          <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+          {isFractional ? (
+            <FractionalSummaryCards inv={inv} />
+          ) : isSaveToOwn ? (
+            <SaveToOwnTotals inv={inv} onPayments={() => setOpenSheet('payments')} />
+          ) : (
+            <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
+          )}
 
           {inv.currentDevelopmentStageTitle && (
-            <DevelopmentStageSection inv={inv} theme={theme} />
+            <DevelopmentStageSection inv={inv} theme={theme} onOpen={() => setOpenSheet('milestones')} />
           )}
 
           {hasPM && (
@@ -891,15 +1021,52 @@ export default function InvestmentDetail() {
               <ProjectManagerCard inv={inv} theme={theme} />
             </div>
           )}
+          {isSaveToOwn && (
+            <SaveToOwnPaymentHistory inv={inv} onViewAll={() => setOpenSheet('payments')} />
+          )}
         </div>
       </div>
 
       {/* Fixed action bar */}
-      <ActionBar inv={inv} theme={theme} onPaymentsOpen={() => setOpenSheet('payments')} />
+      <ActionBar
+        inv={inv}
+        theme={theme}
+        onPaymentsOpen={() => setOpenSheet('payments')}
+        onBuyBack={() => setOpenSheet('buyback')}
+        onExit={() => setOpenSheet('exit')}
+        onSaveNow={() => setOpenSheet('save')}
+      />
 
       {/* Sheets */}
-      <PaymentsSheet inv={inv} isOpen={openSheet === 'payments'} onClose={() => setOpenSheet(null)} />
+      <PaymentsSheet
+        inv={inv}
+        isOpen={openSheet === 'payments' || openSheet === 'save'}
+        startPaying={openSheet === 'save'}
+        onClose={() => setOpenSheet(null)}
+      />
       <PerformanceSheet inv={inv} isOpen={openSheet === 'performance'} onClose={() => setOpenSheet(null)} />
+      <MilestonesSheet inv={inv} isOpen={openSheet === 'milestones'} onClose={() => setOpenSheet(null)} />
+      {inv.type === 'land_banking' && (
+        <BuyBackSheet
+          inv={inv}
+          open={openSheet === 'buyback'}
+          onClose={() => setOpenSheet(null)}
+          onViewStatus={setBuybackId}
+        />
+      )}
+      <BuyBackDetailSheet buybackId={buybackId} onClose={() => setBuybackId(null)} />
+      {isFractional && (
+        <PayoutHistorySheet inv={inv} isOpen={openSheet === 'payouts'} onClose={() => setOpenSheet(null)} />
+      )}
+      {(isFractional || isSaveToOwn) && (
+        <ExitInvestmentSheet
+          inv={inv}
+          open={openSheet === 'exit'}
+          onClose={() => setOpenSheet(null)}
+          onViewStatus={setExitId}
+        />
+      )}
+      <ExitDetailSheet exitId={exitId} onClose={() => setExitId(null)} />
     </div>
   );
 }

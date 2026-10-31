@@ -32,6 +32,14 @@ export interface PropertyFilters {
   limit?: number;
 }
 
+// The UI keeps its own sort keys (they're in shareable URLs); the API documents different names
+const API_SORT: Record<NonNullable<PropertyFilters['sort']>, string> = {
+  popular: 'popular',
+  price_asc: 'priceLowToHigh',
+  price_desc: 'priceHighToLow',
+  name_asc: 'nameAsc',
+};
+
 export const propertiesApi = {
   list: async (filters: PropertyFilters = {}): Promise<PaginatedResponse<Property>> => {
     const params = new URLSearchParams();
@@ -39,7 +47,7 @@ export const propertiesApi = {
     if (filters.propertyKind) params.set('propertyKind', filters.propertyKind);
     if (filters.returnType) params.set('returnType', filters.returnType);
     if (filters.search) params.set('search', filters.search);
-    if (filters.sort) params.set('sort', filters.sort);
+    if (filters.sort) params.set('sort', API_SORT[filters.sort]);
     if (filters.page) params.set('page', String(filters.page));
     if (filters.limit) params.set('limit', String(filters.limit));
     const raw = await api.get<{ data: Property[]; meta: PaginatedResponse<Property>['pagination'] }>(`/properties?${params}`);

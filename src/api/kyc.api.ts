@@ -12,11 +12,14 @@ export const kycApi = {
   getStatus: (): Promise<KYCStatusResponse> =>
     api.get<KYCStatusResponse>('/kyc/status'),
 
+  // A mismatch comes back as 200 with verified: false (same shape as the corporate checks)
   verifyNIN: (payload: {
     nin: string;
     firstname: string;
     lastname: string;
-  }): Promise<ApiResponse<{ verified: boolean }>> => api.post('/kyc/verify-nin', payload),
+    phone?: string;
+    dob?: string;
+  }): Promise<CorporateVerificationResult> => api.post('/kyc/verify-nin', payload),
 
   verifyLiveness: (payload: {
     nin: string;

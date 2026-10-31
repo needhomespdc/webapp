@@ -37,6 +37,18 @@ import { cn } from '@/lib/utils';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
+// The API's ReferralSource enum; it rejects any other value and requires one for individuals and partners.
+const REFERRAL_SOURCES = [
+  { value: 'socialMedia', label: 'Social Media' },
+  { value: 'friend', label: 'Friend / Family' },
+  { value: 'advertisement', label: 'Advertisement' },
+  { value: 'others', label: 'Others' },
+];
+
+const referralSourceSchema = z
+  .string()
+  .refine((v) => REFERRAL_SOURCES.some((s) => s.value === v), 'Please select an option');
+
 const passwordSchema = z
   .string()
   .min(8, 'Minimum 8 characters')
@@ -53,7 +65,7 @@ const individualSchema = z
     phone: z.string().min(10, 'Enter a valid phone number'),
     password: passwordSchema,
     confirmPassword: z.string(),
-    referralSource: z.string().optional(),
+    referralSource: referralSourceSchema,
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
@@ -62,7 +74,7 @@ const individualSchema = z
 
 const corporateSchema = z
   .object({
-    companyName: z.string().min(1, 'Company name is required'),
+    companyName: z.string().min(1, 'Company name is required').max(200, 'Maximum 200 characters'),
     email: z.string().email('Invalid email address'),
     phone: z.string().min(10, 'Enter a valid phone number'),
     password: passwordSchema,
@@ -81,7 +93,7 @@ const partnerSchema = z
     phone: z.string().min(10, 'Enter a valid phone number'),
     password: passwordSchema,
     confirmPassword: z.string(),
-    referralSource: z.string().optional(),
+    referralSource: referralSourceSchema,
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
@@ -324,10 +336,9 @@ function IndividualForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="socialMedia">Social Media</SelectItem>
-                  <SelectItem value="friend">Friend / Family</SelectItem>
-                  <SelectItem value="advertisement">Advertisement</SelectItem>
-                  <SelectItem value="others">Others</SelectItem>
+                  {REFERRAL_SOURCES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -628,12 +639,9 @@ function PartnerForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="friend">Friend / Family</SelectItem>
-                <SelectItem value="socialMedia">Social Media</SelectItem>
-                <SelectItem value="google">Google Search</SelectItem>
-                <SelectItem value="tv">TV / Radio</SelectItem>
-                <SelectItem value="event">Event / Conference</SelectItem>
-                <SelectItem value="others">Others</SelectItem>
+                {REFERRAL_SOURCES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -733,8 +741,9 @@ export default function Register() {
         {/* Terms */}
         <p className="text-center text-xs text-foreground/40 mt-4 leading-relaxed">
           By creating an account, you agree to Needhomes{' '}
-          <Link to="/privacy-policy" className="text-accent hover:underline">Privacy Policy</Link>,{' '}
-          <Link to="/terms" className="text-accent hover:underline">Terms and Conditions</Link>
+          {/* The policy pages live on the marketing website (same links as the Profile page) */}
+          <a href="https://needhomespdc.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Privacy Policy</a>,{' '}
+          <a href="https://needhomespdc.com/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Terms and Conditions</a>
         </p>
 
         {/* Login link */}
