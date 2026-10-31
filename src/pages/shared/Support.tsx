@@ -63,8 +63,8 @@ const HELP_OPTIONS: HelpOption[] = [
     icon: <RiQuestionnaireLine className="h-6 w-6" />,
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
-    // TODO: replace '#' with the real FAQ URL when available
-    href: '#',
+    // FAQs live on the marketing site (bug 012)
+    href: 'https://needhomespdc.com/',
   },
   {
     key: 'kb',

@@ -511,7 +511,7 @@ export default function Profile() {
               iconColor="text-emerald-500"
               label="FAQs"
               desc="Frequently asked questions and guides"
-              onClick={() => {}}
+              onClick={() => window.open('https://needhomespdc.com/', '_blank', 'noopener,noreferrer')}
             />
             <MenuItem
               icon={<RiFileTextLine />}

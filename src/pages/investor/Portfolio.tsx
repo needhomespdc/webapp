@@ -126,8 +126,9 @@ function InvestmentCard({ inv }: { inv: Investment }) {
     inv.totalReturns < 0 ? `-${formatCurrency(Math.abs(inv.totalReturns))}` :
     formatCurrency(0);
 
-  const thumbnail = (large: boolean) => (
-    <div className={cn('relative rounded-xl overflow-hidden shrink-0', large ? 'w-19 h-19' : 'w-14 h-14')}>
+  // Investment type sits on the image in its model colour, as on the marketplace cards
+  const thumbnail = (
+    <div className="relative w-19 h-19 rounded-xl overflow-hidden shrink-0">
       {inv.propertyImageUrl ? (
         <img src={inv.propertyImageUrl} alt={inv.title} className="w-full h-full object-cover" />
       ) : (
@@ -135,15 +136,26 @@ function InvestmentCard({ inv }: { inv: Investment }) {
           <RiBriefcaseLine className="text-accent h-6 w-6" />
         </div>
       )}
-      <span className={cn(
-        'absolute top-1.5 left-1.5 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap leading-none',
-        large ? modelBadgeCls : statusBadgeBg,
-      )}>
-        {large
-          ? (inv.typeLabel === 'Co-development' ? 'Co-Dev' : inv.typeLabel)
-          : inv.statusLabel}
+      <span
+        className={cn(
+          'absolute top-1.5 left-1.5 max-w-[calc(100%-0.75rem)] truncate text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-lg whitespace-nowrap leading-none',
+          modelBadgeCls,
+        )}
+      >
+        {inv.typeLabel === 'Co-development' ? 'Co-Dev' : inv.typeLabel}
       </span>
     </div>
+  );
+
+  const statusPill = (
+    <span
+      className={cn(
+        'inline-block text-white text-[10px] font-semibold px-2 py-0.5 rounded-lg whitespace-nowrap leading-tight',
+        statusBadgeBg,
+      )}
+    >
+      {inv.statusLabel}
+    </span>
   );
 
   return (
@@ -153,9 +165,12 @@ function InvestmentCard({ inv }: { inv: Investment }) {
     >
       {/* Mobile — original design */}
       <div className="md:hidden flex items-center gap-3 p-3">
-        {thumbnail(true)}
+        {thumbnail}
         <div className="flex-1 min-w-0">
-          <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
+            {statusPill}
+          </div>
           <div className="flex items-center gap-1 mt-1">
             <RiMapPinLine className="text-foreground/40 h-3 w-3 shrink-0" />
             <p className="text-foreground/50 text-xs truncate">{inv.location}</p>
@@ -185,7 +200,7 @@ function InvestmentCard({ inv }: { inv: Investment }) {
 
       {/* Desktop — new table-row design */}
       <div className="hidden md:flex items-center gap-3 p-3">
-        {thumbnail(false)}
+        {thumbnail}
         <div className="w-36 shrink-0 min-w-0">
           <p className="text-foreground text-sm font-bold truncate">{inv.title}</p>
           <div className="flex items-center gap-1 mt-1">
@@ -194,7 +209,10 @@ function InvestmentCard({ inv }: { inv: Investment }) {
           </div>
         </div>
         <div className="flex flex-1 items-center">
-          <DataCol label="Type" value={inv.typeLabel} />
+          <div className="min-w-0 flex-1 px-3 border-l border-foreground/8">
+            <p className="text-foreground/40 text-[10px]">Status</p>
+            <div className="mt-0.5">{statusPill}</div>
+          </div>
           <DataCol label="Units Owned" value={inv.unitsOwnedLabel} />
           <DataCol label="Invested Amount" value={formatCurrency(inv.totalInvested)} />
           <DataCol label="Current Value" value={formatCurrency(inv.currentValue)} valueClassName="text-accent" />

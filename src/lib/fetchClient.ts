@@ -234,6 +234,14 @@ async function requestBlob(path: string, options: RequestInit = {}, isRetry = fa
     const body = await parseBody(res);
     throw new ApiError(res.status, body, getMessage(body) ?? `Request failed with status ${res.status}`);
   }
+  // Receipts and certificates are documented as JSON { filename, contentType, pdfBase64 }
+  // (sometimes inside the usual { data } envelope); decode those into a real file
+  if (res.headers.get('content-type')?.includes('application/json')) {
+    const doc = unwrapEnvelope<{ pdfBase64?: string; contentType?: string }>(await res.json());
+    if (!doc?.pdfBase64) throw new ApiError(res.status, doc, 'The document could not be downloaded');
+    const bytes = Uint8Array.from(atob(doc.pdfBase64), (c) => c.charCodeAt(0));
+    return new Blob([bytes], { type: doc.contentType ?? 'application/pdf' });
+  }
   return res.blob();
 }
 

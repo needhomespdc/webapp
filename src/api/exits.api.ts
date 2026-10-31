@@ -16,10 +16,8 @@ export const exitsApi = {
   getById: (exitId: string): Promise<ApiResponse<ExitDetail>> =>
     api.get<ApiResponse<ExitDetail>>(`/exits/${exitId}`),
 
-  getReceipt: async (exitId: string): Promise<Blob> => {
-    const raw = await api.get<Blob>(`/exits/${exitId}/receipt`);
-    return raw as unknown as Blob;
-  },
+  // Not in the Postman docs yet (asked the backend); handled like the documented receipts
+  getReceipt: (exitId: string): Promise<Blob> => api.getBlob(`/exits/${exitId}/receipt`),
 
   cancel: (exitId: string): Promise<ApiResponse<null>> =>
     api.delete<ApiResponse<null>>(`/exits/${exitId}`),

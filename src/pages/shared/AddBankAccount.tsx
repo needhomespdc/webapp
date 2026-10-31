@@ -244,6 +244,8 @@ function AddBankForm({ onSuccess }: { onSuccess: () => void }) {
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
   const [accountName, setAccountName] = useState('');
   const [isResolving, setIsResolving] = useState(false);
+  // Bug 020: the API only links accounts whose name matches the NeedHomes profile, so block a mismatch here
+  const [nameMismatch, setNameMismatch] = useState(false);
   const [bankSearch, setBankSearch] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -262,17 +264,19 @@ function AddBankForm({ onSuccess }: { onSuccess: () => void }) {
   useEffect(() => {
     if (accountNumber.length !== 10 || !selectedBank) {
       setAccountName('');
+      setNameMismatch(false);
       return;
     }
     let cancelled = false;
     setIsResolving(true);
     setAccountName('');
+    setNameMismatch(false);
     walletApi
       .resolveBank(selectedBank.code, accountNumber)
       .then((data) => {
         if (cancelled) return;
         setAccountName(data.accountName);
-        if (!data.matchesProfile) toast.error('Account name does not match your profile');
+        setNameMismatch(data.matchesProfile === false);
       })
       .catch(() => {
         if (cancelled) return;
@@ -310,7 +314,7 @@ function AddBankForm({ onSuccess }: { onSuccess: () => void }) {
   });
 
   const canSubmit =
-    accountNumber.length === 10 && selectedBank !== null && accountName !== '' && !isResolving;
+    accountNumber.length === 10 && selectedBank !== null && accountName !== '' && !isResolving && !nameMismatch;
 
   return (
     <div className="flex flex-col">
@@ -424,10 +428,19 @@ function AddBankForm({ onSuccess }: { onSuccess: () => void }) {
             value={isResolving ? '' : accountName}
             readOnly
           />
-          {accountName && !isResolving && (
+          {accountName && !isResolving && !nameMismatch && (
             <p className="text-xs text-emerald-500 flex items-center gap-1 font-medium">
               <RiCheckLine /> Account verified
             </p>
+          )}
+          {accountName && !isResolving && nameMismatch && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-xs leading-relaxed">
+              <p className="text-red-600 dark:text-red-400 font-semibold">This account name doesn't match your profile</p>
+              <p className="text-foreground/60 mt-1">
+                For your security, you can only link a bank account in your own name. Use an account registered to the
+                same name as your NeedHomes profile, or contact support if your name is spelt differently at your bank.
+              </p>
+            </div>
           )}
         </div>
       </div>

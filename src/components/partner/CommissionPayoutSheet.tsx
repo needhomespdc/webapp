@@ -453,12 +453,23 @@ function PinBoxes({ value, onChange }: { value: string; onChange: (v: string) =>
     }
   };
 
+  // Pasting the whole PIN into any box spreads the digits across the boxes
+  const handlePaste = (i: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '');
+    if (!pasted) return;
+    e.preventDefault();
+    const next = (pasted.length >= 4 ? pasted : value.slice(0, i) + pasted).slice(0, 4);
+    onChange(next);
+    refs[Math.min(next.length, 3)].current?.focus();
+  };
+
   return (
     <div className="flex gap-3 justify-center">
       {[0, 1, 2, 3].map((i) => (
         <input
           key={i}
           ref={refs[i]}
+          onPaste={(e) => handlePaste(i, e)}
           type="password"
           inputMode="numeric"
           maxLength={1}

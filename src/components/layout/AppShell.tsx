@@ -12,6 +12,8 @@ export interface NavItem {
   to: string;
   icon: React.ReactNode;
   activeIcon?: React.ReactNode;
+  /** Sub-items shown under the entry (e.g. My Portfolio → Investments, Resell, Buy Back, Exit) */
+  children?: { label: string; to: string; end?: boolean }[];
 }
 
 export function AppShell({ navItems }: AppShellProps) {

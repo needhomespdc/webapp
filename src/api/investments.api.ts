@@ -17,6 +17,17 @@ export interface InstallmentEntry {
   type?: string;
 }
 
+/** One property value change (GET /investments/:id/property-growth-history). */
+export interface GrowthEvent {
+  id: string;
+  title?: string;
+  occurredAt: string;
+  previousValue: number;
+  newValue: number;
+  changeAmount: number;
+  changePercent: number;
+}
+
 export const investmentsApi = {
   checkout: (payload: {
     propertyId: string;
@@ -51,8 +62,16 @@ export const investmentsApi = {
     return [];
   },
 
+  getGrowthHistory: async (investmentId: string): Promise<GrowthEvent[]> => {
+    const raw = await api.get<unknown>(`/investments/${investmentId}/property-growth-history`);
+    if (Array.isArray(raw)) return raw as GrowthEvent[];
+    const wrapped = raw as Record<string, unknown>;
+    if (Array.isArray(wrapped.data)) return wrapped.data as GrowthEvent[];
+    return [];
+  },
+
   payInstallment: (
     investmentId: string,
-    payload: { transactionPin: string }
+    payload: { transactionPin: string; amount?: number }
   ): Promise<ApiResponse<unknown>> => api.post(`/investments/${investmentId}/payments`, payload),
 };

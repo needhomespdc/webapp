@@ -68,13 +68,22 @@ export function useInvestmentPayments(investmentId: string | undefined) {
   return { paymentEntries: query.data ?? [], isLoading: query.isLoading };
 }
 
+export function useInvestmentGrowthHistory(investmentId: string | undefined) {
+  const query = useQuery({
+    queryKey: ['investments', investmentId, 'growth-history'],
+    queryFn: () => investmentsApi.getGrowthHistory(investmentId!),
+    enabled: !!investmentId,
+  });
+  return { growthEvents: query.data ?? [], isLoading: query.isLoading };
+}
+
 export function usePayInstallment(investmentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { transactionPin: string }) =>
+    mutationFn: (payload: { transactionPin: string; amount?: number }) =>
       investmentsApi.payInstallment(investmentId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.investments.detail(investmentId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.wallet.me });
     },
   });

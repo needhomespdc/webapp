@@ -47,6 +47,11 @@ export const queryKeys = {
     list: ['exits', 'list'] as const,
     detail: (id: string) => ['exits', id] as const,
   },
+  buybacks: {
+    mine: ['buybacks', 'mine'] as const,
+    eligible: ['buybacks', 'eligible'] as const,
+    detail: (id: string) => ['buybacks', id] as const,
+  },
   resales: {
     eligible: ['resales', 'eligible'] as const,
     mine: ['resales', 'mine'] as const,

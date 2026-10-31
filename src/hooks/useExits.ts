@@ -53,6 +53,10 @@ export function useCancelExit() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: exitsApi.cancel,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.exits.list }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.exits.list });
+      queryClient.invalidateQueries({ queryKey: queryKeys.exits.eligible });
+      queryClient.invalidateQueries({ queryKey: queryKeys.investments.all });
+    },
   });
 }

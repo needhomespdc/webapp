@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { RiMenuLine, RiLogoutBoxLine, RiUserLine, RiArrowDownSLine, RiVerifiedBadgeLine, RiShieldCheckLine, RiCustomerService2Line, RiLinksLine } from 'react-icons/ri';
 import { HiOutlineBell } from 'react-icons/hi2';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -14,8 +14,8 @@ import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationContext } from '@/contexts/notification.context';
-import { cn } from '@/lib/utils';
 import type { NavItem } from './AppShell';
+import { NavMenuItem } from './NavMenuItem';
 
 interface HeaderProps {
   navItems: NavItem[];
@@ -164,28 +164,12 @@ export function Header({ navItems }: HeaderProps) {
 
             <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
               {menuItems.map((item) => (
-                <NavLink
+                <NavMenuItem
                   key={item.to}
-                  to={item.to}
-                  onClick={() => setMenuOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
-                      isActive
-                        ? 'bg-accent/15 text-accent'
-                        : 'text-foreground/70 hover:text-foreground hover:bg-foreground/5'
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span className="text-xl">
-                        {isActive && item.activeIcon ? item.activeIcon : item.icon}
-                      </span>
-                      <span>{item.label}</span>
-                    </>
-                  )}
-                </NavLink>
+                  item={item}
+                  onNavigate={() => setMenuOpen(false)}
+                  idleClass="text-foreground/70"
+                />
               ))}
 
               {/* Share nudge — partner only, KYC approved */}

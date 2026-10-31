@@ -26,6 +26,7 @@ const KYCPage = lazy(() => import('@/pages/investor/KYCPage'));
 const ExitsAndResales = lazy(() => import('@/pages/investor/ExitsAndResales'));
 const ExitsList = lazy(() => import('@/pages/investor/Exits'));
 const Resales = lazy(() => import('@/pages/investor/Resales'));
+const Buybacks = lazy(() => import('@/pages/investor/Buybacks'));
 const Favorites = lazy(() => import('@/pages/investor/Favorites'));
 
 // Partner pages
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
           { path: '/investor/exits-and-resales', element: withSuspense(ExitsAndResales) },
           { path: '/investor/exits', element: withSuspense(ExitsList) },
           { path: '/investor/resales', element: withSuspense(Resales) },
+          { path: '/investor/buybacks', element: withSuspense(Buybacks) },
           { path: '/investor/favorites', element: withSuspense(Favorites) },
           { path: '/investor/add-bank-account', element: withSuspense(AddBankAccount) },
           { path: '/investor/notifications', element: withSuspense(Notifications) },

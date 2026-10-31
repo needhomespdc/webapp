@@ -163,6 +163,7 @@ export default function SupportTicketDetail() {
               <p className="text-foreground/40 text-xs">
                 How can we help you today? Send us a message to get started.
               </p>
+              <p className="text-foreground/40 text-xs">We usually reply within an hour.</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -219,31 +220,35 @@ export default function SupportTicketDetail() {
           {isTicketClosed ? (
             <p className="text-center text-xs text-foreground/40 py-1">This conversation has been closed.</p>
           ) : (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => toast.error('Attachment coming soon')}
-                className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center text-foreground/50 hover:bg-foreground/15 hover:text-foreground/80 transition-colors shrink-0"
-              >
-                <RiImageLine className="h-5 w-5" />
-              </button>
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your message…"
-                disabled={isSending}
-                className="flex-1 rounded-full bg-foreground/8 border-foreground/10 px-5 h-10"
-              />
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={!input.trim() || isSending}
-                className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0 transition-opacity disabled:opacity-40 hover:bg-accent/90"
-              >
-                <RiSendPlaneFill className="h-5 w-5" />
-              </button>
-            </div>
+            <>
+              {/* Bug 009: set expectations on reply time */}
+              <p className="text-center text-[11px] text-foreground/40 pb-2">We usually reply within an hour.</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toast.error('Attachment coming soon')}
+                  className="w-10 h-10 rounded-full bg-foreground/8 flex items-center justify-center text-foreground/50 hover:bg-foreground/15 hover:text-foreground/80 transition-colors shrink-0"
+                >
+                  <RiImageLine className="h-5 w-5" />
+                </button>
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your message…"
+                  disabled={isSending}
+                  className="flex-1 rounded-full bg-foreground/8 border-foreground/10 px-5 h-10"
+                />
+                <button
+                  type="button"
+                  onClick={handleSend}
+                  disabled={!input.trim() || isSending}
+                  className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0 transition-opacity disabled:opacity-40 hover:bg-accent/90"
+                >
+                  <RiSendPlaneFill className="h-5 w-5" />
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
