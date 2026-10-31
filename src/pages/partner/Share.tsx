@@ -116,7 +116,7 @@ function GeneralShareModal({
           <a
             key={label}
             href={href(link, title)}
-            target="_blank"
+            target={label === 'Email' ? undefined : '_blank'}
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5"
             onClick={() => onOpenChange(false)}

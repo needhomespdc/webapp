@@ -133,7 +133,6 @@ export function LandBankingReserveSheet({
 }: LandBankingReserveSheetProps) {
   const isMobile = useMediaQuery('(max-width: 639px)');
   const queryClient = useQueryClient();
-  const plotsInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('plots');
   const [plots, setPlots] = useState(1);
@@ -171,7 +170,11 @@ export function LandBankingReserveSheet({
   // First payment = full plot price; survey fee is deferred across intervals
   const firstPayment = plotsTotal;
   const remainingAfterFirst = surveyFee;
-  const paymentPerInterval = payInterval > 0 ? Math.round(remainingAfterFirst / payInterval) : 0;
+  // Round down and let the last instalment absorb the remainder, so the schedule adds up exactly
+  // (e.g. ₦20,000 over 14 days = 13 × ₦1,428 + ₦1,436) and the last payment is never negative.
+  const paymentPerInterval = payInterval > 0 ? Math.floor(remainingAfterFirst / payInterval) : 0;
+  const finalPayment =
+    payInterval > 0 ? remainingAfterFirst - paymentPerInterval * (payInterval - 1) : 0;
   const chargedNow = payInstallmentally ? firstPayment : totalCommitment;
   const displayTotal = formatCurrency(chargedNow);
 
@@ -231,6 +234,14 @@ export function LandBankingReserveSheet({
   };
 
   const displayPlotsInput = plotsInput ? parseInt(plotsInput, 10).toLocaleString('en-NG') : '';
+  // Validate what's typed, not the last valid number, so "Buy" can't go ahead with an out-of-range entry.
+  const enteredPlots = parseInt(plotsInput, 10);
+  const plotsError =
+    isNaN(enteredPlots) || enteredPlots < 1
+      ? 'Enter at least 1 plot.'
+      : enteredPlots > availablePlots
+        ? `Only ${availablePlots} plot${availablePlots !== 1 ? 's' : ''} remaining. You can buy up to ${availablePlots}.`
+        : null;
 
   const handlePlotsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, '').replace(/\D/g, '');
@@ -325,10 +336,13 @@ export function LandBankingReserveSheet({
           <p className="text-foreground font-medium text-sm mb-2">
             How many plots do you want to reserve?
           </p>
-          <div className="flex items-center gap-3 bg-foreground/5 border border-foreground/15 rounded-2xl px-4 py-3">
+          <div className={cn(
+            'flex items-center gap-3 bg-foreground/5 border rounded-2xl px-4 py-3',
+            plotsError ? 'border-red-400' : 'border-foreground/15'
+          )}>
             <input
-              ref={plotsInputRef}
               type="text"
+              aria-invalid={!!plotsError}
               inputMode="numeric"
               value={displayPlotsInput}
               onChange={handlePlotsChange}
@@ -338,9 +352,15 @@ export function LandBankingReserveSheet({
             />
             <span className="text-foreground/40 text-sm font-medium shrink-0">plots</span>
           </div>
-          <p className="text-foreground/40 text-xs mt-1.5 px-1">
-            {availablePlots} plot{availablePlots !== 1 ? 's' : ''} available · min. 1
-          </p>
+          {plotsError ? (
+            <p className="text-red-400 text-xs mt-1.5 px-1">{plotsError}</p>
+          ) : (
+            <p className="text-foreground/40 text-xs mt-1.5 px-1">
+              {availablePlots === 1
+                ? '1 plot remaining. You can buy 1.'
+                : `${availablePlots} plots remaining. You can buy 1 to ${availablePlots}.`}
+            </p>
+          )}
         </div>
 
         {/* Reservation duration */}
@@ -427,12 +447,6 @@ export function LandBankingReserveSheet({
               <div className="bg-foreground/5 border border-foreground/15 rounded-2xl px-4 py-3">
                 <span className="text-foreground font-bold text-lg">{formatCurrency(firstPayment)}</span>
               </div>
-              <button
-                onClick={() => plotsInputRef.current?.focus()}
-                className="text-accent text-sm font-semibold mt-1.5 px-1"
-              >
-                Can I reserve more plots?
-              </button>
             </div>
 
             <div>
@@ -485,8 +499,12 @@ export function LandBankingReserveSheet({
                   After your first payment, you will pay{' '}
                   <span className="text-accent font-bold">
                     {formatCurrency(paymentPerInterval)} {frequency}
-                  </span>
-                  .
+                  </span>{' '}
+                  for {INTERVAL_LABEL[frequency](payInterval).toLowerCase()}
+                  {finalPayment !== paymentPerInterval && (
+                    <>, with a final payment of {formatCurrency(finalPayment)}</>
+                  )}
+                  , {formatCurrency(remainingAfterFirst)} in total.
                 </p>
               </div>
             )}
@@ -509,9 +527,9 @@ export function LandBankingReserveSheet({
         <Button
           className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl"
           onClick={() => setStep('terms')}
-          disabled={plots < 1 || plots > availablePlots}
+          disabled={!!plotsError || plots < 1 || plots > availablePlots}
         >
-          Buy now
+          Pay {displayTotal}
           <RiArrowRightSLine className="h-5 w-5 ml-1" />
         </Button>
       </div>

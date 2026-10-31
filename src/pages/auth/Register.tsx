@@ -733,8 +733,9 @@ export default function Register() {
         {/* Terms */}
         <p className="text-center text-xs text-foreground/40 mt-4 leading-relaxed">
           By creating an account, you agree to Needhomes{' '}
-          <Link to="/privacy-policy" className="text-accent hover:underline">Privacy Policy</Link>,{' '}
-          <Link to="/terms" className="text-accent hover:underline">Terms and Conditions</Link>
+          {/* The policy pages live on the marketing website (same links as the Profile page) */}
+          <a href="https://needhomespdc.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Privacy Policy</a>,{' '}
+          <a href="https://needhomespdc.com/terms" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Terms and Conditions</a>
         </p>
 
         {/* Login link */}

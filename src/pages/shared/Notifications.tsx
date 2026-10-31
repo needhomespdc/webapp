@@ -92,9 +92,11 @@ function NotificationDialog({
 export default function Notifications() {
   const [tab, setTab] = useState('all');
   const [selected, setSelected] = useState<Notification | null>(null);
-  const { notifications, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+  const { notifications, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, unreadCount: serverUnreadCount } =
     useNotificationsList(tab, 20);
-  const { markRead, markAllRead } = useNotifications();
+  const { markRead, markAllRead, unreadCount: feedUnreadCount } = useNotifications();
+  // Prefer the server's total (counts unread beyond the latest 20); fall back while it loads
+  const unreadCount = serverUnreadCount ?? feedUnreadCount;
   const sentinelRef = useInfiniteScroll({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
   const handleClick = (n: Notification) => {
@@ -170,6 +172,8 @@ export default function Notifications() {
           size="sm"
           className="text-accent"
           onClick={() => markAllRead()}
+          // Nothing to mark when there are no unread notifications
+          disabled={unreadCount === 0}
         >
           <RiCheckDoubleLine className="h-4 w-4 mr-1.5" />
           Mark all read

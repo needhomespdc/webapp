@@ -69,7 +69,12 @@ export function MarketplaceFilterSheet({ open, onOpenChange, value, onApply }: M
   const toggle = (list: string[], item: string) =>
     list.includes(item) ? list.filter((i) => i !== item) : [...list, item];
 
-  const handleClearAll = () => setDraft(EMPTY_FILTERS);
+  // Clearing takes effect immediately; no need to press Apply afterwards.
+  const handleClearAll = () => {
+    setDraft(EMPTY_FILTERS);
+    onApply(EMPTY_FILTERS);
+    onOpenChange(false);
+  };
 
   const handleApply = () => {
     onApply(draft);
@@ -86,7 +91,8 @@ export function MarketplaceFilterSheet({ open, onOpenChange, value, onApply }: M
         )}
       >
         <SheetHeader>
-          <div className="flex items-center justify-between">
+          {/* pr-10 keeps "Clear all" clear of the sheet's close X (absolute, top-right). */}
+          <div className="flex items-center justify-between pr-10">
             <SheetTitle>Filters</SheetTitle>
             <button onClick={handleClearAll} className="text-accent text-sm font-medium hover:underline">
               Clear all

@@ -16,7 +16,6 @@ import {
   RiImageLine,
   RiLockLine,
   RiBuildingLine,
-  RiArrowRightLine,
   RiWallet3Line,
   RiArrowUpLine,
   RiCustomerService2Line,
@@ -854,7 +853,6 @@ export default function KYCPage() {
                 <p className="text-foreground font-semibold text-sm">{title}</p>
                 <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">{desc}</p>
               </div>
-              <RiArrowRightLine className="h-4 w-4 text-foreground/30 shrink-0" />
             </div>
           ))}
         </div>

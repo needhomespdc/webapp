@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   RiBankLine,
   RiQuestionLine,
@@ -34,6 +34,7 @@ export default function AddBankAccount() {
   const { bankAccounts, isLoading } = useBankAccounts();
   const hasAccount = bankAccounts.length > 0;
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="space-y-5 w-full min-w-0">
@@ -108,7 +109,9 @@ export default function AddBankAccount() {
       </div>
 
       {/* Floating help button */}
-      <button className="fixed bottom-6 right-5 z-30 flex items-center gap-1.5 bg-accent text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-accent/90 transition-colors">
+      <button
+        onClick={() => navigate(location.pathname.startsWith('/partner') ? '/partner/support' : '/investor/support')}
+        className="fixed bottom-6 right-5 z-30 flex items-center gap-1.5 bg-accent text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-accent/90 transition-colors">
         <RiQuestionLine className="text-sm" />
         Help
       </button>

@@ -161,7 +161,8 @@ function ShareModal({
               <a
                 key={label}
                 href={href(url, title)}
-                target="_blank"
+                // mailto: must open in the same tab, or the browser shows a blank tab instead of the mail app.
+                target={label === 'Email' ? undefined : '_blank'}
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-1.5"
                 onClick={() => onOpenChange(false)}
