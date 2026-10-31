@@ -117,6 +117,10 @@ function DataCol({
 function InvestmentCard({ inv }: { inv: Investment }) {
   const modelBadgeCls = MODEL_BADGE[inv.type] ?? 'bg-foreground/30';
   const statusBadgeBg = STATUS_BADGE[inv.status] ?? 'bg-foreground/40';
+  // Only fractional holdings earn returns (payouts). The API sends totalReturns: 0 for outright,
+  // land banking and co-development (checked live 31 Oct 2026), so the Returns field is left out
+  // for those unless a value arrives.
+  const hasReturns = inv.type === 'fractional' || inv.totalReturns !== 0;
   const returnsClass =
     inv.totalReturns > 0 ? 'text-green-400' :
     inv.totalReturns < 0 ? 'text-red-400' :
@@ -216,7 +220,7 @@ function InvestmentCard({ inv }: { inv: Investment }) {
           <DataCol label="Units Owned" value={inv.unitsOwnedLabel} />
           <DataCol label="Invested Amount" value={formatCurrency(inv.totalInvested)} />
           <DataCol label="Current Value" value={formatCurrency(inv.currentValue)} valueClassName="text-accent" />
-          <DataCol label="Returns" value={returnsValue} valueClassName={returnsClass} />
+          {hasReturns && <DataCol label="Returns" value={returnsValue} valueClassName={returnsClass} />}
         </div>
         <RiArrowRightLine className="text-foreground/30 shrink-0 h-4 w-4" />
       </div>

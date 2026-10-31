@@ -144,6 +144,31 @@ function StatCell({ label, value, sub, subClass }: { label: string; value: strin
 
 // ─── Header card (model-specific layout) ──────────────────────────────────────
 
+// Link back to the listing, as fractional and save-to-own already have (DetailHeader).
+// The slug lives on the frozen property snapshot as `propertySlug`.
+const PROPERTY_LINK_TEXT: Partial<Record<InvestmentModelType, string>> = {
+  land_banking: 'text-orange-700',
+  outright: 'text-amber-700',
+  co_development: 'text-emerald-700',
+};
+
+function PropertyLink({ inv }: { inv: Investment }) {
+  const snap = (inv.snapshot ?? {}) as Record<string, unknown>;
+  const slug = [snap.slug, snap.propertySlug].find((v): v is string => typeof v === 'string' && !!v);
+  if (!slug) return null;
+  return (
+    <Link
+      to={`/investor/marketplace/${slug}`}
+      className={cn(
+        'inline-block mt-4 bg-white font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-white/90 transition-colors',
+        PROPERTY_LINK_TEXT[inv.type] ?? 'text-foreground',
+      )}
+    >
+      View Property details
+    </Link>
+  );
+}
+
 function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
   const type = inv.type;
 
@@ -197,6 +222,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
             <StatCell key={s.label} label={s.label} value={s.value} sub={s.sub} />
           ))}
         </div>
+        <PropertyLink inv={inv} />
       </div>
     );
   }
@@ -231,6 +257,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
             value={inv.maturityDate ? formatDate(inv.maturityDate, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
           />
         </div>
+        <PropertyLink inv={inv} />
       </div>
     );
   }
@@ -256,6 +283,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
             )}
           </div>
         </div>
+        <PropertyLink inv={inv} />
       </div>
     );
   }
