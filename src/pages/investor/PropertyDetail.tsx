@@ -560,9 +560,10 @@ export default function PropertyDetail() {
 
   useEffect(() => {
     const ref = searchParams.get('ref');
-    if (ref && property) {
+    const token = searchParams.get('t');
+    if ((ref || token) && property) {
       partnersApi.trackReferralEvent({
-        referralCode: ref,
+        ...(token ? { trackingToken: token } : { referralCode: ref! }),
         eventType: 'click',
         propertySlug: property.slug,
         propertyTitle: property.title,

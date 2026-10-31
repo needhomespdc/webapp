@@ -34,6 +34,8 @@ export const queryKeys = {
     commissionEntry: (id: string) => ['partner', 'commission-entry', id] as const,
     wallet: ['partner', 'wallet'] as const,
     properties: (page: number) => ['partner', 'properties', page] as const,
+    trackingToken: (slug: string) => ['partner', 'tracking-token', slug] as const,
+    commission: (slug: string) => ['partner', 'commission', slug] as const,
   },
   notifications: {
     // Polled flat list backing the header bell badge — distinct from `list`

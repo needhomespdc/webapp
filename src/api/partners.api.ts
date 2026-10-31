@@ -34,8 +34,15 @@ export const partnersApi = {
     transactionPin: string;
   }): Promise<ApiResponse<null>> => api.post('/partners/me/commission-wallet/payout', payload),
 
+  mintReferralTrackingToken: (
+    propertySlug?: string
+  ): Promise<{ trackingToken: string; expiresInHours: number }> =>
+    api.post('/partners/me/referral-tracking-tokens', propertySlug ? { propertySlug } : {}),
+
+  // Public endpoint: send the signed trackingToken when we have one, else the legacy referralCode.
   trackReferralEvent: (payload: {
-    referralCode: string;
+    trackingToken?: string;
+    referralCode?: string;
     eventType: string;
     propertySlug?: string;
     propertyTitle?: string;

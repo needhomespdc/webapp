@@ -15,6 +15,35 @@ export function usePromotableProperties(page = 1, limit = 10) {
   };
 }
 
+// GET /properties/by-slug has no commission fields; only the promotable-properties list carries
+// estimatedCommission and commissionRatePercent, so look the property up there (paging until found).
+export function usePromotableCommission(slug: string | undefined) {
+  const query = useQuery({
+    queryKey: queryKeys.partner.commission(slug ?? ''),
+    queryFn: async () => {
+      for (let page = 1; ; page++) {
+        const res = await partnersApi.getPromotableProperties(page, 50);
+        const match = res.data.find((p) => p.slug === slug);
+        if (match) {
+          return {
+            estimatedCommission: match.estimatedCommission,
+            commissionRatePercent: match.commissionRatePercent,
+          };
+        }
+        if (page >= (res.pagination?.totalPages ?? 1)) return null;
+      }
+    },
+    enabled: !!slug,
+    staleTime: 5 * 60_000,
+  });
+
+  return {
+    estimatedCommission: query.data?.estimatedCommission,
+    commissionRatePercent: query.data?.commissionRatePercent,
+    isLoading: query.isLoading,
+  };
+}
+
 export function useReferralAnalytics(period = '30d') {
   const query = useQuery({
     queryKey: queryKeys.partner.analytics(period),
@@ -22,6 +51,19 @@ export function useReferralAnalytics(period = '30d') {
   });
 
   return { analytics: query.data, isLoading: query.isLoading };
+}
+
+// Tokens live 72 hours; refresh well before that so shared links stay valid.
+export function useReferralTrackingToken(propertySlug: string, enabled = true) {
+  const query = useQuery({
+    queryKey: queryKeys.partner.trackingToken(propertySlug),
+    queryFn: () => partnersApi.mintReferralTrackingToken(propertySlug || undefined),
+    enabled,
+    staleTime: 12 * 60 * 60_000,
+    retry: false,
+  });
+
+  return { trackingToken: query.data?.trackingToken, isLoading: query.isLoading };
 }
 
 export function useCommissionWallet() {
