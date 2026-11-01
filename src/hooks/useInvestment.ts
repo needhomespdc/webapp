@@ -16,10 +16,11 @@ export function useInvestmentList(page = 1, limit = 10, status?: string) {
   };
 }
 
-export function useInvestmentListFeed(status?: string) {
+export function useInvestmentListFeed(status?: string, search = '') {
+  const term = search.trim();
   return useInfiniteQuery({
-    queryKey: queryKeys.investments.feed(status ?? 'all'),
-    queryFn: ({ pageParam }) => investmentsApi.list(pageParam as number, 10, status),
+    queryKey: queryKeys.investments.feed(status ?? 'all', term),
+    queryFn: ({ pageParam }) => investmentsApi.list(pageParam as number, 10, status, term),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const p = lastPage?.pagination;

@@ -40,8 +40,10 @@ function monthsBetween(a?: string, b?: string | null): string | undefined {
 export function FractionalHeader({ inv, statusChip }: { inv: Investment; statusChip: React.ReactNode }) {
   const fs = summaryOf(inv);
   const snap = snapshotOf(inv);
-  const propertyType = str(snap.propertyTypeLabel) ?? str(snap.propertyType);
-  const slotsAvailable = num(snap.inventoryAvailable) ?? num(snap.slotsAvailable);
+  // Property kind (Apartment, Land…) as on the property details page
+  const propertyType = inv.propertyKindLabel;
+  // Slots still left to buy on the property
+  const slotsAvailable = inv.inventoryAvailable;
   const slug = str(snap.slug) ?? str(snap.propertySlug);
   const start = str(fs.investmentWindowStart) ?? inv.startedAt;
   const end = str(fs.investmentDurationEnd) ?? inv.maturityDate;

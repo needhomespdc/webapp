@@ -78,18 +78,18 @@ export default function InvestorDashboard() {
         className="group relative block rounded-2xl overflow-hidden min-h-[160px] sm:min-h-[180px]"
       >
         <img
-          src="/resources/invest-hero-house.png"
+          src="/resources/invest-banner-estate.jpg"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+          className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-linear-to-r from-primary/95 via-primary/80 to-primary/30" />
         <div className="relative z-10 flex flex-col justify-center w-full h-full p-4 sm:p-6">
           <h2 className="text-white text-xl sm:text-2xl font-bold leading-tight">
-            Grow your wealth through real estate
+            Your smooth journey to property ownership
           </h2>
           <p className="text-white/70 text-sm mt-2">
-            Explore fractional ownership, land banking, and more — start with as little as
-            ₦50,000.
+            Choose the investment model that fits your goal. Be part of a smarter, reliable and
+            more inclusive real estate opportunity with as low as ₦100,000.
           </p>
           <span className="inline-flex items-center gap-2 bg-accent text-white text-sm font-bold px-5 py-2.5 rounded-xl mt-4 w-fit hover:bg-[#d45a1e] transition-colors">
             <RiLineChartLine className="h-4 w-4" />
@@ -287,7 +287,7 @@ export default function InvestorDashboard() {
               <p className="text-foreground/50 text-sm">No investments yet.</p>
               <Link to="/investor/marketplace">
                 <Button variant="default" size="sm" className="mt-3">
-                  Browse Marketplace
+                  Browse Property Hub
                 </Button>
               </Link>
             </div>

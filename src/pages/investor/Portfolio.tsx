@@ -7,28 +7,35 @@ import {
   RiEyeOffLine,
   RiMapPinLine,
   RiSortDesc,
+  RiSearchLine,
   RiTimeLine,
   RiCheckLine,
   RiArrowDownSLine,
-  RiPieChart2Line,
-  RiLineChartLine,
-  RiFlashlightLine,
-  RiCheckboxCircleLine,
+  // Only used by the commented-out Quick Overview card:
+  // RiPieChart2Line, RiLineChartLine, RiFlashlightLine, RiCheckboxCircleLine,
 } from 'react-icons/ri';
 import { usePortfolioPerformance, useInvestmentListFeed } from '@/hooks/useInvestment';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { formatCurrency, cn } from '@/lib/utils';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import type { Investment, PortfolioPerformance } from '@/types';
+import type { Investment } from '@/types'; // PortfolioPerformance — only for the commented-out Quick Overview
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -37,7 +44,8 @@ const PERIOD_OPTIONS = [
   { label: 'This Week', value: 'this_week' },
   { label: 'This month', value: 'this_month' },
   { label: 'Past 6 months', value: 'past_6_months' },
-  { label: 'This year', value: 'all_time' },
+  // Hidden until the backend supports period=all_time (it doesn't load yet)
+  // { label: 'This year', value: 'all_time' },
 ] as const;
 
 const SORT_OPTIONS = [
@@ -229,7 +237,9 @@ function InvestmentCard({ inv }: { inv: Investment }) {
 }
 
 // ─── Quick Overview sidebar ────────────────────────────────────────────────────
+// Removed from the design (1 Nov 2026), kept for reference.
 
+/*
 function QuickOverview({ perf, loading }: { perf: PortfolioPerformance | undefined; loading: boolean }) {
   const items = [
     {
@@ -282,6 +292,7 @@ function QuickOverview({ perf, loading }: { perf: PortfolioPerformance | undefin
     </div>
   );
 }
+*/
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -294,6 +305,8 @@ export default function Portfolio() {
   const [showValue, setShowValue] = useState(true);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebouncedValue(searchInput, 300).trim();
 
   const { performance: perf, isLoading: perfLoading } = usePortfolioPerformance(period);
   const {
@@ -302,7 +315,7 @@ export default function Portfolio() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInvestmentListFeed(tab === 'all' ? undefined : tab);
+  } = useInvestmentListFeed(tab === 'all' ? undefined : tab, search);
 
   const rawInvestments = useMemo(
     () => data?.pages.flatMap((p) => p.data ?? []) ?? [],
@@ -312,6 +325,19 @@ export default function Portfolio() {
   const filtered = useMemo(() => sortInvestments(rawInvestments, sort), [rawInvestments, sort]);
 
   const currentPeriodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? 'This month';
+
+  // Opens the bottom sheet on mobile; on desktop it's the dropdown's trigger
+  const periodButton = (
+    <button
+      type="button"
+      onClick={isMobile ? () => setPeriodOpen(true) : undefined}
+      className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
+    >
+      <RiTimeLine className="h-3.5 w-3.5" />
+      {currentPeriodLabel}
+      <RiArrowDownSLine className="h-3.5 w-3.5" />
+    </button>
+  );
   const currentSortLabel = SORT_OPTIONS.find((s) => s.value === sort)?.label ?? 'Recent';
 
   return (
@@ -322,8 +348,8 @@ export default function Portfolio() {
         <p className="text-foreground/50 text-sm mt-0.5">Track your investments and earnings</p>
       </div>
 
-      {/* Top cards — hero + performance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Top card — hero (full width now the performance card is out) */}
+      <div className="grid grid-cols-1 gap-3">
         {/* Hero — Total Portfolio Value */}
         <div className="relative rounded-2xl overflow-hidden bg-primary p-5 min-h-[170px] flex flex-col justify-between">
           <div className="flex flex-row justify-between">
@@ -349,32 +375,74 @@ export default function Portfolio() {
               </div>
             </div>
 
-            <img src="/resources/portfolio-hero.png" alt="portfolio" className="h-auto w-20" />
+            <div className="flex flex-col items-end gap-3">
+              {/* Period filter — bottom sheet on mobile, dropdown on larger screens */}
+              {isMobile ? (
+                periodButton
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>{periodButton}</DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {PERIOD_OPTIONS.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => setPeriod(opt.value)}
+                        className={cn('justify-between', period === opt.value && 'text-accent')}
+                      >
+                        {opt.label}
+                        {period === opt.value && <RiCheckLine className="h-4 w-4" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <img src="/resources/portfolio-hero.png" alt="portfolio" className="h-auto w-24 sm:w-32" />
+            </div>
           </div>
 
-          <div className="flex items-center mt-4 pt-4 border-t border-white/10">
-            {(
-              [
-                { label: 'Total Invested', amount: perf?.totalInvested ?? 0, currency: true },
-                { label: 'Total Returns', amount: perf?.returnsEarned ?? 0, currency: true },
-                { label: 'Active', amount: perf?.activeInvestments ?? 0, currency: false },
-              ] as const
-            ).map((stat, i) => (
-              <div key={stat.label} className={cn('flex-1 text-center', i !== 0 && 'border-l border-white/10')}>
-                <p className="text-white/50 text-[10px]">{stat.label}</p>
+          {/* Insights — invested + returns on the left, investment counts on the right */}
+          <div className="flex items-start justify-between gap-4 mt-4 pt-4 border-t border-white/10">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <p className="text-white/60 text-xs">Total Invested</p>
                 {perfLoading ? (
-                  <Skeleton className="h-3.5 w-10 mx-auto mt-1.5 bg-white/10" />
+                  <Skeleton className="h-4 w-24 bg-white/10" />
                 ) : (
-                  <p className="text-white text-xs font-bold mt-0.5">
-                    {stat.currency ? formatCurrency(stat.amount as number) : (stat.amount as number)}
-                  </p>
+                  <p className="text-white text-base font-bold">{formatCurrency(perf?.totalInvested ?? 0)}</p>
                 )}
               </div>
-            ))}
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <p className="text-green-400 text-xs">Returns</p>
+                {perfLoading ? (
+                  <Skeleton className="h-3.5 w-20 bg-white/10" />
+                ) : (
+                  <p className="text-white text-xs font-semibold">{formatCurrency(perf?.returnsEarned ?? 0)}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5 text-right shrink-0">
+              <div className="flex items-baseline justify-end gap-2">
+                <p className="text-white/60 text-xs">Total Investments</p>
+                {perfLoading ? (
+                  <Skeleton className="h-4 w-6 bg-white/10" />
+                ) : (
+                  <p className="text-white text-base font-bold">{perf?.totalInvestments ?? 0}</p>
+                )}
+              </div>
+              <div className="flex items-baseline justify-end gap-2">
+                <p className="text-green-400 text-xs">Active</p>
+                {perfLoading ? (
+                  <Skeleton className="h-3.5 w-5 bg-white/10" />
+                ) : (
+                  <p className="text-white text-xs font-semibold">{perf?.activeInvestments ?? 0}</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Portfolio Performance */}
+        {/* Portfolio Performance — removed from the design (1 Nov 2026), kept for reference
         <div className="rounded-2xl border border-foreground/10 bg-card p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-foreground text-sm font-semibold">Portfolio Performance</p>
@@ -425,6 +493,7 @@ export default function Portfolio() {
             </>
           )}
         </div>
+        */}
       </div>
 
       {/* Bottom — investments list + quick overview sidebar */}
@@ -432,11 +501,43 @@ export default function Portfolio() {
 
         {/* My Investments list */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <p className="text-foreground font-semibold">My Investments</p>
+            {/* Search — sent to the API as ?search= */}
+            <div className="relative w-full sm:w-96">
+              <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 h-4 w-4" />
+              <Input
+                type="search"
+                className="pl-9 h-9"
+                placeholder="Search by property name"
+                aria-label="Search investments"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Status filter tabs + sort */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 no-scrollbar [-webkit-overflow-scrolling:touch]">
+              {STATUS_TABS.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTab(t.value)}
+                  className={cn(
+                    'shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
+                    tab === t.value
+                      ? 'bg-accent/15 border-accent/40 text-accent'
+                      : 'bg-transparent border-foreground/10 text-foreground/60 hover:border-foreground/20'
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setSortOpen(true)}
-              className="flex items-center gap-1.5 text-foreground/60 text-sm hover:text-foreground transition-colors"
+              className="shrink-0 self-end sm:self-auto flex items-center gap-1.5 text-foreground/60 text-sm hover:text-foreground transition-colors"
             >
               <RiSortDesc className="h-4 w-4" />
               Sort by:&nbsp;<span className="text-accent font-medium">{currentSortLabel}</span>
@@ -444,29 +545,17 @@ export default function Portfolio() {
             </button>
           </div>
 
-          {/* Status filter tabs */}
-          <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 no-scrollbar mb-4 [-webkit-overflow-scrolling:touch]">
-            {STATUS_TABS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  'shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-all',
-                  tab === t.value
-                    ? 'bg-accent/15 border-accent/40 text-accent'
-                    : 'bg-transparent border-foreground/10 text-foreground/60 hover:border-foreground/20'
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
           {/* Investment cards */}
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
             </div>
+          ) : !filtered.length && search ? (
+            <EmptyState
+              icon={<RiSearchLine />}
+              title="No matching investments"
+              description={`Nothing in your portfolio matches "${search}".`}
+            />
           ) : !filtered.length ? (
             <EmptyState
               icon={<RiBriefcaseLine />}
@@ -474,7 +563,7 @@ export default function Portfolio() {
               description="Start investing in real estate to see your portfolio here."
               action={
                 <Link to="/investor/marketplace">
-                  <Button variant="default" size="sm">Browse Marketplace</Button>
+                  <Button variant="default" size="sm">Browse Property Hub</Button>
                 </Link>
               }
             />
@@ -499,15 +588,16 @@ export default function Portfolio() {
           )}
         </div>
 
-        {/* Quick Overview — desktop sidebar */}
+        {/* Quick Overview — removed from the design (1 Nov 2026), kept for reference
         <div className="hidden xl:block xl:w-64 shrink-0">
           <QuickOverview perf={perf} loading={perfLoading} />
         </div>
+        */}
       </div>
 
-      {/* Period filter sheet */}
+      {/* Period filter sheet — mobile only (desktop uses the dropdown on the value card) */}
       <Sheet open={periodOpen} onOpenChange={setPeriodOpen}>
-        <SheetContent side={isMobile ? 'bottom' : 'right'} className="pb-8">
+        <SheetContent side="bottom" className="pb-8">
           <SheetHeader>
             <SheetTitle>Filter by period</SheetTitle>
           </SheetHeader>

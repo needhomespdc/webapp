@@ -26,8 +26,9 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'co_development',
     title: 'Co-Development',
-    description: 'Partner with us to develop properties and share in the returns.',
-    tags: ['Partner', 'Build', 'Earn'],
+    description:
+      'Become a co-development partner from conception to completion without funding the entire project?',
+    tags: ['Build Together', 'Own Together', 'Grow Together'],
     icon: <RiToolsLine className="h-6 w-6" />,
     iconBg: 'bg-green-500/15',
     iconColor: 'text-green-400',
@@ -47,8 +48,8 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'land_banking',
     title: 'Land Banking',
-    description: 'Secure land in prime locations and watch your investment grow over time.',
-    tags: ['Secure', 'Appreciate', 'Profit'],
+    description: 'Secure land in prime locations and position yourself for long-term growth.',
+    tags: ['Secure', 'Appreciate', 'Grow'],
     icon: <RiMapPin2Line className="h-6 w-6" />,
     iconBg: 'bg-accent/15',
     iconColor: 'text-accent',

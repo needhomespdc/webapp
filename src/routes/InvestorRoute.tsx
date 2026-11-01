@@ -26,7 +26,7 @@ const investorNavItems = [
     activeIcon: <RiDashboardFill />,
   },
   {
-    label: 'Marketplace',
+    label: 'My Property Hub',
     to: '/investor/marketplace',
     icon: <HiOutlineBuildingOffice2 />,
     activeIcon: <HiBuildingOffice2 />,

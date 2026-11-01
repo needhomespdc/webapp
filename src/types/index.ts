@@ -261,6 +261,11 @@ export interface Investment {
   milestones?: InvestmentMilestone[];
   handoverDetails?: HandoverDetails;
   createdAt: string;
+  updatedAt?: string;
+  propertyKindLabel?: string;
+  /** Slots/units still available to buy on the property (detail response) */
+  inventoryAvailable?: number;
+  inventoryTotal?: number;
   // Extended detail-only fields returned by GET /investments/:id
   description?: string | null;
   aboutLabel?: string | null;

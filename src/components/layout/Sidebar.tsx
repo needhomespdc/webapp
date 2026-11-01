@@ -177,14 +177,14 @@ export function Sidebar({ navItems }: SidebarProps) {
                   onClick={() => navigate('/investor/marketplace')}
                   className="mt-3 w-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-xl py-2.5 transition-colors"
                 >
-                  Explore Marketplace
+                  Explore Property Hub
                 </button>
               </div>
               <img
-                src="/resources/invest-hero-house.png"
+                src="/resources/invest-banner-estate.jpg"
                 alt=""
                 aria-hidden
-                className="w-full object-cover"
+                className="w-full aspect-[3/2] object-cover object-center"
               />
             </div>
           )}

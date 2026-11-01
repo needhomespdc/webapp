@@ -11,8 +11,8 @@ const CARD = 'bg-card border border-foreground/5 rounded-3xl';
 const shortDate = (d: string) => formatDate(d, { day: 'numeric', month: 'short', year: 'numeric' });
 
 /**
- * One development stage as the design shows it. The API's milestone objects only promise
- * id, title, status and completedAt; progress, write-up and photos are read when present.
+ * One development stage, built from the investment's `milestones`
+ * (id, stepNumber, title, subtitle, status, targetDate, isCurrentStage).
  */
 interface Stage {
   id: string;
@@ -20,9 +20,17 @@ interface Stage {
   title: string;
   status: 'completed' | 'in_progress' | 'upcoming';
   percent: number | null;
-  description?: string;
-  images: string[];
-  completedAt?: string;
+  description: string;
+}
+
+interface ApiMilestone {
+  id: string;
+  stepNumber: number;
+  title: string;
+  subtitle: string;
+  status: string;
+  targetDate: string;
+  isCurrentStage: boolean;
 }
 
 const STAGE_STATUS: Record<Stage['status'], { label: string; cls: string }> = {
@@ -35,32 +43,22 @@ const STAGE_STATUS: Record<Stage['status'], { label: string; cls: string }> = {
 };
 
 function toStages(inv: Investment): Stage[] {
-  const raw = (inv.milestones ?? []) as unknown as Record<string, unknown>[];
-  return raw
-    .map((m, i) => {
-      const s = String(m.status ?? '').toLowerCase();
+  const milestones = (inv.milestones ?? []) as unknown as ApiMilestone[];
+  return milestones
+    .map((m) => {
       const status: Stage['status'] =
-        s === 'completed' ? 'completed' : s === 'in_progress' ? 'in_progress' : 'upcoming';
-      const given = m.progressPercent ?? m.percent ?? m.progress;
-      const percent =
-        typeof given === 'number' ? given : status === 'completed' ? 100 : status === 'upcoming' ? 0 : null;
-      const imgs = (m.imageUrls ?? m.images ?? m.media) as unknown;
-      const images = Array.isArray(imgs)
-        ? imgs.map((x) => (typeof x === 'string' ? x : (x as { url?: string })?.url)).filter((u): u is string => !!u)
-        : [];
+        m.status === 'completed' ? 'completed' : m.status === 'in_progress' ? 'in_progress' : 'upcoming';
       return {
-        id: String(m.milestoneId ?? m.id ?? i),
-        number: Number(m.stepNumber ?? i + 1),
-        title: String(m.title ?? `Stage ${i + 1}`),
+        id: m.id,
+        number: m.stepNumber,
+        title: m.title,
         status,
-        percent,
-        description: (m.description ?? m.subtitle) as string | undefined,
-        images,
-        completedAt: m.completedAt as string | undefined,
-        order: Number(m.sortOrder ?? m.stepNumber ?? i),
+        // No progress figure in the response: full when completed, empty when upcoming
+        percent: status === 'completed' ? 100 : status === 'upcoming' ? 0 : null,
+        description: m.subtitle,
       };
     })
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => a.number - b.number);
 }
 
 function StagePill({ status }: { status: Stage['status'] }) {
@@ -94,26 +92,6 @@ function StageDetail({ stage }: { stage: Stage }) {
       <StageBar percent={stage.percent} />
       {stage.description && (
         <p className="text-foreground/50 text-sm leading-relaxed mt-3 whitespace-pre-line">{stage.description}</p>
-      )}
-      {stage.images.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mt-3">
-          {stage.images.map((url) => (
-            <a
-              key={url}
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="block aspect-square rounded-2xl overflow-hidden"
-            >
-              <img src={url} alt={stage.title} className="w-full h-full object-cover" />
-            </a>
-          ))}
-        </div>
-      )}
-      {stage.status === 'completed' && stage.completedAt && (
-        <p className="text-green-600 dark:text-green-400 font-bold text-sm mt-3">
-          Completed on {shortDate(stage.completedAt)}
-        </p>
       )}
     </div>
   );

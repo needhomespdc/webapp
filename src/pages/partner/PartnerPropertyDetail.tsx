@@ -24,7 +24,7 @@ import {
   RiPhoneLine,
   RiFileCopy2Line,
 } from 'react-icons/ri';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, whatsappLink } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { usePropertyBySlug } from '@/hooks/useProperty';
 import { useFavoriteIds, useToggleFavorite } from '@/hooks/useFavorites';
@@ -701,9 +701,11 @@ export default function PartnerPropertyDetail() {
             <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
                 <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
-                <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
-                  {property.documents?.length ?? 0}
-                </span>
+                {(property.documents?.length ?? 0) > 0 && (
+                  <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
+                    {property.documents!.length}
+                  </span>
+                )}
               </div>
               {property.documents?.map((doc) => (
                 <a
@@ -754,13 +756,24 @@ export default function PartnerPropertyDetail() {
                   )}
                 </div>
                 {property.projectManagerContact && (
-                  <a
-                    href={`tel:${property.projectManagerContact}`}
-                    className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0"
-                    aria-label="Call property manager"
-                  >
-                    <RiPhoneLine className="h-5 w-5" />
-                  </a>
+                  <>
+                    <a
+                      href={whatsappLink(property.projectManagerContact)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+                      aria-label="WhatsApp project manager"
+                    >
+                      <img src="/resources/whatsapp.png" alt="" className="h-12 w-12" />
+                    </a>
+                    <a
+                      href={`tel:${property.projectManagerContact}`}
+                      className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0"
+                      aria-label="Call property manager"
+                    >
+                      <RiPhoneLine className="h-5 w-5" />
+                    </a>
+                  </>
                 )}
               </div>
             </div>
