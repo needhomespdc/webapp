@@ -35,7 +35,7 @@ import {
 } from 'react-icons/ri';
 import { useInvestmentDetail } from '@/hooks/useInvestment';
 import { investmentsApi } from '@/api/investments.api';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, whatsappLink } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -144,6 +144,15 @@ function StatCell({ label, value, sub, subClass }: { label: string; value: strin
 
 // ─── Header card (model-specific layout) ──────────────────────────────────────
 
+// Co-development, land banking and outright don't send currentValueChangePercent:
+// work it out from current value vs. amount invested. Other types keep the API's figure.
+function valueChangePercent(inv: Investment): number {
+  if (inv.type === 'co_development' || inv.type === 'land_banking' || inv.type === 'outright') {
+    return inv.totalInvested > 0 ? ((inv.currentValue - inv.totalInvested) / inv.totalInvested) * 100 : 0;
+  }
+  return inv.currentValueChangePercent ?? 0;
+}
+
 // Link back to the listing, as fractional and save-to-own already have (DetailHeader).
 // The slug lives on the frozen property snapshot as `propertySlug`.
 const PROPERTY_LINK_TEXT: Partial<Record<InvestmentModelType, string>> = {
@@ -183,11 +192,11 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
 
   // Co-Development: no thumbnail; 3×2 stat grid in card
   if (type === 'co_development') {
-    const changePercent = inv.currentValueChangePercent ?? 0;
+    const changePercent = valueChangePercent(inv);
     const stats = [
       {
         label: 'Project Progress',
-        value: inv.projectProgressPercent != null ? `${inv.projectProgressPercent}%` : (inv.progressLabel ?? '—'),
+        value: inv.progressLabel,
       },
       {
         label: 'Project End Date',
@@ -202,7 +211,10 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
         value: compactAmount(inv.currentValue),
         sub: `${changePercent.toFixed(1)}% Since Investment`,
       },
-      { label: 'Project Duration', value: inv.projectDurationLabel ?? '—' },
+      {
+        label: 'Project Duration',
+        value: (inv.snapshot as { config?: { projectDuration?: string } } | null | undefined)?.config?.projectDuration ?? '—',
+      },
       { label: 'Units', value: inv.unitsOwnedLabel },
     ];
 
@@ -254,7 +266,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
           <div className="w-px h-8 bg-white/15 shrink-0 mt-0.5" />
           <StatCell
             label="Maturity Date"
-            value={inv.maturityDate ? formatDate(inv.maturityDate, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+            value={inv.reservationEndsAt ? formatDate(inv.reservationEndsAt, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
           />
         </div>
         <PropertyLink inv={inv} />
@@ -278,9 +290,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
               <RiMapPinLine className="h-3 w-3 shrink-0" />
               {inv.location}
             </div>
-            {inv.ownershipLabel && (
-              <p className="text-white/80 text-xs font-semibold mt-1.5">{inv.ownershipLabel}</p>
-            )}
+            <p className="text-white/80 text-xs font-semibold mt-1.5">{inv.progressLabel}</p>
           </div>
         </div>
         <PropertyLink inv={inv} />
@@ -333,7 +343,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
 
 function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: ModelTheme; onPerfOpen: () => void }) {
   const type = inv.type;
-  const changePercent = inv.currentValueChangePercent ?? 0;
+  const changePercent = valueChangePercent(inv);
   const isPositive = changePercent >= 0;
 
   let leftLabel: string;
@@ -359,7 +369,7 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
     showRightChange = true;
   } else if (type === 'co_development') {
     leftLabel = 'Total Invested'; leftValue = inv.totalInvested;
-    rightLabel = 'Initial Property Value'; rightValue = inv.initialPropertyValue ?? inv.currentValue;
+    rightLabel = 'Initial Property Value'; rightValue = inv.currentValue;
     perfLink = 'View investment performance';
   } else if (type === 'fractional') {
     leftLabel = 'Current Value'; leftValue = inv.currentValue;
@@ -380,7 +390,7 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
           <p className="text-foreground/50 text-xs flex items-center gap-1">
             {leftLabel} <RiInformationLine className="h-3 w-3 shrink-0" />
           </p>
-          <p className="text-foreground font-bold text-xl mt-1 leading-tight truncate">{formatCurrency(leftValue)}</p>
+          <p className="text-foreground font-bold text-xl xl:text-base mt-1 leading-tight truncate">{formatCurrency(leftValue)}</p>
           {showLeftChange && (
             <p className={cn('text-xs mt-1 font-semibold', isPositive ? theme.accentText : 'text-red-400')}>
               {isPositive ? '↑' : '↓'} {Math.abs(changePercent).toFixed(1)}% Since investment
@@ -395,7 +405,7 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
           <p className="text-foreground/50 text-xs flex items-center gap-1">
             {rightLabel} <RiInformationLine className="h-3 w-3 shrink-0" />
           </p>
-          <p className="text-foreground font-bold text-xl mt-1 leading-tight truncate">{formatCurrency(rightValue)}</p>
+          <p className="text-foreground font-bold text-xl xl:text-base mt-1 leading-tight truncate">{formatCurrency(rightValue)}</p>
           {showRightChange && (
             <p className={cn('text-xs mt-1 font-semibold', isPositive ? theme.accentText : 'text-red-400')}>
               ({isPositive ? '+' : ''}{changePercent.toFixed(0)}%)
@@ -534,13 +544,24 @@ function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme
           )}
         </div>
         {inv.projectManagerContact && (
-          <a
-            href={`tel:${inv.projectManagerContact}`}
-            className={cn('w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0', theme.accentBg)}
-            aria-label="Call project manager"
-          >
-            <RiPhoneLine className="h-5 w-5" />
-          </a>
+          <>
+            <a
+              href={whatsappLink(inv.projectManagerContact)}
+              target="_blank"
+              rel="noreferrer"
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+              aria-label="WhatsApp project manager"
+            >
+              <img src="/resources/whatsapp.png" alt="" className="h-9 w-9" />
+            </a>
+            <a
+              href={`tel:${inv.projectManagerContact}`}
+              className={cn('w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0', theme.accentBg)}
+              aria-label="Call project manager"
+            >
+              <RiPhoneLine className="h-4 w-4" />
+            </a>
+          </>
         )}
       </div>
     </div>
@@ -549,21 +570,44 @@ function ProjectManagerCard({ inv, theme }: { inv: Investment; theme: ModelTheme
 
 // ─── Current Development Stage ────────────────────────────────────────────────
 
+type StageRow = { title: string; date?: string | null };
+
+// Current stage (isCurrentStage) + the one after it, from the investment's milestones (co-development)
+function developmentStageRows(inv: Investment): StageRow[] {
+  const ms = ((inv.milestones ?? []) as unknown as { stepNumber: number; title: string; targetDate: string; isCurrentStage: boolean }[])
+    .slice()
+    .sort((a, b) => a.stepNumber - b.stepNumber);
+  const idx = ms.findIndex((m) => m.isCurrentStage);
+  if (idx >= 0) return ms.slice(idx, idx + 2).map((m) => ({ title: m.title, date: m.targetDate }));
+  return inv.currentDevelopmentStageTitle
+    ? [{ title: inv.currentDevelopmentStageTitle, date: inv.currentDevelopmentStageDate }]
+    : [];
+}
+
 function DevelopmentStageSection({ inv, theme, onOpen }: { inv: Investment; theme: ModelTheme; onOpen: () => void }) {
+  const rows = developmentStageRows(inv);
+  if (!rows.length) return null;
+
   return (
     <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-      <h2 className="text-foreground font-bold text-sm mb-3">Current Development Stage</h2>
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-foreground font-semibold text-sm">{inv.currentDevelopmentStageTitle}</p>
-          {inv.currentDevelopmentStageDate && (
-            <p className="text-foreground/50 text-xs mt-0.5">
-              {formatDate(inv.currentDevelopmentStageDate, { day: 'numeric', month: 'short', year: 'numeric' })}
-            </p>
-          )}
-        </div>
-        <RiArrowRightSLine className="h-5 w-5 text-foreground/30 shrink-0" />
-      </div>
+      <h2 className="text-foreground font-bold text-sm mb-1">Current Development Stage</h2>
+      {rows.map((row, i) => (
+        <button
+          key={`${row.title}-${i}`}
+          onClick={onOpen}
+          className="w-full flex items-center justify-between gap-3 py-3 border-b border-foreground/10 text-left"
+        >
+          <div className="min-w-0">
+            <p className="text-foreground font-semibold text-sm">{row.title}</p>
+            {row.date && (
+              <p className="text-foreground/50 text-xs mt-0.5">
+                {formatDate(row.date, { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
+            )}
+          </div>
+          <RiArrowRightSLine className="h-5 w-5 text-foreground/30 shrink-0" />
+        </button>
+      ))}
       <button onClick={onOpen} className={cn('text-sm font-semibold mt-3', theme.accentText)}>
         View all development stages
       </button>
@@ -573,18 +617,46 @@ function DevelopmentStageSection({ inv, theme, onOpen }: { inv: Investment; them
 
 // ─── Investment Information ────────────────────────────────────────────────────
 
+type ApiPayment = { dueDate: string; status: string };
+
+// Co-development + land banking: derived from the payments schedule and checkout snapshot
+function paymentInfo(inv: Investment) {
+  const payments = (inv as unknown as { payments?: ApiPayment[] }).payments ?? [];
+  const unpaid = payments
+    .filter((p) => p.status !== 'paid')
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const checkout = (inv.snapshot as { checkout?: { initialPayment: number; totalCommitment: number } } | null | undefined)
+    ?.checkout;
+  const isFullPayment = checkout ? checkout.initialPayment >= checkout.totalCommitment : null;
+
+  return {
+    nextPaymentDate: unpaid[0]?.dueDate ?? null,
+    paymentPlan: isFullPayment == null ? null : isFullPayment ? 'Full Payment' : 'Installments',
+    remainingInstallments: isFullPayment === false ? String(unpaid.length) : null,
+  };
+}
+
 function InvestmentInfoSection({ inv }: { inv: Investment }) {
   const type = inv.type;
+  // Co-development + land banking read the schedule; the other types keep their own fields
+  const pay =
+    type === 'co_development' || type === 'land_banking'
+      ? paymentInfo(inv)
+      : {
+          nextPaymentDate: inv.nextPaymentDate ?? null,
+          paymentPlan: inv.paymentPlan ?? null,
+          remainingInstallments: inv.remainingInstallmentsLabel ?? null,
+        };
 
   // 2-col grid (label above, value below) for most models
   const gridItems = (() => {
     if (type === 'land_banking') {
       return [
         { label: 'Investment ID', value: inv.reference },
-        { label: 'Number of Plots', value: String(inv.numberOfPlots ?? inv.unitsOwnedLabel) },
+        { label: 'Number of Plots', value: inv.unitsOwnedLabel },
         { label: 'Investment Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
         { label: 'Plot Size', value: inv.plotSizeLabel ?? inv.plotSize ?? '—' },
-        { label: 'Payment Plan', value: inv.paymentPlan ?? '—' },
+        { label: 'Payment Plan', value: pay.paymentPlan ?? '—' },
         { label: 'Location', value: inv.location },
       ];
     }
@@ -595,12 +667,12 @@ function InvestmentInfoSection({ inv }: { inv: Investment }) {
         { label: 'Investment Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
         {
           label: 'Next Payment',
-          value: inv.nextPaymentDate
-            ? formatDate(inv.nextPaymentDate, { day: 'numeric', month: 'short', year: 'numeric' })
+          value: pay.nextPaymentDate
+            ? formatDate(pay.nextPaymentDate, { day: 'numeric', month: 'short', year: 'numeric' })
             : '—',
         },
-        { label: 'Payment Plan', value: inv.paymentPlan ?? '—' },
-        { label: 'Remaining Installments', value: inv.remainingInstallmentsLabel ?? '—' },
+        { label: 'Payment Plan', value: pay.paymentPlan ?? '—' },
+        { label: 'Remaining Installments', value: pay.remainingInstallments ?? '—' },
       ];
     }
     if (type === 'fractional') {
@@ -624,8 +696,8 @@ function InvestmentInfoSection({ inv }: { inv: Investment }) {
     { label: 'Purchase Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
     {
       label: 'Last Updated',
-      value: inv.lastUpdatedAt
-        ? formatDate(inv.lastUpdatedAt, { day: 'numeric', month: 'short', year: 'numeric' })
+      value: inv.updatedAt
+        ? formatDate(inv.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })
         : '—',
     },
   ] : null;
@@ -962,8 +1034,8 @@ export default function InvestmentDetail() {
         )}
       </div>
 
-      {/* Two-column layout: main content + sticky sidebar on xl */}
-      <div className="flex flex-col xl:flex-row gap-4 items-start">
+      {/* Two-column layout: main content + sticky sidebar on xl (2fr / 1fr) */}
+      <div className="flex flex-col xl:grid xl:grid-cols-[2fr_1fr] gap-4 items-start">
 
         {/* ── Main column ── */}
         <div className="w-full xl:flex-1 min-w-0 space-y-4">
@@ -977,7 +1049,7 @@ export default function InvestmentDetail() {
           )}
 
           {/* Development Stage — mobile only */}
-          {inv.currentDevelopmentStageTitle && (
+          {developmentStageRows(inv).length > 0 && (
             <div className="xl:hidden">
               <DevelopmentStageSection inv={inv} theme={theme} onOpen={() => setOpenSheet('milestones')} />
             </div>
@@ -999,6 +1071,13 @@ export default function InvestmentDetail() {
             </>
           ) : (
             <InvestmentInfoSection inv={inv} />
+          )}
+
+          {/* Development Stage — desktop, under Investment Information */}
+          {developmentStageRows(inv).length > 0 && (
+            <div className="hidden xl:block">
+              <DevelopmentStageSection inv={inv} theme={theme} onOpen={() => setOpenSheet('milestones')} />
+            </div>
           )}
 
           {/* Progress timeline (land_banking / fractional), under Investment Information */}
@@ -1030,17 +1109,13 @@ export default function InvestmentDetail() {
         </div>
 
         {/* ── Sidebar — desktop only ── */}
-        <div className="hidden xl:flex xl:w-72 shrink-0 flex-col gap-4 sticky top-20">
+        <div className="hidden xl:flex min-w-0 flex-col gap-4 sticky top-20">
           {isFractional ? (
             <FractionalSummaryCards inv={inv} />
           ) : isSaveToOwn ? (
             <SaveToOwnTotals inv={inv} onPayments={() => setOpenSheet('payments')} />
           ) : (
             <FinancialCard inv={inv} theme={theme} onPerfOpen={() => setOpenSheet('performance')} />
-          )}
-
-          {inv.currentDevelopmentStageTitle && (
-            <DevelopmentStageSection inv={inv} theme={theme} onOpen={() => setOpenSheet('milestones')} />
           )}
 
           {hasPM && (

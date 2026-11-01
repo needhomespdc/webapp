@@ -35,9 +35,10 @@ export const investmentsApi = {
     transactionPin: string;
   }): Promise<ApiResponse<Investment>> => api.post<ApiResponse<Investment>>('/investments', payload),
 
-  list: async (page = 1, limit = 10, status?: string): Promise<PaginatedResponse<Investment>> => {
+  list: async (page = 1, limit = 10, status?: string, search?: string): Promise<PaginatedResponse<Investment>> => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (status && status !== 'all') params.set('status', status);
+    if (search?.trim()) params.set('search', search.trim());
     const raw = await api.get<{ data: Investment[]; meta: PaginatedResponse<Investment>['pagination'] }>(`/investments/me?${params}`);
     return { data: raw.data, pagination: raw.meta };
   },

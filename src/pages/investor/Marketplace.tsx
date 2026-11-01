@@ -117,7 +117,7 @@ export default function Marketplace() {
   return (
     <div className="space-y-5 w-full min-w-0">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Marketplace</h1>
+        <h1 className="text-2xl font-bold text-foreground">Property Hub</h1>
         <p className="text-foreground/50 text-sm mt-1">Discover premium properties and opportunities.</p>
         <p className="text-foreground/50 text-sm mt-1">Invest with as little as <span className='text-accent'>₦50,000</span>.</p>
       </div>

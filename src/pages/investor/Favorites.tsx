@@ -52,7 +52,7 @@ export default function Favorites() {
           description="Save properties you're interested in to find them here later."
           action={
             <Link to="/investor/marketplace">
-              <Button variant="outline" size="sm">Browse Marketplace</Button>
+              <Button variant="outline" size="sm">Browse Property Hub</Button>
             </Link>
           }
         />

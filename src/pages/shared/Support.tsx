@@ -64,7 +64,7 @@ const HELP_OPTIONS: HelpOption[] = [
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
     // FAQs live on the marketing site (bug 012)
-    href: 'https://needhomespdc.com/',
+    href: 'https://needhomespdc.com/faq',
   },
   {
     key: 'kb',

@@ -218,7 +218,7 @@ function ResaleDetailBody({
             <DetailRow
               label={fin.listingFeeRate != null ? `Listing fee (${(fin.listingFeeRate * 100).toFixed(1)}%)` : 'Listing fee'}
               value={formatCurrency(fin.listingFee)}
-              info="Charged by NeedHomes for listing your holding on the marketplace."
+              info="Charged by NeedHomes for listing your holding on the Property Hub."
             />
             <DetailRow
               label={

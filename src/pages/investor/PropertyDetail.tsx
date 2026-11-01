@@ -30,7 +30,7 @@ import {
   RiMailFill,
 } from 'react-icons/ri';
 import { partnersApi } from '@/api/partners.api';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, whatsappLink } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { usePropertyBySlug } from '@/hooks/useProperty';
@@ -80,10 +80,10 @@ const MODEL_BADGE_COLOR: Record<string, string> = {
 // ─── Per-model CTA config ─────────────────────────────────────────────────────
 
 const MODEL_CTA: Record<string, { priceLabel: string; btnText: string; btnClass: string; unitLabel: string }> = {
-  co_development: { priceLabel: 'Price per Slot', btnText: 'Join Project', btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white', unitLabel: 'Slots' },
-  fractional: { priceLabel: 'Minimum Investment', btnText: 'Invest Now', btnClass: 'bg-violet-500 hover:bg-violet-600 text-white', unitLabel: 'Units' },
-  land_banking: { priceLabel: 'Minimum Plot Investment', btnText: 'Buy Now', btnClass: 'bg-accent hover:bg-accent/90 text-white', unitLabel: 'Plots' },
-  save_to_own: { priceLabel: 'Minimum First Payment', btnText: 'Save Now', btnClass: 'bg-blue-500 hover:bg-blue-600 text-white', unitLabel: 'Units' },
+  co_development: { priceLabel: 'Price per slot', btnText: 'Join Project', btnClass: 'bg-emerald-500 hover:bg-emerald-600 text-white', unitLabel: 'Slots' },
+  fractional: { priceLabel: 'Price per slot', btnText: 'Invest Now', btnClass: 'bg-violet-500 hover:bg-violet-600 text-white', unitLabel: 'Units' },
+  land_banking: { priceLabel: 'Price per plot', btnText: 'Buy Now', btnClass: 'bg-accent hover:bg-accent/90 text-white', unitLabel: 'Plots' },
+  save_to_own: { priceLabel: 'Price per plot', btnText: 'Save Now', btnClass: 'bg-blue-500 hover:bg-blue-600 text-white', unitLabel: 'Units' },
   outright: { priceLabel: 'Price per unit', btnText: 'Acquire Now', btnClass: 'bg-accent hover:bg-accent/90 text-white', unitLabel: 'Units' },
 };
 
@@ -216,7 +216,7 @@ function CoDevSection({ property, config }: { property: Property; config: Record
     <>
       <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
         <div className="px-4 py-3 border-b border-foreground/10">
-          <h2 className="text-foreground font-semibold text-sm">Co-Development Overview</h2>
+          <h2 className="text-foreground font-semibold text-sm">Overview</h2>
         </div>
         {duration && (
           <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
@@ -297,13 +297,13 @@ function FractionalSection({ config }: { config: Record<string, unknown> }) {
 // ─── Land Banking section ─────────────────────────────────────────────────────
 
 function LandBankingSection({ property, config }: { property: Property; config: Record<string, unknown> }) {
-  const pricePerPlot = (config.pricePerPlot as number | undefined) ?? property.totalPrice ?? property.minInvestment;
-  const hasBuyback = (config.hasBuyback ?? config.guaranteedExit) as boolean | undefined;
+  const pricePerPlot = config.pricePerPlot as number;
+  const hasBuyback = config.hasBuyBackOption as boolean | undefined;
 
   const rows: Array<{ label: string; value: string }> = [
     { label: 'Available Plots', value: String(property.inventoryAvailable) },
     { label: 'Price Per Plot', value: formatCurrency(pricePerPlot) },
-    ...(hasBuyback != null ? [{ label: 'Buy Back Option (Guaranteed Exit)', value: hasBuyback ? 'Yes' : 'No' }] : []),
+    ...(hasBuyback != null ? [{ label: 'Buy back option', value: hasBuyback ? 'Yes' : 'No' }] : []),
   ];
 
   return (
@@ -317,6 +317,42 @@ function LandBankingSection({ property, config }: { property: Property; config: 
           <span className="text-foreground font-medium">{row.value}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ─── Cost Breakdown (land banking + save-to-own) ─────────────────────────────
+
+function CostBreakdownSection({ priceLabel, price, property }: { priceLabel: string; price: number; property: Property }) {
+  const fees = property.managementFees?.items ?? [];
+  const feeTotal = property.managementFees?.total ?? 0;
+
+  return (
+    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-foreground/10">
+        <h2 className="text-foreground font-semibold text-sm">Cost Breakdown</h2>
+      </div>
+      <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
+        <span className="text-foreground/60">{priceLabel}</span>
+        <span className="text-foreground">{formatCurrency(price)}</span>
+      </div>
+      {fees.length > 0 && (
+        <>
+          <div className="px-4 py-2 text-sm font-medium text-foreground bg-foreground/5 border-b border-foreground/10">
+            Management fee
+          </div>
+          {fees.map((item) => (
+            <div key={item.label} className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
+              <span className="text-foreground/60">{item.label}</span>
+              <span className="text-foreground">{formatCurrency(item.amount)}</span>
+            </div>
+          ))}
+        </>
+      )}
+      <div className="flex items-center justify-between px-4 py-3 text-sm">
+        <span className="text-foreground font-semibold">Total purchase price</span>
+        <span className="text-foreground font-bold">{formatCurrency(price + feeTotal)}</span>
+      </div>
     </div>
   );
 }
@@ -384,9 +420,9 @@ function SaveToOwnSection({ property, config }: { property: Property; config: Re
 
 function FractionalInvestmentDetails({ property, config }: { property: Property; config: Record<string, unknown> }) {
   const rows: Array<{ label: string; value: string; bold?: boolean }> = [
-    { label: 'Total Shares', value: String(config.totalShares ?? '-') },
+    { label: 'Total Slots', value: String(config.totalShares ?? '-') },
     { label: 'Price Per Share', value: config.pricePerShare ? formatCurrency(config.pricePerShare as number) : '-' },
-    { label: 'Min. Shares', value: String(config.minShares ?? '1') },
+    { label: 'Minimum Slots to buy', value: String(config.minShares ?? '1') },
     ...(config.holdingPeriodEnd
       ? [{ label: 'Holding period ends', value: formatDate(config.holdingPeriodEnd as string) }]
       : []),
@@ -623,6 +659,9 @@ export default function PropertyDetail() {
     if (property.investmentModelType === 'co_development') {
       return (config.pricePerSlot as number | undefined) ?? property.minInvestment;
     }
+    if (property.investmentModelType === 'land_banking') {
+      return config.pricePerPlot as number;
+    }
     return property.totalPrice ?? property.minInvestment;
   })();
 
@@ -752,9 +791,9 @@ export default function PropertyDetail() {
         {/* ── Property Manager ────────────────────────────────────────────── */}
         {property.projectManagerName && (
           <div>
-            <p className="text-foreground font-semibold text-sm mb-2">Have questions about this property?</p>
+            <p className="text-foreground font-semibold text-sm mb-2">Have questions about this investment?</p>
             <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-              <p className="text-foreground/50 text-xs font-medium mb-3 uppercase tracking-wide">Property Manager</p>
+              <p className="text-foreground/50 text-xs font-medium mb-3 uppercase tracking-wide">Project Manager</p>
               <div className="flex items-center gap-3">
                 {property.projectManagerImageUrl ? (
                   <img
@@ -774,13 +813,24 @@ export default function PropertyDetail() {
                   )}
                 </div>
                 {property.projectManagerContact && (
-                  <a
-                    href={`tel:${property.projectManagerContact}`}
-                    className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0"
-                    aria-label="Call property manager"
-                  >
-                    <RiPhoneLine className="h-5 w-5" />
-                  </a>
+                  <>
+                    <a
+                      href={whatsappLink(property.projectManagerContact)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+                      aria-label="WhatsApp project manager"
+                    >
+                      <img src="/resources/whatsapp.png" alt="" className="h-12 w-12" />
+                    </a>
+                    <a
+                      href={`tel:${property.projectManagerContact}`}
+                      className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0"
+                      aria-label="Call project manager"
+                    >
+                      <RiPhoneLine className="h-5 w-5" />
+                    </a>
+                  </>
                 )}
               </div>
             </div>
@@ -817,13 +867,27 @@ export default function PropertyDetail() {
             <FractionalSection config={config} />
           )}
           {property.investmentModelType === 'land_banking' && (
-            <LandBankingSection property={property} config={config} />
+            <>
+              <LandBankingSection property={property} config={config} />
+              <CostBreakdownSection
+                priceLabel="Price per plot"
+                price={config.pricePerPlot as number}
+                property={property}
+              />
+            </>
           )}
           {property.investmentModelType === 'outright' && (
             <OutrightSection property={property} />
           )}
           {property.investmentModelType === 'save_to_own' && (
-            <SaveToOwnSection property={property} config={config} />
+            <>
+              <SaveToOwnSection property={property} config={config} />
+              <CostBreakdownSection
+                priceLabel="Price per plot"
+                price={config.propertyPrice as number}
+                property={property}
+              />
+            </>
           )}
 
           {/* ── Fractional Investment Details ───────────────────────────────── */}
@@ -832,10 +896,11 @@ export default function PropertyDetail() {
           )}
 
           {/* ── Management Fees ─────────────────────────────────────────────── */}
-          {(property.managementFees?.items.length ?? 0) > 0 && property.investmentModelType !== 'outright' && (
+          {(property.managementFees?.items.length ?? 0) > 0
+            && !['outright', 'land_banking', 'save_to_own'].includes(property.investmentModelType) && (
             <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
               <div className="px-4 py-3 border-b border-foreground/10">
-                <h2 className="text-foreground font-semibold text-sm">Management Fees</h2>
+                <h2 className="text-foreground font-semibold text-sm">Management fee</h2>
               </div>
               {property.managementFees!.items.map((item) => (
                 <div key={item.label} className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
@@ -844,7 +909,7 @@ export default function PropertyDetail() {
                 </div>
               ))}
               <div className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="text-foreground font-semibold">Total Management Fees</span>
+                <span className="text-foreground font-semibold">Total</span>
                 <span className="text-foreground font-bold">{formatCurrency(property.managementFees!.total)}</span>
               </div>
             </div>
@@ -855,9 +920,11 @@ export default function PropertyDetail() {
             <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
                 <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
-                <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
-                  {property.documents?.length ?? 0}
-                </span>
+                {(property.documents?.length ?? 0) > 0 && (
+                  <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
+                    {property.documents!.length}
+                  </span>
+                )}
               </div>
 
               {property.documents?.map((doc) => (

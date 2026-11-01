@@ -51,3 +51,10 @@ export function formatRelativeDate(dateString: string): string {
 export function formatPercent(value: number, decimals = 1): string {
   return `${value.toFixed(decimals)}%`;
 }
+
+/** wa.me chat link for a phone number; local Nigerian numbers (0803…) become 234803… */
+export function whatsappLink(phone: string): string {
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('0')) digits = `234${digits.slice(1)}`;
+  return `https://wa.me/${digits}`;
+}

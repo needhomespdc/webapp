@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import authApi from '@/api/auth.api';
+import { queryClient } from '@/lib/queryClient';
 import {
   setAccessToken,
   setRefreshToken,
@@ -105,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUnauthorizedHandler(() => {
       storeToken(null);
       setUser(null);
+      queryClient.clear();
     });
     return () => setUnauthorizedHandler(null);
   }, [storeToken]);
@@ -119,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshToken: refreshTokenFromResponse,
         user: loggedInUser,
       } = unwrapEnvelope<{ accessToken: string; refreshToken: string; user: User }>(res);
+      // Drop anything cached from a previous account before the new one loads
+      queryClient.clear();
       // "Remember me" keeps the session across tabs and browser restarts (see fetchClient.ts)
       setRefreshToken(refreshTokenFromResponse, rememberMe);
       storeToken(token);
@@ -136,6 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRefreshToken(null);
     storeToken(null);
     setUser(null);
+    // Wipe every cached query so the next account never sees this one's data
+    queryClient.clear();
   }, [storeToken]);
 
   const updateProfile = useCallback((data: Partial<User>) => {
