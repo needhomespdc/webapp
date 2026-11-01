@@ -44,9 +44,11 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'succes
 
 interface StatusBadgeProps {
   status: AnyStatus | string;
+  /** Overrides the display text (e.g. the API's statusLabel) while keeping the status colour */
+  label?: string;
 }
 
-export function StatusBadge({ status }: StatusBadgeProps) {
-  const config = statusConfig[status] ?? { label: status, variant: 'secondary' as const };
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+export function StatusBadge({ status, label }: StatusBadgeProps) {
+  const config = statusConfig[status] ?? statusConfig[status?.toLowerCase()] ?? { label: status, variant: 'secondary' as const };
+  return <Badge variant={config.variant}>{label || config.label}</Badge>;
 }

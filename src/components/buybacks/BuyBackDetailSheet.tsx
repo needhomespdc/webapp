@@ -23,7 +23,7 @@ const STATUS: Record<StatusKey, { label: string; pill: string; message?: string;
   pending: {
     label: 'Under review',
     pill: 'bg-foreground/10 text-foreground',
-    message: 'Your buy-back request is currently under review. We will notify you once it has been reviewed.',
+    message: 'Your buy back request is currently under review. We will notify you once it has been reviewed.',
     messageClass: 'text-foreground/50',
   },
   approved: { label: 'Approved', pill: 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300' },
@@ -98,7 +98,7 @@ function Body({ b, onClose }: { b: BuybackDetail; onClose: () => void }) {
           <div className="text-center text-red-600 dark:text-red-400 text-xs mt-3 leading-relaxed">
             <p className="uppercase">Reason:</p>
             <p className="mt-1">
-              {b.rejectionReason || 'Your buy-back request was not approved. Please contact the NeedHomes team for details.'}
+              {b.rejectionReason || 'Your buy back request was not approved. Please contact the NeedHomes team for details.'}
             </p>
           </div>
         ) : (
@@ -114,11 +114,11 @@ function Body({ b, onClose }: { b: BuybackDetail; onClose: () => void }) {
         {b.reference && <DetailRow label="Reference" value={b.reference} />}
         <DetailRow label="Investment type" value={typeLabel} />
         <DetailRow label="Quantity" value={plots(b).replace(/^\d+ p/, (m) => m.toUpperCase())} />
-        <DetailRow label="Proposed Buy-Back Price" value={formatCurrency(b.proposedPrice ?? price)} />
+        <DetailRow label="Proposed Buy Back Price" value={formatCurrency(b.proposedPrice ?? price)} />
         <DetailRow
           label={`Processing fee (${(feeRate * 100).toFixed(1)}%)`}
           value={formatCurrency(fee)}
-          info="Deducted from the agreed buy-back amount."
+          info="Deducted from the agreed buy back amount."
         />
         <DetailRow
           label="Amount to be paid"
@@ -132,25 +132,25 @@ function Body({ b, onClose }: { b: BuybackDetail; onClose: () => void }) {
           className="w-full h-12 rounded-2xl font-semibold border-red-500/40 text-red-600 dark:text-red-400 bg-transparent hover:bg-red-500/10 hover:text-red-600"
           onClick={() => setConfirmCancel(true)}
         >
-          Cancel buy-back request
+          Cancel buy back request
         </Button>
       )}
       <ConfirmModal
         open={confirmCancel}
         onOpenChange={setConfirmCancel}
-        title="Cancel this buy-back request?"
-        description="Your plots stay in your portfolio, and you can request a buy-back again later."
+        title="Cancel this buy back request?"
+        description="Your plots stay in your portfolio, and you can request a buy back again later."
         confirmLabel="Cancel request"
         variant="destructive"
         isLoading={cancelMutation.isPending}
         onConfirm={() =>
           cancelMutation.mutate(b.id, {
             onSuccess: () => {
-              toast.success('Buy-back request cancelled');
+              toast.success('Buy back request cancelled');
               setConfirmCancel(false);
               onClose();
             },
-            onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to cancel buy-back request'),
+            onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to cancel buy back request'),
           })
         }
       />
@@ -182,7 +182,7 @@ export function BuyBackDetailSheet({ buybackId, onClose }: Props) {
           <Body b={buyback} onClose={onClose} />
         ) : (
           <div className="flex items-center justify-center h-40">
-            <p className="text-foreground/40 text-sm">Could not load buy-back details.</p>
+            <p className="text-foreground/40 text-sm">Could not load buy back details.</p>
           </div>
         )}
       </div>

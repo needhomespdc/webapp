@@ -16,7 +16,7 @@ import { ExitDetailSheet } from '@/components/exits/ExitDetailSheet';
 import { ExitInvestmentSheet } from '@/components/exits/ExitInvestmentSheet';
 import { SelectInvestmentSheet } from '@/components/investment/SelectInvestmentSheet';
 import { useInvestmentDetail } from '@/hooks/useInvestment';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,6 +28,9 @@ import type { ExitRequest } from '@/types';
 // ─── Exit card ─────────────────────────────────────────────────────────────────
 
 function ExitCard({ exit, onClick }: { exit: ExitRequest; onClick: () => void }) {
+  const title = exit.propertyTitle || exit.title || 'Investment';
+  const rawDate = exit.listedAt || exit.requestedAt;
+  const date = exit.dateLabel || (rawDate ? formatDate(rawDate) : '—');
   return (
     <div
       onClick={onClick}
@@ -37,22 +40,22 @@ function ExitCard({ exit, onClick }: { exit: ExitRequest; onClick: () => void })
       <div className="flex items-start gap-3">
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
           {exit.propertyImageUrl
-            ? <img src={exit.propertyImageUrl} alt={exit.title} className="w-full h-full object-cover" />
+            ? <img src={exit.propertyImageUrl} alt={title} className="w-full h-full object-cover" />
             : <div className="w-full h-full flex items-center justify-center"><RiBuildingLine className="h-6 w-6 text-foreground/30" /></div>
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-foreground font-bold text-sm line-clamp-1">{exit.title}</p>
+          <p className="text-foreground font-bold text-sm line-clamp-1">{title}</p>
           <p className="text-foreground/50 text-xs mt-0.5">{exit.location}</p>
         </div>
-        <StatusBadge status={exit.status} />
+        <StatusBadge status={exit.status} label={exit.statusLabel} />
       </div>
 
       {/* 3-col grid — labels/values come from server */}
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
           <p className="text-foreground/40">Date</p>
-          <p className="text-foreground font-medium mt-0.5">{exit.dateLabel}</p>
+          <p className="text-foreground font-medium mt-0.5">{date}</p>
         </div>
         <div>
           <p className="text-foreground/40">Shares</p>
@@ -80,6 +83,25 @@ function ExitCard({ exit, onClick }: { exit: ExitRequest; onClick: () => void })
 
 const TAB_LABELS: Record<string, string> = { all: 'All Exits', pending: 'Pending', cancelled: 'Cancelled' };
 
+const STATUS_ALIASES: Record<string, 'pending' | 'completed' | 'cancelled'> = {
+  pending: 'pending',
+  under_review: 'pending',
+  in_review: 'pending',
+  processing: 'pending',
+  approved: 'pending',
+  completed: 'completed',
+  paid: 'completed',
+  exited: 'completed',
+  cancelled: 'cancelled',
+  canceled: 'cancelled',
+  rejected: 'cancelled',
+  declined: 'cancelled',
+};
+
+function exitStatusKey(raw: string | undefined) {
+  return STATUS_ALIASES[(raw ?? '').toLowerCase().replace(/[\s-]+/g, '_')];
+}
+
 export default function Exits() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
@@ -97,14 +119,18 @@ export default function Exits() {
   const { eligible, isLoading: eligibleLoading } = useEligibleExits();
   const { exits, summary, isLoading } = useExitList('history');
 
-  const totalExits = summary.completedCount + summary.pendingCount;
-  const pendingCount = summary.pendingCount;
+  // The API's summary often comes back empty and its statuses vary in case, so count from the
+  // exits themselves and only trust the summary when it reports more
+  const counted = { pending: 0, completed: 0, cancelled: 0 };
+  exits.forEach((e) => {
+    const key = exitStatusKey(e.status);
+    if (key) counted[key] += 1;
+  });
+  const pendingCount = Math.max(summary.pendingCount ?? 0, counted.pending);
+  const completedCount = Math.max(summary.completedCount ?? 0, counted.completed);
+  const totalExits = pendingCount + completedCount;
 
-  const filtered = (() => {
-    if (tab === 'pending') return exits.filter((e) => e.status === 'pending' || e.status === 'under_review');
-    if (tab === 'cancelled') return exits.filter((e) => e.status === 'cancelled' || e.status === 'rejected');
-    return exits;
-  })();
+  const filtered = tab === 'all' ? exits : exits.filter((e) => exitStatusKey(e.status) === tab);
 
   return (
     <div className="space-y-5 sm:pb-24">

@@ -2,7 +2,7 @@ import { api } from '@/lib/fetchClient';
 import type { ApiResponse, EligibleInvestment } from '@/types';
 
 /**
- * A buy-back request as the detail screen needs it. The API docs don't pin the
+ * A buy back request as the detail screen needs it. The API docs don't pin the
  * response shape down yet, so every field past id and status is optional.
  */
 export interface BuybackDetail {
@@ -12,6 +12,7 @@ export interface BuybackDetail {
   reference?: string;
   investmentId?: string;
   title?: string;
+  propertyTitle?: string;
   propertyImageUrl?: string | null;
   investmentType?: string;
   investmentTypeLabel?: string;
@@ -23,6 +24,8 @@ export interface BuybackDetail {
   processingFeeRate?: number;
   netPayout?: number;
   rejectionReason?: string | null;
+  listedAt?: string;
+  requestedAt?: string;
   createdAt?: string;
 }
 
@@ -43,10 +46,10 @@ export const buybacksApi = {
   create: (payload: { investmentId: string; quantity: number; proposedPrice: number }) =>
     api.post<ApiResponse<BuybackDetail>>('/buybacks', payload).then((r) => unwrap<BuybackDetail>(r)),
 
-  /** GET /buybacks/eligible: holdings the investor can request a buy-back on (same shape as exits/resales) */
+  /** GET /buybacks/eligible: holdings the investor can request a buy back on (same shape as exits/resales) */
   getEligible: () => api.get<unknown>('/buybacks/eligible').then((raw) => unwrapList<EligibleInvestment>(raw)),
 
-  /** GET /buybacks/me: the investor's buy-back requests (list shape undocumented; accepts a bare array or { data }) */
+  /** GET /buybacks/me: the investor's buy back requests (list shape undocumented; accepts a bare array or { data }) */
   listMine: (filter?: 'pending' | 'history' | 'cancelled') =>
     api.get<unknown>(`/buybacks/me${filter ? `?filter=${filter}` : ''}`).then((raw) => unwrapList<BuybackDetail>(raw)),
 

@@ -23,7 +23,7 @@ import { BuyBackDetailSheet } from '@/components/buybacks/BuyBackDetailSheet';
 import { buybackAmounts, buybackStatusKey, type StatusKey } from '@/components/buybacks/buyback';
 import type { BuybackDetail } from '@/api/buybacks.api';
 
-// Buy-back requests, laid out like the Exits page
+// Buy back requests, laid out like the Exits page
 
 const BADGE: Record<StatusKey, { label: string; cls: string }> = {
   pending: { label: 'Under review', cls: 'bg-amber-500' },
@@ -34,9 +34,13 @@ const BADGE: Record<StatusKey, { label: string; cls: string }> = {
 
 function BuybackCard({ b, onClick }: { b: BuybackDetail; onClick: () => void }) {
   const key = buybackStatusKey(b.status);
-  const badge = key ? BADGE[key] : { label: b.statusLabel ?? b.status, cls: 'bg-foreground/40' };
+  const badge = key
+    ? { ...BADGE[key], label: b.statusLabel || BADGE[key].label }
+    : { label: b.statusLabel ?? b.status, cls: 'bg-foreground/40' };
   const qty = b.quantity ?? 1;
   const location = (b as { location?: string }).location;
+  const title = b.propertyTitle || b.title || 'Buy back request';
+  const date = b.listedAt || b.requestedAt || b.createdAt;
 
   return (
     <div
@@ -46,7 +50,7 @@ function BuybackCard({ b, onClick }: { b: BuybackDetail; onClick: () => void }) 
       <div className="flex items-start gap-3">
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-foreground/10">
           {b.propertyImageUrl ? (
-            <img src={b.propertyImageUrl} alt={b.title ?? 'Property'} className="w-full h-full object-cover" />
+            <img src={b.propertyImageUrl} alt={title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <RiBuildingLine className="h-6 w-6 text-foreground/30" />
@@ -54,7 +58,7 @@ function BuybackCard({ b, onClick }: { b: BuybackDetail; onClick: () => void }) 
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-foreground font-bold text-sm line-clamp-1">{b.title ?? 'Buy-back request'}</p>
+          <p className="text-foreground font-bold text-sm line-clamp-1">{title}</p>
           {location && <p className="text-foreground/50 text-xs mt-0.5">{location}</p>}
         </div>
         <span className={cn('text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0', badge.cls)}>
@@ -65,7 +69,7 @@ function BuybackCard({ b, onClick }: { b: BuybackDetail; onClick: () => void }) 
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
           <p className="text-foreground/40">Date</p>
-          <p className="text-foreground font-medium mt-0.5">{b.createdAt ? formatDate(b.createdAt) : '—'}</p>
+          <p className="text-foreground font-medium mt-0.5">{date ? formatDate(date) : '—'}</p>
         </div>
         <div>
           <p className="text-foreground/40">Quantity</p>
@@ -93,7 +97,7 @@ export default function Buybacks() {
   const [tab, setTab] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectOpen, setSelectOpen] = useState(false);
-  // New request: pick an investment, then the same buy-back modal as the investment page
+  // New request: pick an investment, then the same buy back modal as the investment page
   const [chosenId, setChosenId] = useState<string | null>(null);
   const { investment } = useInvestmentDetail(chosenId ?? undefined);
   const buybackInv = chosenId && investment?.id === chosenId ? investment : null;
@@ -120,7 +124,7 @@ export default function Buybacks() {
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-foreground">Buy Backs</h1>
-          <p className="text-foreground/50 text-xs mt-0.5">Request a buy-back on your land or view your buy-back history.</p>
+          <p className="text-foreground/50 text-xs mt-0.5">Request a buy back on your land or view your buy back history.</p>
         </div>
       </div>
 
@@ -188,8 +192,8 @@ export default function Buybacks() {
           ) : !filtered.length ? (
             <EmptyState
               icon={<RiBook2Line />}
-              title="No buy-back requests"
-              description="Your buy-back requests will appear here."
+              title="No buy back requests"
+              description="Your buy back requests will appear here."
             />
           ) : (
             <div className="space-y-3">
@@ -209,7 +213,7 @@ export default function Buybacks() {
         <div className="flex-1 min-w-0">
           <p className="text-foreground font-semibold text-sm">About Buy Backs</p>
           <p className="text-foreground/50 text-xs mt-0.5 leading-relaxed">
-            The NeedHomes team will contact you to agree on the buy-back price. A processing fee is deducted, and the
+            The NeedHomes team will contact you to agree on the buy back price. A processing fee is deducted, and the
             agreed amount is paid within 48 hours of approval.
           </p>
         </div>
@@ -228,10 +232,10 @@ export default function Buybacks() {
         open={selectOpen && !buybackInv}
         onOpenChange={(v) => (v ? setSelectOpen(true) : closeFlow())}
         title="Buy Back"
-        description="Choose a land banking investment that's eligible for a buy-back."
+        description="Choose a land banking investment that's eligible for a buy back."
         eligible={eligible}
         isLoading={eligibleLoading}
-        emptyText="Land banking investments become eligible for buy-back once fully paid."
+        emptyText="Land banking investments become eligible for buy back once fully paid."
         onContinue={setChosenId}
         continuing={!!chosenId && !buybackInv}
       />

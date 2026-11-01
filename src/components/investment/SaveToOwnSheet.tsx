@@ -38,8 +38,8 @@ const TERMS_SECTIONS = [
     body: "Investors may list their savings position for resale only after full payment has been completed, through the platform's Secondary Market. Partial resale of an in-progress Save-to-Own plan is not permitted.",
   },
   {
-    title: '3. Buy-Back Option',
-    body: 'A buy-back option allows an investor to sell their investment back to the company under applicable buy-back terms. Contact support to initiate a buy-back request.',
+    title: '3. Buy Back Option',
+    body: 'A buy back option allows an investor to sell their investment back to the company under applicable buy back terms. Contact support to initiate a buy back request.',
   },
   {
     title: '4. Payment Duration Extension',

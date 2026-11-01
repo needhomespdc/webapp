@@ -48,8 +48,8 @@ const TERMS_SECTIONS = [
     body: 'Upon successful payment, your property documents will be issued immediately as proof of your investment.',
   },
   {
-    title: '3. Buy-Back Option',
-    body: 'A buy-back option allows an investor to sell their investment back to the company under the applicable buy-back terms and conditions.',
+    title: '3. Buy Back Option',
+    body: 'A buy back option allows an investor to sell their investment back to the company under the applicable buy back terms and conditions.',
   },
   {
     title: '4. Property Resale',

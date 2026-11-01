@@ -169,7 +169,7 @@ function LandBankingSection({ property, config }: { property: Property; config: 
   const rows: Array<{ label: string; value: string }> = [
     { label: 'Available Plots', value: String(property.inventoryAvailable) },
     { label: 'Price Per Plot', value: formatCurrency(pricePerPlot) },
-    ...(hasBuyback != null ? [{ label: 'Buy-Back Option (Guaranteed Exit)', value: hasBuyback ? 'Yes' : 'No' }] : []),
+    ...(hasBuyback != null ? [{ label: 'Buy Back Option (Guaranteed Exit)', value: hasBuyback ? 'Yes' : 'No' }] : []),
   ];
 
   return (
