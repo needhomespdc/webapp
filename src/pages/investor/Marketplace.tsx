@@ -119,7 +119,7 @@ export default function Marketplace() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Property Hub</h1>
         <p className="text-foreground/50 text-sm mt-1">Discover premium properties and opportunities.</p>
-        <p className="text-foreground/50 text-sm mt-1">Invest with as little as <span className='text-accent'>₦50,000</span>.</p>
+        <p className="text-foreground/50 text-sm mt-1">Invest with as little as <span className='text-accent'>₦100,000</span>.</p>
       </div>
 
       {/* Search + filter trigger */}

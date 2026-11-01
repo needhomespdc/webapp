@@ -38,7 +38,8 @@ function BuybackCard({ b, onClick }: { b: BuybackDetail; onClick: () => void }) 
     ? { ...BADGE[key], label: b.statusLabel || BADGE[key].label }
     : { label: b.statusLabel ?? b.status, cls: 'bg-foreground/40' };
   const qty = b.quantity ?? 1;
-  const location = (b as { location?: string }).location;
+  // Location under the title, as on the Exits list
+  const location = b.propertyLocation;
   const title = b.propertyTitle || b.title || 'Buy back request';
   const date = b.listedAt || b.requestedAt || b.createdAt;
 

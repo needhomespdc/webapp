@@ -23,16 +23,6 @@ interface Stage {
   description: string;
 }
 
-interface ApiMilestone {
-  id: string;
-  stepNumber: number;
-  title: string;
-  subtitle: string;
-  status: string;
-  targetDate: string;
-  isCurrentStage: boolean;
-}
-
 const STAGE_STATUS: Record<Stage['status'], { label: string; cls: string }> = {
   completed: { label: 'Completed', cls: 'bg-green-600 text-white' },
   in_progress: {
@@ -43,7 +33,7 @@ const STAGE_STATUS: Record<Stage['status'], { label: string; cls: string }> = {
 };
 
 function toStages(inv: Investment): Stage[] {
-  const milestones = (inv.milestones ?? []) as unknown as ApiMilestone[];
+  const milestones = inv.milestones ?? [];
   return milestones
     .map((m) => {
       const status: Stage['status'] =
@@ -55,7 +45,7 @@ function toStages(inv: Investment): Stage[] {
         status,
         // No progress figure in the response: full when completed, empty when upcoming
         percent: status === 'completed' ? 100 : status === 'upcoming' ? 0 : null,
-        description: m.subtitle,
+        description: m.subtitle ?? '',
       };
     })
     .sort((a, b) => a.number - b.number);
@@ -119,7 +109,7 @@ export function MilestonesSheet({ inv, isOpen, onClose }: Props) {
   const stats = [
     {
       label: 'Project Progress',
-      value: inv.projectProgressPercent != null ? `${inv.projectProgressPercent}%` : inv.progressLabel || '—',
+      value: inv.progressLabel || '—',
     },
     {
       label: 'Exp. Completion',
@@ -226,7 +216,7 @@ export function MilestonesSheet({ inv, isOpen, onClose }: Props) {
                 <RiInformationLine className="h-5 w-5 text-foreground shrink-0" />
                 <p className="text-foreground font-bold text-sm">
                   Last Updated
-                  {inv.lastUpdatedAt ? `: ${shortDate(inv.lastUpdatedAt)}` : ''}
+                  {inv.updatedAt ? `: ${shortDate(inv.updatedAt)}` : ''}
                 </p>
               </div>
               <p className="text-foreground/50 text-xs leading-relaxed mt-3">

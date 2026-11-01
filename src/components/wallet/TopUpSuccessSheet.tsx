@@ -1,12 +1,12 @@
 import Lottie from '@/components/shared/LazyLottie';
 import successAnimation from '@/assets/lottie/success-confetti.json';
-import { RiFileTextLine, RiDownload2Line } from 'react-icons/ri';
+import { RiFileTextLine, RiEyeLine } from 'react-icons/ri';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/useToast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, openFileInNewTab } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { walletApi } from '@/api/wallet.api';
 import type { Transaction } from '@/types';
@@ -22,15 +22,9 @@ export function TopUpSuccessSheet({ open, onOpenChange, transaction: tx }: TopUp
 
   const handleDownloadReceipt = async () => {
     try {
-      const blob = await walletApi.getTransactionReceipt(tx.id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${tx.reference}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await openFileInNewTab(() => walletApi.getTransactionReceipt(tx.id), `receipt-${tx.reference}.pdf`);
     } catch {
-      toast.error('Could not download receipt. Try again later.');
+      toast.error('Could not open receipt. Try again later.');
     }
   };
 
@@ -117,8 +111,8 @@ export function TopUpSuccessSheet({ open, onOpenChange, transaction: tx }: TopUp
           className="w-full h-12 rounded-xl flex items-center justify-center gap-2"
           onClick={handleDownloadReceipt}
         >
-          <RiDownload2Line className="h-4 w-4" />
-          Download Receipt
+          <RiEyeLine className="h-4 w-4" />
+          View Receipt
         </Button>
       </div>
     </div>

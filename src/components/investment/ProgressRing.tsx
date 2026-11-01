@@ -5,9 +5,9 @@ export function ProgressRing({ percent, size = 'sm', caption }: { percent: numbe
   const p = Math.max(0, Math.min(100, percent));
   const lg = size === 'lg';
   return (
-    <div className={lg ? 'relative w-48 h-48 shrink-0' : 'relative w-20 h-20 shrink-0'}>
+    <div className={lg ? 'relative w-48 h-48 shrink-0' : 'relative w-24 h-24 shrink-0'}>
       <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
-        <circle cx="32" cy="32" r={r} fill="none" strokeWidth="9" className="stroke-orange-200 dark:stroke-orange-500/25" />
+        <circle cx="32" cy="32" r={r} fill="none" strokeWidth="9" className="stroke-orange-300 dark:stroke-orange-500/25" />
         <circle
           cx="32"
           cy="32"
@@ -21,7 +21,7 @@ export function ProgressRing({ percent, size = 'sm', caption }: { percent: numbe
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={lg ? 'text-foreground font-bold text-4xl' : 'text-orange-500 font-bold text-base'}>
+        <span className={lg ? 'text-foreground font-bold text-4xl' : 'text-orange-500 font-bold text-xl'}>
           {Math.round(p)}%
         </span>
         {caption && <span className="text-orange-500 text-xs">{caption}</span>}

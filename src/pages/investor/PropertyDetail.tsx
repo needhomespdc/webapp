@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  RiArrowLeftLine,
+  RiFullscreenLine,
+  RiHistoryLine,
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiMapPinLine,
   RiHeartLine,
   RiHeartFill,
   RiShareLine,
-  RiCheckLine,
   RiAlertLine,
   RiDownload2Line,
   RiFileTextLine,
@@ -19,7 +19,6 @@ import {
   RiFlashlightLine,
   RiStarLine,
   RiLineChartLine,
-  RiImageLine,
   RiCloseLine,
   RiPhoneLine,
   RiFileCopy2Line,
@@ -69,12 +68,13 @@ const HIGHLIGHT_ICON: Record<string, ReactNode> = {
 
 // ─── Model badge colors (matches PropertyCard) ────────────────────────────────
 
+// Banner pills (Figma, Nov 2026): solid colour per model, outright in white
 const MODEL_BADGE_COLOR: Record<string, string> = {
-  co_development: 'bg-emerald-500',
-  fractional: 'bg-violet-500',
-  land_banking: 'bg-orange-500',
-  save_to_own: 'bg-blue-500',
-  outright: 'bg-amber-500',
+  co_development: 'bg-emerald-700 text-white',
+  fractional: 'bg-violet-800 text-white',
+  land_banking: 'bg-orange-600 text-white',
+  save_to_own: 'bg-blue-600 text-white',
+  outright: 'bg-white text-foreground',
 };
 
 // ─── Per-model CTA config ─────────────────────────────────────────────────────
@@ -191,261 +191,211 @@ function ShareModal({
   );
 }
 
-// ─── Milestone status badge ───────────────────────────────────────────────────
+// ─── Shared section pieces (Figma, Nov 2026) ─────────────────────────────────
 
-function MilestoneBadge({ status }: { status: string }) {
-  if (status === 'completed')
-    return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-600/15 text-green-400">Completed</span>;
-  if (status === 'in_progress')
-    return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/15 text-accent">In Progress</span>;
-  return <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-foreground/10 text-foreground/40">Upcoming</span>;
+const CARD = 'bg-card rounded-3xl p-4';
+type InfoRow = { label: string; value: ReactNode };
+
+const longDate = (d: string) => formatDate(d, { day: 'numeric', month: 'long', year: 'numeric' });
+const monthName = (d: string) => formatDate(d, { month: 'long' });
+
+/** "19 days" under two months, else "4 months" */
+function durationLabel(from?: unknown, to?: unknown): string | undefined {
+  if (typeof from !== 'string' || typeof to !== 'string') return undefined;
+  const days = Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000);
+  if (days <= 0) return undefined;
+  if (days < 60) return `${days} day${days !== 1 ? 's' : ''}`;
+  const months = Math.round(days / 30.44);
+  return `${months} month${months !== 1 ? 's' : ''}`;
 }
 
-// ─── Co-Development section ───────────────────────────────────────────────────
-
-function CoDevSection({ property, config }: { property: Property; config: Record<string, unknown> }) {
-  const slots = config.coDeveloperSlots as number | undefined;
-  const remaining = config.slotsRemaining as number | undefined;
-  const duration = config.projectDuration as string | undefined;
-  const paymentModel = config.paymentModel as string | undefined;
-  const milestones = (property.milestones ?? [])
-    .slice()
-    .sort((a: Milestone, b: Milestone) => (a.sortOrder ?? a.order ?? 0) - (b.sortOrder ?? b.order ?? 0));
-
+/** Titled card of label | value rows with dividers */
+function InfoCard({ title, rows }: { title: string; rows: InfoRow[] }) {
+  if (!rows.length) return null;
   return (
-    <>
-      <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-foreground/10">
-          <h2 className="text-foreground font-semibold text-sm">Overview</h2>
-        </div>
-        {duration && (
-          <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-            <span className="text-foreground/60">Project Duration</span>
-            <span className="text-foreground font-medium">{duration}</span>
-          </div>
-        )}
-        {slots != null && remaining != null && (
-          <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-            <span className="text-foreground/60">Co-Developer Slots</span>
-            <span className="text-foreground font-medium">{remaining} of {slots} left</span>
-          </div>
-        )}
-        {paymentModel && (
-          <div className="flex items-center justify-between px-4 py-3 text-sm">
-            <span className="text-foreground/60">Payment Model</span>
-            <span className="text-foreground font-semibold tracking-wide text-xs uppercase">{paymentModel}</span>
-          </div>
-        )}
-      </div>
-
-      {milestones.length > 0 && (
-        <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-          <h2 className="text-foreground font-semibold text-sm mb-0.5">Development Milestones</h2>
-          <p className="text-foreground/40 text-xs mb-4">Your contribution is released per milestone as construction progresses.</p>
-          <div className="space-y-4">
-            {milestones?.filter((ms) => ms.isCurrentStage).map((ms) => (
-              <div key={ms.id} className="flex items-start gap-3">
-                <div className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold',
-                  ms.status === 'completed' ? 'bg-green-600/20 text-green-400'
-                    : ms.status === 'in_progress' ? 'bg-accent/20 text-accent'
-                      : 'bg-foreground/10 text-foreground/40'
-                )}>
-                  {ms.status === 'completed'
-                    ? <RiCheckLine className="h-4 w-4" />
-                    : (ms.stepNumber ?? (ms.sortOrder != null ? ms.sortOrder + 1 : 1))}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-foreground text-sm font-medium">{ms.title}</p>
-                    <MilestoneBadge status={ms.status} />
-                  </div>
-                  {ms.subtitle && <p className="text-foreground/50 text-xs mt-0.5 line-clamp-2">{ms.subtitle}</p>}
-                  {ms.targetDate && <p className="text-foreground/40 text-xs mt-1">{formatDate(ms.targetDate)}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-// ─── Fractional section ───────────────────────────────────────────────────────
-
-function FractionalSection({ config }: { config: Record<string, unknown> }) {
-  const items = [
-    { label: 'Expected return', value: (config.expectedRoiRange ?? config.expectedReturn) as string | undefined },
-    { label: 'Investment ends', value: config.maturityDate ? formatDate(config.maturityDate as string) : config.investmentEnds as string | undefined },
-  ].filter((i): i is { label: string; value: string } => !!i.value);
-
-  if (!items.length) return null;
-
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {items.map((item) => (
-        <div key={item.label} className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-3">
-          <p className="text-foreground/50 text-xs mb-1">{item.label}</p>
-          <p className="text-accent font-semibold text-sm">{item.value}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Land Banking section ─────────────────────────────────────────────────────
-
-function LandBankingSection({ property, config }: { property: Property; config: Record<string, unknown> }) {
-  const pricePerPlot = config.pricePerPlot as number;
-  const hasBuyback = config.hasBuyBackOption as boolean | undefined;
-
-  const rows: Array<{ label: string; value: string }> = [
-    { label: 'Available Plots', value: String(property.inventoryAvailable) },
-    { label: 'Price Per Plot', value: formatCurrency(pricePerPlot) },
-    ...(hasBuyback != null ? [{ label: 'Buy back option', value: hasBuyback ? 'Yes' : 'No' }] : []),
-  ];
-
-  return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
+    <div className={CARD}>
+      <h2 className="text-foreground font-semibold text-sm mb-1">{title}</h2>
       {rows.map((row, i) => (
         <div
           key={row.label}
-          className={cn('flex items-center justify-between px-4 py-3 text-sm', i < rows.length - 1 && 'border-b border-foreground/10')}
+          className={cn(
+            'flex items-center justify-between gap-4 py-3 text-sm',
+            i < rows.length - 1 && 'border-b border-foreground/10',
+          )}
         >
-          <span className="text-foreground/60">{row.label}</span>
-          <span className="text-foreground font-medium">{row.value}</span>
+          <span className="text-foreground/50">{row.label}</span>
+          <span className="text-foreground text-right">{row.value}</span>
         </div>
       ))}
     </div>
   );
 }
 
-// ─── Cost Breakdown (land banking + save-to-own) ─────────────────────────────
-
-function CostBreakdownSection({ priceLabel, price, property }: { priceLabel: string; price: number; property: Property }) {
+/** Base price, the management fee items, then the total in an orange row */
+function CostBreakdown({
+  property,
+  priceLabel,
+  price,
+  title = 'Cost Breakdown',
+  totalLabel = 'Total purchase price',
+}: {
+  property: Property;
+  priceLabel: string;
+  price: number;
+  title?: string | null;
+  totalLabel?: string;
+}) {
   const fees = property.managementFees?.items ?? [];
-  const feeTotal = property.managementFees?.total ?? 0;
-
   return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-foreground/10">
-        <h2 className="text-foreground font-semibold text-sm">Cost Breakdown</h2>
-      </div>
-      <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-        <span className="text-foreground/60">{priceLabel}</span>
+    <div className={CARD}>
+      {title && <h2 className="text-foreground font-semibold text-sm mb-1">{title}</h2>}
+      <div className="flex items-center justify-between gap-4 py-3 text-sm">
+        <span className="text-foreground/50">{priceLabel}</span>
         <span className="text-foreground">{formatCurrency(price)}</span>
       </div>
       {fees.length > 0 && (
         <>
-          <div className="px-4 py-2 text-sm font-medium text-foreground bg-foreground/5 border-b border-foreground/10">
-            Management fee
-          </div>
-          {fees.map((item) => (
-            <div key={item.label} className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-              <span className="text-foreground/60">{item.label}</span>
+          <p className="bg-foreground/[0.07] rounded-lg px-2 py-1.5 text-sm font-medium text-foreground">Management fee</p>
+          {fees.map((item, i) => (
+            <div
+              key={item.label}
+              className={cn(
+                'flex items-center justify-between gap-4 py-3 text-sm',
+                i < fees.length - 1 && 'border-b border-foreground/10',
+              )}
+            >
+              <span className="text-foreground/50">{item.label}</span>
               <span className="text-foreground">{formatCurrency(item.amount)}</span>
             </div>
           ))}
         </>
       )}
-      <div className="flex items-center justify-between px-4 py-3 text-sm">
-        <span className="text-foreground font-semibold">Total purchase price</span>
-        <span className="text-foreground font-bold">{formatCurrency(price + feeTotal)}</span>
+      <div className="flex items-center justify-between gap-4 mt-1 bg-accent/10 rounded-lg px-2 py-2 text-sm">
+        <span className="text-foreground font-medium">{totalLabel}</span>
+        <span className="text-accent font-bold text-base">{formatCurrency(purchaseTotal(property, price))}</span>
       </div>
     </div>
   );
 }
 
-// ─── Outright section ─────────────────────────────────────────────────────────
+/** Price plus the property's management fees */
+function purchaseTotal(property: Property, price: number) {
+  return price + (property.managementFees?.total ?? 0);
+}
 
-function OutrightSection({ property }: { property: Property }) {
-  const unitPrice = property.minInvestment;
-  const mgmtFee = property.managementFees?.total ?? 0;
-  const totalPurchase = unitPrice + mgmtFee;
+// ─── Per-model detail cards ───────────────────────────────────────────────────
+// Land size per plot is on the designs but the backend doesn't store it yet (Nov 2026).
 
+function LandBankingOverview({ property, config }: { property: Property; config: Record<string, unknown> }) {
+  const hasBuyback = config.hasBuyBackOption as boolean | undefined;
   return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-foreground/10">
-        <h2 className="text-foreground font-semibold text-sm">Cost Breakdown</h2>
-      </div>
-      <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-        <span className="text-foreground/60">Property cost (per unit)</span>
-        <span className="text-foreground">{formatCurrency(unitPrice)}</span>
-      </div>
-      {mgmtFee > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-          <span className="text-foreground/60">Management fee</span>
-          <span className="text-foreground">{formatCurrency(mgmtFee)}</span>
-        </div>
-      )}
-      <div className="flex items-center justify-between px-4 py-3 text-sm">
-        <span className="text-foreground font-semibold">Total purchase price</span>
-        <span className="text-foreground font-bold">{formatCurrency(totalPurchase)}</span>
-      </div>
-    </div>
+    <InfoCard
+      title="Overview"
+      rows={[
+        { label: 'Available Plots', value: String(property.inventoryAvailable) },
+        { label: 'Price Per Plot', value: formatCurrency(config.pricePerPlot as number) },
+        ...(hasBuyback != null ? [{ label: 'Buy-back option', value: hasBuyback ? 'Yes' : 'No' }] : []),
+      ]}
+    />
   );
 }
 
-// ─── Save-to-Own section ──────────────────────────────────────────────────────
-
-function SaveToOwnSection({ property, config }: { property: Property; config: Record<string, unknown> }) {
-  const totalPrice = property.totalPrice ?? property.minInvestment;
-  const minPct = config.minInstallmentPercent as number | undefined;
-  const minFirstPayment = minPct ? (totalPrice * minPct) / 100 : property.minInvestment;
-  const tenure = config.tenureMonths as number | undefined;
-
-  const rows: Array<{ label: string; value: string }> = [
-    { label: 'Property Value', value: formatCurrency(totalPrice) },
-    { label: 'Minimum First Payment', value: formatCurrency(minFirstPayment) },
-    ...(tenure ? [{ label: 'Tenure', value: `${tenure} months` }] : []),
-  ];
-
-  return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-foreground/10">
-        <h2 className="text-foreground font-semibold text-sm">Savings Plan</h2>
-      </div>
-      {rows.map((row, i) => (
-        <div key={row.label} className={cn('flex items-center justify-between px-4 py-3 text-sm', i < rows.length - 1 && 'border-b border-foreground/10')}>
-          <span className="text-foreground/60">{row.label}</span>
-          <span className="text-foreground font-medium">{row.value}</span>
-        </div>
-      ))}
-    </div>
-  );
+function SaveToOwnOverview({ property }: { property: Property }) {
+  return <InfoCard title="Overview" rows={[{ label: 'Available Plots', value: String(property.inventoryAvailable) }]} />;
 }
 
-// ─── Fractional Investment Details ───────────────────────────────────────────
+function CoDevOverview({ property, config }: { property: Property; config: Record<string, unknown> }) {
+  const start = property.projectStartDate ?? (config.projectStartDate as string | undefined);
+  const end = property.projectEndDate ?? (config.projectEndDate as string | undefined);
+  const rows: InfoRow[] = [];
+  if (start && end) rows.push({ label: 'Investment Duration', value: `${longDate(start)} - ${longDate(end)}` });
+  if (end) rows.push({ label: 'Project End Date', value: longDate(end) });
+  if (config.projectDuration) rows.push({ label: 'Project Duration', value: String(config.projectDuration) });
+  if (config.coDeveloperSlots != null) rows.push({ label: 'Co-Developer Slots', value: String(config.coDeveloperSlots) });
+  return <InfoCard title="Overview" rows={rows} />;
+}
 
-function FractionalInvestmentDetails({ property, config }: { property: Property; config: Record<string, unknown> }) {
-  const rows: Array<{ label: string; value: string; bold?: boolean }> = [
-    { label: 'Total Slots', value: String(config.totalShares ?? '-') },
-    { label: 'Price Per Share', value: config.pricePerShare ? formatCurrency(config.pricePerShare as number) : '-' },
-    { label: 'Minimum Slots to buy', value: String(config.minShares ?? '1') },
-    ...(config.holdingPeriodEnd
-      ? [{ label: 'Holding period ends', value: formatDate(config.holdingPeriodEnd as string) }]
-      : []),
-    { label: 'Status', value: property.statusLabel ?? property.status, bold: true },
-  ];
+function FractionalDetails({
+  property,
+  config,
+  isWindowClosed,
+}: {
+  property: Property;
+  config: Record<string, unknown>;
+  isWindowClosed: boolean;
+}) {
+  const start = (config.investmentWindowStart as string | undefined) ?? property.investmentWindowStart ?? undefined;
+  const end = (config.investmentWindowEnd as string | undefined) ?? property.investmentWindowEnd ?? undefined;
+  const notOpenYet = !!start && Date.now() < new Date(start).getTime();
+  const holding = durationLabel(end, config.holdingPeriodEnd);
+  const duration = durationLabel(end, config.investmentDurationEnd);
 
+  const rows: InfoRow[] = [{ label: 'Total Slots', value: String(config.totalShares ?? property.inventoryTotal) }];
+  if (start && end) {
+    rows.push({ label: 'Offer Period', value: `${monthName(start)} - ${monthName(end)}` });
+    rows.push({ label: 'Investment Window', value: `${longDate(start)} - ${longDate(end)}` });
+  }
+  if (holding) rows.push({ label: 'Holding Period', value: holding });
+  if (duration) rows.push({ label: 'Investment Duration', value: duration });
+  rows.push({ label: 'Minimum Slots to buy', value: String(config.minShares ?? 1) });
+  rows.push({
+    label: 'Status',
+    value: (
+      <span
+        className={cn(
+          'text-xs px-2 py-0.5 rounded-md',
+          isWindowClosed
+            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+            : notOpenYet
+              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              : 'bg-green-500/10 text-green-600 dark:text-green-400',
+        )}
+      >
+        {isWindowClosed ? 'Window Closed' : notOpenYet ? 'Opening Soon' : 'Window Open'}
+      </span>
+    ),
+  });
+  return <InfoCard title="Investment Details" rows={rows} />;
+}
+
+/** Co-development: the current stage, on the right under the video */
+function DevelopmentMilestones({ milestones }: { milestones: Milestone[] }) {
+  const sorted = [...milestones].sort(
+    (a, b) => (a.stepNumber ?? a.sortOrder ?? a.order ?? 0) - (b.stepNumber ?? b.sortOrder ?? b.order ?? 0),
+  );
+  const current = sorted.find((m) => m.isCurrentStage) ?? sorted.find((m) => m.status !== 'completed');
+  if (!current) return null;
+  const statusLabel = current.status === 'completed' ? 'Completed' : current.status === 'in_progress' ? 'In progress' : 'Upcoming';
   return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-foreground/10">
-        <h2 className="text-foreground font-semibold text-sm">Investment Details</h2>
-      </div>
-      {rows.map((row, i) => (
-        <div
-          key={row.label}
-          className={cn(
-            'flex items-center justify-between px-4 py-3 text-sm',
-            i < rows.length - 1 && 'border-b border-foreground/10'
+    <div className={CARD}>
+      <h2 className="text-foreground font-semibold text-sm">Development Milestones</h2>
+      <p className="text-foreground/50 text-xs mt-1">
+        Your contribution is released per milestone as construction progresses.
+      </p>
+      <div className="flex items-start gap-2 mt-3">
+        <RiHistoryLine className="h-4 w-4 text-foreground/40 shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-foreground font-semibold text-sm">{current.title}</p>
+            <span
+              className={cn(
+                'text-xs px-2 py-0.5 rounded-md shrink-0',
+                current.status === 'completed'
+                  ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                  : current.status === 'in_progress'
+                    ? 'bg-accent/10 text-accent'
+                    : 'bg-foreground/10 text-foreground/60',
+              )}
+            >
+              {statusLabel}
+            </span>
+          </div>
+          {current.targetDate && <p className="text-foreground/50 text-xs mt-1">{formatDate(current.targetDate)}</p>}
+          {(current.description ?? current.subtitle) && (
+            <p className="text-foreground/50 text-xs leading-relaxed mt-2">{current.description ?? current.subtitle}</p>
           )}
-        >
-          <span className="text-foreground/60">{row.label}</span>
-          <span className={cn('text-foreground', row.bold ? 'font-bold' : 'font-medium')}>{row.value}</span>
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -462,19 +412,17 @@ function PropertyVideoCard({ url }: { url: string }) {
       : null;
 
   return (
-    <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-foreground/10">
-        <h2 className="text-foreground font-semibold text-sm">Property Video</h2>
-      </div>
+    <div className={CARD}>
+      <h2 className="text-foreground font-semibold text-sm mb-3">Property Video</h2>
       {embedUrl ? (
         <iframe
           src={embedUrl}
-          className="w-full aspect-[16/7]"
+          className="w-full aspect-video rounded-2xl"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
       ) : (
-        <video src={url} controls playsInline className="w-full aspect-[16/7] bg-black" />
+        <video src={url} controls playsInline className="w-full aspect-video rounded-2xl bg-black" />
       )}
     </div>
   );
@@ -585,7 +533,6 @@ export default function PropertyDetail() {
   // const [investOpen, setInvestOpen] = useState(false);
   // const [quantity, setQuantity] = useState(1);
   // const [pin, setPin] = useState('');
-  const [descExpanded, setDescExpanded] = useState(false);
   const [acquireOpen, setAcquireOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [successInvestment, setSuccessInvestment] = useState<Investment | null>(null);
@@ -652,28 +599,70 @@ export default function PropertyDetail() {
   const isAvailable = property.status === 'published' && property.inventoryAvailable > 0 && !isWindowClosed;
   const ctaConfig = MODEL_CTA[property.investmentModelType] ?? MODEL_CTA.fractional;
 
+  // As on the designs (Nov 2026): outright, land banking and save-to-own show the total
+  // purchase price (fees in); co-development and fractional show the base slot price
   const ctaPrice = (() => {
-    if (property.investmentModelType === 'outright') {
-      return property.minInvestment;
+    switch (property.investmentModelType) {
+      case 'outright':
+        return purchaseTotal(property, property.minInvestment);
+      case 'land_banking':
+        return purchaseTotal(property, config.pricePerPlot as number);
+      case 'save_to_own':
+        return purchaseTotal(property, (config.propertyPrice as number | undefined) ?? property.minInvestment);
+      case 'co_development':
+        return (config.pricePerSlot as number | undefined) ?? property.minInvestment;
+      default:
+        return (config.pricePerShare as number | undefined) ?? property.minInvestment;
     }
-    if (property.investmentModelType === 'co_development') {
-      return (config.pricePerSlot as number | undefined) ?? property.minInvestment;
-    }
-    if (property.investmentModelType === 'land_banking') {
-      return config.pricePerPlot as number;
-    }
-    return property.totalPrice ?? property.minInvestment;
   })();
 
   const descParagraphs = (property.description ?? '').split(/<br\s*\/?>/gi).filter(Boolean);
-  const longDesc = (property.description?.length ?? 0) > 250;
 
   return (
-    <div className="pb-28 -mx-4 sm:mx-0">
-      {/* ── Image gallery ──────────────────────────────────────────────────── */}
-      <div>
-        <div className="relative h-62 overflow-hidden sm:rounded-2xl bg-foreground/5">
-          {images?.length > 0 ? (
+    <div className="pb-28 space-y-4">
+      {/* ── Header: back, title, location (Figma, Nov 2026) ────────────────── */}
+      <div className="flex items-start gap-2">
+        <button
+          onClick={() => arrivedWithInvest.current ? navigate('/investor/marketplace') : navigate(-1)}
+          aria-label="Back"
+          className="w-9 h-9 -ml-2 mt-0.5 rounded-full flex items-center justify-center text-foreground hover:bg-foreground/10 shrink-0"
+        >
+          <RiArrowLeftSLine className="h-6 w-6" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold text-foreground leading-tight">{property.title}</h1>
+          <div className="flex items-center gap-1.5 mt-1.5 text-foreground/50 text-sm">
+            <RiMapPinLine className="h-4 w-4 shrink-0" />
+            <span className="truncate">{property.location}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => toggleFavMutation.mutate(
+              { propertyId: property.id, isFavorited: isFav },
+              { onError: () => toast.error('Failed to update favorites') }
+            )}
+            aria-label={isFav ? 'Remove from favourites' : 'Add to favourites'}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-foreground/10"
+          >
+            {isFav
+              ? <RiHeartFill className="h-5 w-5 text-accent" />
+              : <RiHeartLine className="h-5 w-5 text-foreground/60" />}
+          </button>
+          <button
+            onClick={handleShare}
+            aria-label="Share property"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-foreground/60 hover:bg-foreground/10"
+          >
+            <RiShareLine className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Banner card: gallery + about (Figma, Nov 2026) ─────────────────── */}
+      <div className="bg-card rounded-3xl p-3 sm:p-4">
+        <div className="relative h-56 sm:h-72 lg:h-80 rounded-2xl overflow-hidden bg-foreground/5">
+          {images.length > 0 ? (
             <img
               src={currentImageUrl}
               alt={property.title}
@@ -681,10 +670,10 @@ export default function PropertyDetail() {
               onClick={() => setLightboxOpen(true)}
             />
           ) : (
-            <div className="h-72 bg-foreground/5 flex items-center justify-center text-foreground/20 text-5xl">🏠</div>
-
+            <div className="w-full h-full flex items-center justify-center text-foreground/20">
+              <RiBuildingLine className="h-12 w-12" />
+            </div>
           )}
-          <div className="absolute inset-0 bg-linear-to-b from-black/50 via-transparent to-black/60 pointer-events-none" />
 
           {/* Sold Out stamp */}
           {property.inventoryAvailable === 0 && (
@@ -695,305 +684,300 @@ export default function PropertyDetail() {
             </div>
           )}
 
-          {/* Top: back / heart / share */}
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-            <button
-              onClick={() => arrivedWithInvest.current ? navigate('/investor/marketplace') : navigate(-1)}
-              className="w-9 h-9 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white"
-            >
-              <RiArrowLeftLine className="h-4 w-4" />
-            </button>
-            <div className="flex items-center gap-2">
+          {/* Prev / next */}
+          {images.length > 1 && (
+            <>
               <button
-                onClick={() => toggleFavMutation.mutate(
-                  { propertyId: property.id, isFavorited: isFav },
-                  { onError: () => toast.error('Failed to update favorites') }
-                )}
-                className="w-9 h-9 bg-black/40 backdrop-blur rounded-full flex items-center justify-center"
+                onClick={() => setSelectedImage((i) => (i - 1 + images.length) % images.length)}
+                aria-label="Previous image"
+                className="absolute left-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-white drop-shadow"
               >
-                {isFav
-                  ? <RiHeartFill className="h-4 w-4 text-accent" />
-                  : <RiHeartLine className="h-4 w-4 text-white" />}
+                <RiArrowLeftSLine className="h-7 w-7" />
               </button>
               <button
-                onClick={handleShare}
-                className="w-9 h-9 bg-black/40 backdrop-blur rounded-full flex items-center justify-center text-white"
+                onClick={() => setSelectedImage((i) => (i + 1) % images.length)}
+                aria-label="Next image"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-white drop-shadow"
               >
-                <RiShareLine className="h-4 w-4" />
+                <RiArrowRightSLine className="h-7 w-7" />
               </button>
-            </div>
-          </div>
+            </>
+          )}
 
-          {/* Bottom: model badge / image count */}
-          <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
-            <span className={cn(
-              'flex items-center gap-1.5 text-white text-[10px] font-semibold px-2.5 py-1 rounded-xl',
-              MODEL_BADGE_COLOR[property.investmentModelType] ?? 'bg-black/60'
-            )}>
-              <RiBuildingLine className="h-3 w-3" />
-              {property.investmentModelTypeLabel === 'Co-development' ? 'Co-Dev' : property.investmentModelTypeLabel}
-            </span>
-            {images.length > 1 && (
-              <span className="flex items-center gap-1 text-white text-[10px] font-medium bg-black/40 backdrop-blur px-2 py-1 rounded-lg">
-                <RiImageLine className="h-3 w-3" />
-                {selectedImage + 1}/{images.length}
+          {/* Bottom: model + return type pills, dots, expand */}
+          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={cn(
+                'text-xs font-medium px-2.5 py-1 rounded-full',
+                MODEL_BADGE_COLOR[property.investmentModelType] ?? 'bg-black/60 text-white'
+              )}>
+                {property.investmentModelTypeLabel}
               </span>
-            )}
-          </div>
-        </div>
-
-        {/* Dot pagination */}
-        {images.length > 1 && (
-          <div className="flex items-center justify-center gap-1.5 py-2.5">
-            {images.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedImage(idx)}
-                className={cn(
-                  'rounded-full transition-all',
-                  idx === selectedImage ? 'w-5 h-2 bg-accent' : 'w-2 h-2 bg-foreground/20'
-                )}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-
-      {/* ── Content ────────────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-0 space-y-4 mt-4">
-
-        {/* Title + location */}
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{property.title}</h1>
-          <div className="flex items-center gap-1 mt-1 text-foreground/50 text-sm">
-            <RiMapPinLine className="h-4 w-4 shrink-0 text-accent" />
-            <span>{property.location}</span>
-          </div>
-        </div>
-
-        {/* Description */}
-        {descParagraphs.length > 0 && (
-          <div>
-            <div className={cn(!descExpanded && 'line-clamp-4')}>
-              {descParagraphs.map((para, i) => (
-                <p key={i} className="text-foreground/70 text-sm leading-relaxed mb-1">{para}</p>
-              ))}
-            </div>
-            {longDesc && (
-              <button onClick={() => setDescExpanded(!descExpanded)} className="text-accent text-sm font-medium mt-0.5">
-                {descExpanded ? 'Show less' : 'Read more'}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* ── Property Manager ────────────────────────────────────────────── */}
-        {property.projectManagerName && (
-          <div>
-            <p className="text-foreground font-semibold text-sm mb-2">Have questions about this investment?</p>
-            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-              <p className="text-foreground/50 text-xs font-medium mb-3 uppercase tracking-wide">Project Manager</p>
-              <div className="flex items-center gap-3">
-                {property.projectManagerImageUrl ? (
-                  <img
-                    src={property.projectManagerImageUrl}
-                    alt={property.projectManagerName}
-                    className="w-12 h-12 rounded-full object-cover shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center text-accent font-bold text-lg shrink-0">
-                    {property.projectManagerName[0]}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-foreground font-semibold text-sm uppercase tracking-wide">{property.projectManagerName}</p>
-                  {property.projectManagerContact && (
-                    <p className="text-foreground/50 text-xs mt-0.5">{property.projectManagerContact}</p>
-                  )}
-                </div>
-                {property.projectManagerContact && (
-                  <>
-                    <a
-                      href={whatsappLink(property.projectManagerContact)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
-                      aria-label="WhatsApp project manager"
-                    >
-                      <img src="/resources/whatsapp.png" alt="" className="h-12 w-12" />
-                    </a>
-                    <a
-                      href={`tel:${property.projectManagerContact}`}
-                      className="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white shrink-0"
-                      aria-label="Call project manager"
-                    >
-                      <RiPhoneLine className="h-5 w-5" />
-                    </a>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          {/* ── Property Highlights — always first ──────────────────────────── */}
-          {(property.highlights?.length ?? 0) > 0 && (
-            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
-              <h2 className="text-foreground font-semibold text-sm mb-3">Property Highlights</h2>
-              <div className="grid grid-cols-2 gap-y-3 gap-x-2">
-                {property.highlights!.map((h) => (
-                  <div key={h.label} className="flex items-center gap-2 text-sm text-foreground/70">
-                    <span className="text-foreground/40 shrink-0">
-                      {HIGHLIGHT_ICON[h.iconKey] ?? <RiStarLine className="h-4 w-4" />}
-                    </span>
-                    {h.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Property Video ──────────────────────────────────────────────── */}
-          {property.video && <PropertyVideoCard url={property.video.secureUrl ?? property.video.url} />}
-
-          {/* ── Model-specific section ──────────────────────────────────────── */}
-          {property.investmentModelType === 'co_development' && (
-            <CoDevSection property={property} config={config} />
-          )}
-          {property.investmentModelType === 'fractional' && (
-            <FractionalSection config={config} />
-          )}
-          {property.investmentModelType === 'land_banking' && (
-            <>
-              <LandBankingSection property={property} config={config} />
-              <CostBreakdownSection
-                priceLabel="Price per plot"
-                price={config.pricePerPlot as number}
-                property={property}
-              />
-            </>
-          )}
-          {property.investmentModelType === 'outright' && (
-            <OutrightSection property={property} />
-          )}
-          {property.investmentModelType === 'save_to_own' && (
-            <>
-              <SaveToOwnSection property={property} config={config} />
-              <CostBreakdownSection
-                priceLabel="Price per plot"
-                price={config.propertyPrice as number}
-                property={property}
-              />
-            </>
-          )}
-
-          {/* ── Fractional Investment Details ───────────────────────────────── */}
-          {property.investmentModelType === 'fractional' && (
-            <FractionalInvestmentDetails property={property} config={config} />
-          )}
-
-          {/* ── Management Fees ─────────────────────────────────────────────── */}
-          {(property.managementFees?.items.length ?? 0) > 0
-            && !['outright', 'land_banking', 'save_to_own'].includes(property.investmentModelType) && (
-            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-foreground/10">
-                <h2 className="text-foreground font-semibold text-sm">Management fee</h2>
-              </div>
-              {property.managementFees!.items.map((item) => (
-                <div key={item.label} className="flex items-center justify-between px-4 py-3 text-sm border-b border-foreground/10">
-                  <span className="text-foreground/60">{item.label}</span>
-                  <span className="text-foreground">{formatCurrency(item.amount)}</span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="text-foreground font-semibold">Total</span>
-                <span className="text-foreground font-bold">{formatCurrency(property.managementFees!.total)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* ── Documents + Building Permit ─────────────────────────────────── */}
-          {((property.documents?.length ?? 0) > 0 || property.buildingPermitNumber) && (
-            <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/10">
-                <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
-                {(property.documents?.length ?? 0) > 0 && (
-                  <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold">
-                    {property.documents!.length}
-                  </span>
-                )}
-              </div>
-
-              {property.documents?.map((doc) => (
-                <a
-                  key={doc.id}
-                  href={doc.secureUrl ?? doc.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-foreground/5 transition-colors border-b border-foreground/10"
-                >
-                  <RiFileTextLine className="text-accent h-5 w-5 shrink-0" />
-                  <span className="text-foreground/80 text-sm flex-1">{doc.fileName ?? doc.name ?? 'Document'}</span>
-                  <RiDownload2Line className="text-foreground/40 h-4 w-4 shrink-0" />
-                </a>
-              ))}
-
-              {property.buildingPermitNumber && (
-                <div className="px-4 py-3">
-                  <p className="text-foreground/50 text-xs mb-1.5">Building Permit Number</p>
-                  <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2">
-                    <p className="text-accent text-sm font-medium">{property.buildingPermitNumber}</p>
-                  </div>
-                </div>
+              {property.investmentModelType === 'fractional' && property.returnTypeLabel && (
+                <span className="bg-white text-foreground text-xs font-medium px-2.5 py-1 rounded-full">
+                  {property.returnTypeLabel}
+                </span>
               )}
             </div>
-          )}
-
-          {/* KYC inline warning */}
-          {!kycApproved && isAvailable && (
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
-              <RiAlertLine className="text-amber-400 h-5 w-5 shrink-0" />
-              <p className="text-amber-400 text-sm flex-1">Complete KYC to invest.</p>
-              <Button
-                size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-black"
-                onClick={() => navigate('/investor/kyc')}
-              >
-                Complete KYC
-              </Button>
+            <button
+              onClick={() => setLightboxOpen(true)}
+              disabled={!images.length}
+              className="flex items-center gap-2 bg-black/50 backdrop-blur text-white text-sm font-medium px-3 py-1.5 rounded-lg shrink-0"
+            >
+              <RiFullscreenLine className="h-4 w-4" />
+              <span className="hidden sm:inline">Click to Expand</span>
+            </button>
+          </div>
+          {images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+              {images.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImage(idx)}
+                  aria-label={`Image ${idx + 1}`}
+                  className={cn('w-2 h-2 rounded-full', idx === selectedImage ? 'bg-accent' : 'bg-white')}
+                />
+              ))}
             </div>
           )}
         </div>
+
+        {descParagraphs.length > 0 && (
+          <div className="mt-4 px-1">
+            <h2 className="text-foreground font-semibold text-sm uppercase">About {property.title}</h2>
+            <div className="mt-2 space-y-1">
+              {descParagraphs.map((para, i) => (
+                <p key={i} className="text-foreground/60 text-sm leading-relaxed">{para}</p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* ── Sticky CTA bar ─────────────────────────────────────────────────── */}
+      {/* ── Content ────────────────────────────────────────────────────────── */}
+      <div className="space-y-4">
+
+        {/* Two columns on desktop (Figma, Nov 2026): details left; video, milestones and PM right */}
+        <div className="grid grid-cols-1 lg:grid-cols-[5fr_4fr] gap-4 items-start">
+          {/* ── Left column ── */}
+          <div className="space-y-4 min-w-0">
+            {/* Property Highlights */}
+            {(property.highlights?.length ?? 0) > 0 && (
+              <div className={CARD}>
+                <h2 className="text-foreground font-semibold text-sm mb-1">Property Highlights</h2>
+                <div className="grid grid-cols-2 gap-x-4">
+                  {property.highlights!.map((h, i, all) => (
+                    <div
+                      key={h.label}
+                      className={cn(
+                        'flex items-center gap-2 py-3 text-sm text-foreground/70 min-w-0',
+                        // Divider under every row but the last
+                        i < all.length - (all.length % 2 || 2) && 'border-b border-foreground/10',
+                      )}
+                    >
+                      <span className="text-accent shrink-0">
+                        {HIGHLIGHT_ICON[h.iconKey] ?? <RiStarLine className="h-4 w-4" />}
+                      </span>
+                      <span className="truncate">{h.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Model-specific details */}
+            {property.investmentModelType === 'land_banking' && (
+              <>
+                <LandBankingOverview property={property} config={config} />
+                <CostBreakdown property={property} priceLabel="Property cost" price={config.pricePerPlot as number} />
+              </>
+            )}
+            {property.investmentModelType === 'save_to_own' && (
+              <>
+                <SaveToOwnOverview property={property} />
+                <CostBreakdown property={property} priceLabel="Price per plot" price={config.propertyPrice as number} />
+              </>
+            )}
+            {property.investmentModelType === 'outright' && (
+              <CostBreakdown property={property} priceLabel="Property cost (per unit)" price={property.minInvestment} />
+            )}
+            {property.investmentModelType === 'co_development' && (
+              <>
+                <CoDevOverview property={property} config={config} />
+                <CostBreakdown
+                  property={property}
+                  priceLabel="Property cost (per unit)"
+                  price={(config.pricePerSlot as number | undefined) ?? property.minInvestment}
+                />
+              </>
+            )}
+            {property.investmentModelType === 'fractional' && (
+              <>
+                <FractionalDetails property={property} config={config} isWindowClosed={isWindowClosed} />
+                <CostBreakdown
+                  property={property}
+                  title={null}
+                  priceLabel="Price per slot"
+                  price={(config.pricePerShare as number | undefined) ?? property.minInvestment}
+                  totalLabel="Total"
+                />
+              </>
+            )}
+
+            {/* Documents + Building Permit */}
+            {((property.documents?.length ?? 0) > 0 || property.buildingPermitNumber) && (
+              <div className={CARD}>
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <h2 className="text-foreground font-semibold text-sm">Property Title Documents</h2>
+                  <RiFileTextLine className="h-5 w-5 text-foreground" aria-hidden />
+                </div>
+                {property.documents?.map((doc) => (
+                  <a
+                    key={doc.id}
+                    href={doc.secureUrl ?? doc.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 py-3 border-b border-foreground/10 last:border-0"
+                  >
+                    <span className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                      <RiFileTextLine className="h-5 w-5 text-accent" />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-foreground text-sm font-semibold truncate">
+                        {doc.name ?? doc.fileName ?? doc.originalFilename ?? 'Document'}
+                      </span>
+                      <span className="block text-foreground/50 text-xs mt-0.5">PDF Document</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 text-accent text-sm font-semibold shrink-0">
+                      View <RiDownload2Line className="h-4 w-4" />
+                    </span>
+                  </a>
+                ))}
+                {property.buildingPermitNumber && (
+                  <div className="flex items-center gap-3 pt-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground text-sm font-semibold">{property.buildingPermitNumber}</p>
+                      <p className="text-foreground/50 text-xs mt-0.5">Building Permit Number</p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard
+                          .writeText(property.buildingPermitNumber!)
+                          .then(() => toast.success('Building permit number copied'))
+                          .catch(() => toast.error('Could not copy'))
+                      }
+                      aria-label="Copy building permit number"
+                      className="w-10 h-10 -mr-2 rounded-full flex items-center justify-center text-foreground/60 hover:bg-foreground/10"
+                    >
+                      <RiFileCopy2Line className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Right column ── */}
+          <div className="space-y-4 min-w-0">
+            {property.video && <PropertyVideoCard url={property.video.secureUrl ?? property.video.url} />}
+
+            {property.investmentModelType === 'co_development' && (property.milestones?.length ?? 0) > 0 && (
+              <DevelopmentMilestones milestones={property.milestones!} />
+            )}
+
+            {property.projectManagerName && (
+              <div className="space-y-2">
+                <p className="text-foreground font-semibold text-sm">Have questions about this investment?</p>
+                <div className={CARD}>
+                  <p className="text-foreground/50 text-sm font-medium mb-2">Project Manager</p>
+                  <div className="flex items-center gap-3">
+                    {property.projectManagerImageUrl ? (
+                      <img
+                        src={property.projectManagerImageUrl}
+                        alt={property.projectManagerName}
+                        className="w-11 h-11 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-accent/15 flex items-center justify-center text-accent font-bold shrink-0">
+                        {property.projectManagerName[0]}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-foreground font-semibold text-sm truncate capitalize">
+                        {property.projectManagerName.toLowerCase()}
+                      </p>
+                      {property.projectManagerContact && (
+                        <p className="text-foreground/50 text-sm mt-0.5">{property.projectManagerContact}</p>
+                      )}
+                    </div>
+                    {property.projectManagerContact && (
+                      <div className="flex items-center shrink-0">
+                        <a
+                          href={whatsappLink(property.projectManagerContact)}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label="WhatsApp project manager"
+                          className="w-10 h-10 flex items-center justify-center hover:opacity-80"
+                        >
+                          <img src="/resources/whatsapp.png" alt="" className="h-6 w-6" />
+                        </a>
+                        <span className="w-px h-6 bg-foreground/10" />
+                        <a
+                          href={`tel:${property.projectManagerContact}`}
+                          aria-label="Call project manager"
+                          className="w-10 h-10 flex items-center justify-center text-accent hover:opacity-80"
+                        >
+                          <RiPhoneLine className="h-5 w-5" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* KYC inline warning */}
+        {!kycApproved && isAvailable && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+            <RiAlertLine className="text-amber-400 h-5 w-5 shrink-0" />
+            <p className="text-amber-400 text-sm flex-1">Complete KYC to invest.</p>
+            <Button
+              size="sm"
+              className="bg-amber-500 hover:bg-amber-600 text-black"
+              onClick={() => navigate('/investor/kyc')}
+            >
+              Complete KYC
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Sticky CTA bar (Figma, Nov 2026): price left, wide orange button ── */}
       {(property.inventoryAvailable > 0 || property.status === 'sold_out' || property.status === 'closed' || isWindowClosed) && <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30 bg-background/95 backdrop-blur-md border-t border-foreground/10 px-4 py-3">
-        <div className="max-w-screen-sm mx-auto flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-foreground/50 text-xs truncate">{ctaConfig.priceLabel}</p>
+        <div className="max-w-screen-md mx-auto flex items-center gap-6 sm:gap-10">
+          <div className="min-w-0 shrink-0">
+            <p className="text-foreground/50 text-xs sm:text-sm truncate">{ctaConfig.priceLabel}</p>
             <p className="text-foreground font-bold text-lg leading-tight">{formatCurrency(ctaPrice)}</p>
           </div>
           {!isAvailable ? (
-            <Button disabled className="rounded-full px-6 bg-foreground/10 text-foreground/40 border-0 shrink-0">
-              {property.status === 'sold_out' ? 'Sold Out' : 'Window Closed'}
+            <Button disabled className="flex-1 h-12 rounded-xl bg-accent text-white border-0 disabled:opacity-50">
+              {property.status === 'sold_out' || property.inventoryAvailable === 0 ? 'Sold Out' : ctaConfig.btnText}
             </Button>
           ) : !kycApproved ? (
             <Button
               onClick={() => navigate('/investor/kyc')}
-              className="rounded-full px-6 bg-amber-500 hover:bg-amber-600 text-black shrink-0"
+              className="flex-1 h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-black"
             >
               Complete KYC
             </Button>
           ) : (
             <Button
               onClick={() => { setAcquireOpen(true); setSearchParams((p) => { p.set('invest', 'true'); return p; }, { replace: true }); }}
-              className={cn('rounded-full px-6 shrink-0', ctaConfig.btnClass)}
+              className="flex-1 h-12 rounded-xl bg-accent hover:bg-accent/90 text-white"
             >
               {ctaConfig.btnText}
-              <RiArrowRightSLine className="h-4 w-4" />
             </Button>
           )}
         </div>

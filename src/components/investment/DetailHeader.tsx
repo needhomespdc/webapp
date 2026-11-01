@@ -10,6 +10,16 @@ export interface HeaderStat {
   to?: string;
 }
 
+/** Main property image: the API's propertyImageUrl, else the first image on the frozen snapshot */
+export function investmentImage(inv: Investment): string | undefined {
+  if (inv.propertyImageUrl) return inv.propertyImageUrl;
+  const images = ((inv.snapshot ?? {}) as { images?: unknown }).images;
+  const first = Array.isArray(images) ? images[0] : undefined;
+  if (typeof first === 'string' && first) return first;
+  const url = (first as { url?: unknown; secureUrl?: unknown } | undefined)?.url ?? (first as { secureUrl?: unknown } | undefined)?.secureUrl;
+  return typeof url === 'string' && url ? url : undefined;
+}
+
 /** Coloured investment header (Figma, Oct 2026): image, title, chips, location, four stats, property link */
 export function DetailHeader({
   inv,
@@ -19,6 +29,7 @@ export function DetailHeader({
   stats,
   bgClass,
   linkClass,
+  statsGridClass = 'grid-cols-2 sm:grid-cols-4',
 }: {
   inv: Investment;
   statusChip: React.ReactNode;
@@ -27,12 +38,14 @@ export function DetailHeader({
   stats: HeaderStat[];
   bgClass: string;
   linkClass: string;
+  statsGridClass?: string;
 }) {
+  const image = investmentImage(inv);
   return (
     <div className={cn('rounded-3xl p-4 sm:p-5', bgClass)}>
       <div className="flex gap-4">
-        {inv.propertyImageUrl ? (
-          <img src={inv.propertyImageUrl} alt={inv.title} className="w-20 h-20 rounded-2xl object-cover shrink-0" />
+        {image ? (
+          <img src={image} alt={inv.title} className="w-20 h-20 rounded-2xl object-cover shrink-0" />
         ) : (
           <div className="w-20 h-20 rounded-2xl bg-white/10 shrink-0 flex items-center justify-center">
             <RiBuildingLine className="h-8 w-8 text-white/40" />
@@ -52,7 +65,7 @@ export function DetailHeader({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-white/15">
+      <div className={cn('grid gap-4 mt-4 pt-4 border-t border-white/15', statsGridClass)}>
         {stats.map((s) => {
           const inner = (
             <>

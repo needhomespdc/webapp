@@ -52,6 +52,36 @@ export function formatPercent(value: number, decimals = 1): string {
   return `${value.toFixed(decimals)}%`;
 }
 
+/** An investment's progressPercent (sent as a 0–1 fraction) as 0–100, e.g. 0.0811 → 8.11 */
+export function percentOwned(inv: { progressPercent: number }): number {
+  return Math.round(inv.progressPercent * 10_000) / 100;
+}
+
+/**
+ * Opens a fetched file (receipt, certificate PDF) in a new tab. The tab is opened
+ * synchronously, before the fetch, so pop-up blockers treat it as part of the click.
+ * Falls back to downloading if the browser blocks the tab anyway.
+ */
+export async function openFileInNewTab(fetcher: () => Promise<Blob>, filename: string): Promise<void> {
+  const tab = window.open('', '_blank');
+  try {
+    const url = URL.createObjectURL(await fetcher());
+    if (tab) {
+      tab.location.href = url;
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    }
+    // Give the new tab time to load the file before freeing it
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (err) {
+    tab?.close();
+    throw err;
+  }
+}
+
 /** wa.me chat link for a phone number; local Nigerian numbers (0803…) become 234803… */
 export function whatsappLink(phone: string): string {
   let digits = phone.replace(/\D/g, '');

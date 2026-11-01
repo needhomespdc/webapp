@@ -31,7 +31,7 @@ const HELP_OPTIONS: HelpOption[] = [
   {
     key: 'chat',
     title: 'Chat Admin',
-    description: 'Chat with our support team in real time',
+    description: 'Chat with our support team.',
     icon: <RiCustomerService2Line className="h-6 w-6" />,
     iconBg: 'bg-accent/15',
     iconColor: 'text-accent',

@@ -6,3 +6,13 @@ export const MODEL_BADGE: Record<string, string> = {
   save_to_own: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
   outright: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
 };
+
+// "Owned" column label in investment lists, per model (Nov 2026)
+const OWNED_LABEL: Record<string, string> = {
+  land_banking: 'Plots Owned',
+  save_to_own: 'Plots Owned',
+  co_development: 'Slots Owned',
+  fractional: 'Slots Owned',
+  outright: 'Units Owned',
+};
+export const ownedLabel = (type: string) => OWNED_LABEL[type] ?? 'Units Owned';

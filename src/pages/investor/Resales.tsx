@@ -25,7 +25,8 @@ import type { ResaleListing } from '@/types';
 
 function ResaleCard({ listing, onClick }: { listing: ResaleListing; onClick: () => void }) {
   const title = listing.propertyTitle || listing.investment?.title || 'Investment';
-  const location = listing.investment?.location ?? '';
+  // Location under the title, as on the Exits list (GET /resales/me sends propertyLocation)
+  const location = listing.propertyLocation ?? listing.investment?.location;
   const imageUrl = listing.propertyImageUrl || listing.investment?.propertyImageUrl || null;
   const price =
     listing.minPricePerUnit === listing.maxPricePerUnit
@@ -49,7 +50,7 @@ function ResaleCard({ listing, onClick }: { listing: ResaleListing; onClick: () 
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-foreground font-bold text-sm line-clamp-1">{title}</p>
-          <p className="text-foreground/50 text-xs mt-0.5">{location}</p>
+          {location && <p className="text-foreground/50 text-xs mt-0.5">{location}</p>}
         </div>
         <StatusBadge status={listing.status} label={listing.statusLabel} />
       </div>

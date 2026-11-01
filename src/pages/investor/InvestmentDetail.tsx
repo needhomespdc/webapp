@@ -18,6 +18,7 @@ import {
   SaveToOwnTotals,
 } from '@/components/investment/saveToOwn/SaveToOwnDetail';
 import { PayoutHistorySheet } from '@/components/investment/fractional/PayoutHistorySheet';
+import { DetailHeader, investmentImage } from '@/components/investment/DetailHeader';
 import { ExitInvestmentSheet } from '@/components/exits/ExitInvestmentSheet';
 import { ExitDetailSheet } from '@/components/exits/ExitDetailSheet';
 import { BuyBackDetailSheet } from '@/components/buybacks/BuyBackDetailSheet';
@@ -30,12 +31,14 @@ import {
   RiArrowRightSLine,
   RiFileLine,
   RiInformationLine,
-  RiCalendarLine,
   RiBuildingLine,
+  RiArrowUpSFill,
+  RiArrowDownSFill,
 } from 'react-icons/ri';
 import { useInvestmentDetail } from '@/hooks/useInvestment';
+import { useEligibleResales } from '@/hooks/useResales';
 import { investmentsApi } from '@/api/investments.api';
-import { formatCurrency, formatDate, whatsappLink } from '@/lib/utils';
+import { formatCurrency, formatDate, whatsappLink, openFileInNewTab } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -95,15 +98,6 @@ const MODEL_THEME: Record<InvestmentModelType, ModelTheme> = {
     borderLight: 'border-blue-500/20',
   },
 };
-
-// ─── Compact currency (for header card stats) ─────────────────────────────────
-
-function compactAmount(n: number): string {
-  if (n >= 1_000_000_000) return `₦${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `₦${(n / 1_000).toFixed(0)}K`;
-  return formatCurrency(n);
-}
 
 // ─── Inline badges (within colored header card) ───────────────────────────────
 
@@ -181,96 +175,69 @@ function PropertyLink({ inv }: { inv: Investment }) {
 function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
   const type = inv.type;
 
+  const image = investmentImage(inv);
   const Thumbnail = () =>
-    inv.propertyImageUrl ? (
-      <img src={inv.propertyImageUrl} alt={inv.title} className="w-20 h-20 rounded-xl object-cover shrink-0" />
+    image ? (
+      <img src={image} alt={inv.title} className="w-20 h-20 rounded-xl object-cover shrink-0" />
     ) : (
       <div className="w-20 h-20 rounded-xl bg-white/10 shrink-0 flex items-center justify-center">
         <RiBuildingLine className="h-8 w-8 text-white/30" />
       </div>
     );
 
-  // Co-Development: no thumbnail; 3×2 stat grid in card
+  // Co-Development (Figma, Nov 2026): shared header, thumbnail + 3-col grid of five stats
   if (type === 'co_development') {
-    const changePercent = valueChangePercent(inv);
+    const snap = (inv.snapshot ?? {}) as Record<string, unknown>;
+    const config = (snap.config ?? {}) as Record<string, unknown>;
+    const pick = (...vals: unknown[]) => vals.find((v): v is string => typeof v === 'string' && !!v);
+    const date = (d?: string | null) => (d ? formatDate(d, { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
     const stats = [
-      {
-        label: 'Project Progress',
-        value: inv.progressLabel,
-      },
-      {
-        label: 'Project End Date',
-        value: inv.projectEndDate ? formatDate(inv.projectEndDate, { day: 'numeric', month: 'short', year: 'numeric' }) : '—',
-      },
-      {
-        label: 'Investment Date',
-        value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }),
-      },
-      {
-        label: 'Current Value',
-        value: compactAmount(inv.currentValue),
-        sub: `${changePercent.toFixed(1)}% Since Investment`,
-      },
-      {
-        label: 'Project Duration',
-        value: (inv.snapshot as { config?: { projectDuration?: string } } | null | undefined)?.config?.projectDuration ?? '—',
-      },
+      { label: 'Project Progress', value: inv.progressLabel },
+      { label: 'Project End Date', value: date(inv.projectEndDate ?? pick(config.projectEndDate, snap.projectEndDate)) },
+      { label: 'Project Start Date', value: date(pick(config.projectStartDate, snap.projectStartDate)) },
+      { label: 'Project Duration', value: pick(config.projectDuration) ?? '—' },
       { label: 'Units', value: inv.unitsOwnedLabel },
     ];
 
     return (
-      <div className={cn('rounded-2xl p-4', theme.headerBg)}>
-        <p className="text-white font-bold text-base leading-tight">{inv.title}</p>
-        <div className="flex items-center gap-1.5 flex-wrap mt-2">
-          <ModelBadge>{inv.typeLabel}</ModelBadge>
-          <StatusChip status={inv.status} label={inv.statusLabel} />
-        </div>
-        <div className="flex items-center gap-1.5 mt-2 text-white/60 text-xs">
-          <RiMapPinLine className="h-3.5 w-3.5 shrink-0" />
-          {inv.location}
-        </div>
-        <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/15">
-          {stats.map((s) => (
-            <StatCell key={s.label} label={s.label} value={s.value} sub={s.sub} />
-          ))}
-        </div>
-        <PropertyLink inv={inv} />
-      </div>
+      <DetailHeader
+        inv={inv}
+        statusChip={<StatusChip status={inv.status} label={inv.statusLabel} />}
+        propertyType={inv.propertyKindLabel}
+        slug={pick(snap.slug, snap.propertySlug)}
+        stats={stats}
+        bgClass={theme.headerBg}
+        linkClass="text-emerald-700"
+        statsGridClass="grid-cols-2 sm:grid-cols-3"
+      />
     );
   }
 
-  // Land Banking: thumbnail + 4-col stats row
+  // Land Banking (Figma, Nov 2026): shared header, four stats
   if (type === 'land_banking') {
+    const snap = (inv.snapshot ?? {}) as Record<string, unknown>;
     return (
-      <div className={cn('rounded-2xl p-4', theme.headerBg)}>
-        <div className="flex gap-3">
-          <Thumbnail />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start gap-1.5 flex-wrap">
-              <ModelBadge>{inv.typeLabel}</ModelBadge>
-              <StatusChip status={inv.status} label={inv.statusLabel} />
-            </div>
-            <p className="text-white font-bold text-sm mt-2 leading-tight">{inv.title}</p>
-            <div className="flex items-center gap-1 mt-1.5 text-white/60 text-xs">
-              <RiMapPinLine className="h-3 w-3 shrink-0" />
-              {inv.location}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-start gap-2 mt-4 pt-4 border-t border-white/15 overflow-x-auto">
-          <StatCell label="Reservation Period" value={inv.reservationPeriodLabel ?? '—'} />
-          <div className="w-px h-8 bg-white/15 shrink-0 mt-0.5" />
-          <StatCell label="Your Ownership" value={inv.unitsOwnedLabel} />
-          <div className="w-px h-8 bg-white/15 shrink-0 mt-0.5" />
-          <StatCell label="Plot Size" value={inv.plotSizeLabel ?? inv.plotSize ?? '—'} />
-          <div className="w-px h-8 bg-white/15 shrink-0 mt-0.5" />
-          <StatCell
-            label="Maturity Date"
-            value={inv.reservationEndsAt ? formatDate(inv.reservationEndsAt, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
-          />
-        </div>
-        <PropertyLink inv={inv} />
-      </div>
+      <DetailHeader
+        inv={inv}
+        statusChip={<StatusChip status={inv.status} label={inv.statusLabel} />}
+        propertyType={inv.propertyKindLabel}
+        slug={typeof snap.propertySlug === 'string' ? snap.propertySlug : undefined}
+        stats={[
+          { label: 'Reservation Period', value: inv.reservationPeriodLabel ?? '—' },
+          { label: 'Your Ownership', value: inv.unitsOwnedLabel },
+          // Plot Size hidden until the backend stores it (not on the property or investment, Nov 2026)
+          // { label: 'Plot Size', value: '—' },
+          {
+            label: 'Maturity Date',
+            value: inv.reservationEndsAt
+              ? formatDate(inv.reservationEndsAt, { day: 'numeric', month: 'short', year: 'numeric' })
+              : '—',
+          },
+        ]}
+        bgClass={theme.headerBg}
+        linkClass="text-orange-700"
+        statsGridClass="grid-cols-2 sm:grid-cols-3"
+      />
     );
   }
 
@@ -284,6 +251,7 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
             <p className="text-white font-bold text-sm leading-tight">{inv.title}</p>
             <div className="flex items-center gap-1.5 flex-wrap mt-2">
               <ModelBadge>{inv.typeLabel}</ModelBadge>
+              {inv.propertyKindLabel && <ModelBadge>{inv.propertyKindLabel}</ModelBadge>}
               <StatusChip status={inv.status} label={inv.statusLabel} />
             </div>
             <div className="flex items-center gap-1 mt-1.5 text-white/60 text-xs">
@@ -341,8 +309,82 @@ function HeaderCard({ inv, theme }: { inv: Investment; theme: ModelTheme }) {
 
 // ─── Financial card ────────────────────────────────────────────────────────────
 
+// Co-development, land banking + outright (Figma, Nov 2026): amount paid over Current Value, then a tinted performance button
+function ValueCard({
+  inv,
+  topLabel,
+  topValue,
+  note,
+  perfLabel,
+  onPerfOpen,
+}: {
+  inv: Investment;
+  topLabel: string;
+  topValue: number;
+  note?: string | null;
+  perfLabel: string;
+  onPerfOpen: () => void;
+}) {
+  const changePercent = valueChangePercent(inv);
+  const up = changePercent >= 0;
+  const Arrow = up ? RiArrowUpSFill : RiArrowDownSFill;
+
+  return (
+    <div className="bg-card border border-foreground/5 rounded-3xl p-4">
+      <p className="text-foreground/50 text-sm">{topLabel}</p>
+      <p className="text-foreground font-bold text-lg mt-1 pb-3 border-b border-foreground/10 truncate">
+        {formatCurrency(topValue)}
+      </p>
+      <p className="text-foreground/50 text-sm mt-3">Current value</p>
+      <div className="flex items-center gap-3 mt-1 min-w-0">
+        <p className="text-foreground font-bold text-lg truncate">{formatCurrency(inv.currentValue)}</p>
+        <span
+          className={cn(
+            'flex items-center text-sm shrink-0',
+            up ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
+          )}
+        >
+          <Arrow className="h-6 w-6 -mr-0.5" aria-hidden />
+          {Math.abs(changePercent).toFixed(changePercent % 1 ? 1 : 0)}%
+        </span>
+      </div>
+      {note && <p className="text-foreground/50 text-sm mt-2">{note}</p>}
+      <button
+        onClick={onPerfOpen}
+        className="flex items-center gap-3 mt-4 bg-accent/10 hover:bg-accent/15 text-accent text-sm font-medium px-4 py-3 rounded-xl transition-colors"
+      >
+        {perfLabel} <RiArrowRightSLine className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
 function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: ModelTheme; onPerfOpen: () => void }) {
   const type = inv.type;
+  if (type === 'co_development' || type === 'land_banking') {
+    return (
+      <ValueCard
+        inv={inv}
+        topLabel="Total Invested"
+        topValue={inv.totalInvested}
+        note={type === 'land_banking' ? 'Excluding management fees' : 'excluding management fees'}
+        perfLabel={type === 'land_banking' ? 'View land performance' : 'View investment performance'}
+        onPerfOpen={onPerfOpen}
+      />
+    );
+  }
+  if (type === 'outright') {
+    return (
+      <ValueCard
+        inv={inv}
+        topLabel="Total Paid"
+        topValue={inv.totalCommitment}
+        note={inv.currentValueNote}
+        perfLabel="View property performance"
+        onPerfOpen={onPerfOpen}
+      />
+    );
+  }
   const changePercent = valueChangePercent(inv);
   const isPositive = changePercent >= 0;
 
@@ -351,27 +393,9 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
   let rightLabel: string;
   let rightValue: number;
   let perfLink: string;
-  let note: string | null = null;
   let showLeftChange = false;
-  let showRightChange = false;
-  let showAmountPaid = false;
 
-  if (type === 'land_banking') {
-    leftLabel = 'Current Value'; leftValue = inv.currentValue;
-    rightLabel = 'Total Invested'; rightValue = inv.totalInvested;
-    perfLink = 'Land performance history';
-    showLeftChange = true; showAmountPaid = true;
-  } else if (type === 'outright') {
-    leftLabel = 'Total Paid'; leftValue = inv.totalCommitment;
-    rightLabel = 'Current Value'; rightValue = inv.currentValue;
-    note = inv.currentValueNote ?? null;
-    perfLink = 'View property performance';
-    showRightChange = true;
-  } else if (type === 'co_development') {
-    leftLabel = 'Total Invested'; leftValue = inv.totalInvested;
-    rightLabel = 'Initial Property Value'; rightValue = inv.currentValue;
-    perfLink = 'View investment performance';
-  } else if (type === 'fractional') {
+  if (type === 'fractional') {
     leftLabel = 'Current Value'; leftValue = inv.currentValue;
     rightLabel = 'Total Returns'; rightValue = inv.totalReturns;
     perfLink = 'View performance history';
@@ -406,23 +430,8 @@ function FinancialCard({ inv, theme, onPerfOpen }: { inv: Investment; theme: Mod
             {rightLabel} <RiInformationLine className="h-3 w-3 shrink-0" />
           </p>
           <p className="text-foreground font-bold text-xl xl:text-base mt-1 leading-tight truncate">{formatCurrency(rightValue)}</p>
-          {showRightChange && (
-            <p className={cn('text-xs mt-1 font-semibold', isPositive ? theme.accentText : 'text-red-400')}>
-              ({isPositive ? '+' : ''}{changePercent.toFixed(0)}%)
-            </p>
-          )}
-          {showAmountPaid && (
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-foreground/50 text-xs">Amount Paid</span>
-              <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full text-white', theme.accentBg)}>
-                {inv.progressPercent.toFixed(0)}%
-              </span>
-            </div>
-          )}
         </div>
       </div>
-
-      {note && <p className="text-foreground/40 text-xs mt-3">{note}</p>}
 
       <button
         onClick={onPerfOpen}
@@ -506,9 +515,6 @@ function ProgressSection({
       {infoText && (
         <div className="mt-4 rounded-3xl p-4 bg-emerald-100 dark:bg-emerald-500/15">
           <p className="text-foreground text-sm leading-relaxed">{infoText}</p>
-          <button className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-medium mt-3">
-            Learn More <RiArrowRightSLine className="h-4 w-4" />
-          </button>
         </div>
       )}
     </div>
@@ -574,14 +580,9 @@ type StageRow = { title: string; date?: string | null };
 
 // Current stage (isCurrentStage) + the one after it, from the investment's milestones (co-development)
 function developmentStageRows(inv: Investment): StageRow[] {
-  const ms = ((inv.milestones ?? []) as unknown as { stepNumber: number; title: string; targetDate: string; isCurrentStage: boolean }[])
-    .slice()
-    .sort((a, b) => a.stepNumber - b.stepNumber);
+  const ms = [...(inv.milestones ?? [])].sort((a, b) => a.stepNumber - b.stepNumber);
   const idx = ms.findIndex((m) => m.isCurrentStage);
-  if (idx >= 0) return ms.slice(idx, idx + 2).map((m) => ({ title: m.title, date: m.targetDate }));
-  return inv.currentDevelopmentStageTitle
-    ? [{ title: inv.currentDevelopmentStageTitle, date: inv.currentDevelopmentStageDate }]
-    : [];
+  return idx >= 0 ? ms.slice(idx, idx + 2).map((m) => ({ title: m.title, date: m.targetDate })) : [];
 }
 
 function DevelopmentStageSection({ inv, theme, onOpen }: { inv: Investment; theme: ModelTheme; onOpen: () => void }) {
@@ -617,7 +618,52 @@ function DevelopmentStageSection({ inv, theme, onOpen }: { inv: Investment; them
 
 // ─── Investment Information ────────────────────────────────────────────────────
 
-type ApiPayment = { dueDate: string; status: string };
+type ApiPayment = { dueDate: string; status: string; paidAt?: string | null };
+
+// "August 4, 2026", as on the land banking and outright designs
+const usLongDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
+
+/**
+ * Land banking progress (Figma, Nov 2026): Payment → Holding Period → Maturity.
+ * The API sends no progressTimeline, so it's read off the payments schedule and reservationEndsAt.
+ */
+function landBankingProgress(inv: Investment): { steps: InvestmentProgressStep[]; infoText: string } {
+  const payments = (inv as unknown as { payments?: ApiPayment[] }).payments ?? [];
+  const allPaid = payments.every((p) => p.status === 'paid');
+  const lastPaidAt = payments
+    .map((p) => p.paidAt)
+    .filter((d): d is string => !!d)
+    .sort()
+    .pop();
+  const maturity = inv.reservationEndsAt;
+  const matured = !!maturity && new Date(maturity).getTime() <= Date.now();
+
+  const steps: InvestmentProgressStep[] = [
+    allPaid
+      ? { title: 'Payment', status: 'completed', date: usLongDate(lastPaidAt ?? inv.startedAt) }
+      : { title: 'Payment', status: 'current', subtitle: 'In Progress' },
+    {
+      title: 'Holding Period',
+      status: matured ? 'completed' : allPaid ? 'current' : 'upcoming',
+      subtitle: matured ? 'Completed' : allPaid ? 'In Progress' : 'Upcoming',
+    },
+    {
+      title: 'Maturity',
+      status: matured ? 'completed' : 'upcoming',
+      date: maturity ? usLongDate(maturity) : null,
+      subtitle: 'Upcoming',
+    },
+  ];
+
+  const infoText = !allPaid
+    ? 'Complete your payments to start the holding period.'
+    : matured
+      ? 'Your land has reached maturity.'
+      : 'You are in the holding period. Your land asset is appreciating in value over time';
+
+  return { steps, infoText };
+}
 
 // Co-development + land banking: derived from the payments schedule and checkout snapshot
 function paymentInfo(inv: Investment) {
@@ -638,115 +684,89 @@ function paymentInfo(inv: Investment) {
 
 function InvestmentInfoSection({ inv }: { inv: Investment }) {
   const type = inv.type;
-  // Co-development + land banking read the schedule; the other types keep their own fields
-  const pay =
-    type === 'co_development' || type === 'land_banking'
-      ? paymentInfo(inv)
-      : {
-          nextPaymentDate: inv.nextPaymentDate ?? null,
-          paymentPlan: inv.paymentPlan ?? null,
-          remainingInstallments: inv.remainingInstallmentsLabel ?? null,
-        };
 
-  // 2-col grid (label above, value below) for most models
-  const gridItems = (() => {
-    if (type === 'land_banking') {
-      return [
-        { label: 'Investment ID', value: inv.reference },
-        { label: 'Number of Plots', value: inv.unitsOwnedLabel },
-        { label: 'Investment Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
-        { label: 'Plot Size', value: inv.plotSizeLabel ?? inv.plotSize ?? '—' },
-        { label: 'Payment Plan', value: pay.paymentPlan ?? '—' },
-        { label: 'Location', value: inv.location },
-      ];
-    }
-    if (type === 'co_development' || type === 'save_to_own') {
-      return [
-        { label: 'Investment ID', value: inv.reference },
-        { label: 'Payment Frequency', value: inv.paymentFrequency ?? '—' },
-        { label: 'Investment Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
-        {
-          label: 'Next Payment',
-          value: pay.nextPaymentDate
-            ? formatDate(pay.nextPaymentDate, { day: 'numeric', month: 'short', year: 'numeric' })
-            : '—',
-        },
-        { label: 'Payment Plan', value: pay.paymentPlan ?? '—' },
-        { label: 'Remaining Installments', value: pay.remainingInstallments ?? '—' },
-      ];
-    }
-    if (type === 'fractional') {
-      return [
-        { label: 'Investment ID', value: inv.reference },
-        { label: 'Shares Owned', value: inv.unitsOwnedLabel },
-        { label: 'Investment Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
-        { label: 'Payment Frequency', value: inv.paymentFrequency ?? '—' },
-        { label: 'Payment Plan', value: inv.paymentPlan ?? '—' },
-        { label: 'Remaining Installments', value: inv.remainingInstallmentsLabel ?? '—' },
-      ];
-    }
-    return null;
-  })();
+  // Land banking + co-development (Figma, Nov 2026): roomier 2-col grid with row dividers.
+  // Everything is read off the payments schedule and checkout snapshot; field paths checked
+  // against live responses for both types (Nov 2026).
+  if (type === 'land_banking' || type === 'co_development') {
+    const pay = paymentInfo(inv);
+    const frequency = (inv.snapshot as { checkout?: { paymentFrequency?: string } } | null | undefined)?.checkout
+      ?.paymentFrequency;
+    const frequencyLabel = frequency ? frequency[0].toUpperCase() + frequency.slice(1) : '—';
+    const payments = (inv as unknown as { payments?: ApiPayment[] }).payments ?? [];
+    const fullyPaid = payments.length > 0 && payments.every((p) => p.status === 'paid');
+    const nextPayment = fullyPaid ? 'Fully paid' : usLongDate(pay.nextPaymentDate);
+    const rows =
+      type === 'land_banking'
+        ? [
+            { label: 'Investment ID', value: inv.reference },
+            { label: 'Number of Plots', value: inv.unitsOwnedLabel },
+            { label: 'Investment Date', value: usLongDate(inv.startedAt) },
+            // Plot Size hidden until the backend stores it (not on the property or investment, Nov 2026)
+            // { label: 'Plot Size', value: '—' },
+            { label: 'Payment Plan', value: pay.paymentPlan ?? '—' },
+            { label: 'Payment Frequency', value: frequencyLabel },
+            { label: 'Next Payment', value: nextPayment },
+          ]
+        : [
+            { label: 'Investment ID', value: inv.reference },
+            { label: 'Slots Purchased', value: inv.unitsOwnedLabel },
+            { label: 'Investment Date', value: usLongDate(inv.startedAt) },
+            { label: 'Payment Plan', value: pay.paymentPlan ?? '—' },
+            { label: 'Payment Frequency', value: frequencyLabel },
+            { label: 'Next Payment', value: nextPayment },
+            { label: 'Remaining Installments', value: pay.remainingInstallments ?? '—' },
+          ];
+    // No divider under the last row (one item when the count is odd, two when even)
+    const lastRowStart = rows.length - (rows.length % 2 || 2);
+    return (
+      <div className="bg-card border border-foreground/5 rounded-3xl p-4">
+        <h2 className="text-foreground font-bold text-base mb-2">Investment Information</h2>
+        <div className="grid grid-cols-2 gap-x-6">
+          {rows.map(({ label, value }, i) => (
+            <div key={label} className={cn('py-3 min-w-0', i < lastRowStart && 'border-b border-foreground/10')}>
+              <p className="text-foreground/50 text-sm">{label}</p>
+              <p className="text-foreground text-sm mt-1 wrap-break-word">{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  // Label | value rows for outright
+  // Label | value rows for outright (fractional and save-to-own render their own cards)
   const rowItems = type === 'outright' ? [
     { label: 'Reference', value: inv.reference },
     { label: 'Units Owned', value: inv.unitsOwnedLabel },
-    { label: 'Total Commitment', value: formatCurrency(inv.totalCommitment) },
-    { label: 'Purchase Date', value: formatDate(inv.startedAt, { day: 'numeric', month: 'short', year: 'numeric' }) },
+    { label: 'Purchase Price', value: formatCurrency(inv.totalCommitment) },
+    // "August 4, 2026" as on the outright design
     {
-      label: 'Last Updated',
-      value: inv.updatedAt
-        ? formatDate(inv.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })
-        : '—',
+      label: 'Purchase Date',
+      value: new Date(inv.startedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     },
   ] : null;
 
-  if (!gridItems && !rowItems) return null;
-
-  const sectionTitle = type === 'outright' ? 'Purchase Information' : 'Investment Information';
-  const showCalIcon = type === 'co_development' || type === 'save_to_own';
+  if (!rowItems) return null;
 
   return (
     <div className="bg-white dark:bg-foreground/5 border border-foreground/10 rounded-2xl p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-foreground font-bold text-sm">{sectionTitle}</h2>
-        {showCalIcon && (
-          <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center">
-            <RiCalendarLine className="h-4 w-4 text-blue-400" />
-          </div>
-        )}
+        <h2 className="text-foreground font-bold text-sm">Purchase Information</h2>
       </div>
-
-      {/* 2-col grid */}
-      {gridItems && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-          {gridItems.map((item) => (
-            <div key={item.label}>
-              <p className="text-foreground/40 text-[11px]">{item.label}</p>
-              <p className="text-foreground text-xs font-semibold mt-0.5 wrap-break-word">{item.value}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Label | value rows */}
-      {rowItems && (
-        <div>
-          {rowItems.map((item, i) => (
-            <div
-              key={item.label}
-              className={cn(
-                'flex items-start justify-between gap-4 py-3',
-                i < rowItems.length - 1 && 'border-b border-foreground/8',
-              )}
-            >
-              <span className="text-foreground/50 text-xs shrink-0">{item.label}</span>
-              <span className="text-foreground text-xs font-semibold text-right wrap-break-word max-w-[60%]">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <div>
+        {rowItems.map((item, i) => (
+          <div
+            key={item.label}
+            className={cn(
+              'flex items-start justify-between gap-4 py-3',
+              i < rowItems.length - 1 && 'border-b border-foreground/8',
+            )}
+          >
+            <span className="text-foreground/50 text-xs shrink-0">{item.label}</span>
+            <span className="text-foreground text-xs font-semibold text-right wrap-break-word max-w-[60%]">{item.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -769,17 +789,12 @@ function AboutSection({ inv }: { inv: Investment }) {
 function DocumentsSection({ inv }: { inv: Investment }) {
   const apiDocs = inv.documents ?? [];
 
+  // "View" opens the PDF in a new tab rather than downloading it
   const downloadFile = async (fetcher: () => Promise<Blob>, filename: string) => {
     try {
-      const blob = await fetcher();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      await openFileInNewTab(fetcher, filename);
     } catch {
-      toast.error('Failed to download file');
+      toast.error('Failed to open file');
     }
   };
 
@@ -885,8 +900,12 @@ function ActionBar({
   onSaveNow: () => void;
 }) {
   const navigate = useNavigate();
-  const canResell = !['exited', 'pending_resale', 'pending'].includes(inv.status);
+  // Exit and buy back stay off once the holding is exited, pending or already listed
+  const canAct = !['exited', 'pending_resale', 'pending'].includes(inv.status);
   const hasBuyBack = inv.type === 'land_banking';
+  // Resell follows the backend's eligibility list (GET /resales/eligible), checked before the tap
+  const { eligible, isLoading: eligibleLoading } = useEligibleResales();
+  const resale = eligible.find((e) => e.investmentId === inv.id);
 
   // Save-to-own (Oct 2026 design): Save Now plus an outline Exit
   if (inv.type === 'save_to_own') {
@@ -896,7 +915,7 @@ function ActionBar({
           <Button
             variant="outline"
             className="flex-1 h-12 rounded-xl font-semibold border-accent text-accent bg-transparent hover:bg-accent/10 hover:text-accent"
-            disabled={!canResell}
+            disabled={!canAct}
             onClick={onExit}
           >
             Exit
@@ -919,7 +938,7 @@ function ActionBar({
         <div className="max-w-screen-sm mx-auto">
           <Button
             className="w-full h-12 rounded-xl font-semibold text-white border-0 bg-accent hover:bg-accent/90"
-            disabled={!canResell}
+            disabled={!canAct}
             onClick={onExit}
           >
             Exit Investment
@@ -934,25 +953,25 @@ function ActionBar({
       <div className="flex items-center gap-2 max-w-screen-sm mx-auto">
         <Button
           variant="outline"
-          className="flex-1 h-12 rounded-xl font-semibold border-accent text-accent bg-transparent hover:bg-accent/10 hover:text-accent"
+          // Grey My Payments button on every footer (boss's call, Nov 2026)
+          className="flex-1 h-12 rounded-xl font-semibold border-0 bg-foreground/10 text-foreground hover:bg-foreground/15 hover:text-foreground"
           onClick={onPaymentsOpen}
         >
           My Payments
         </Button>
-        {canResell && (
-          <Button
-            className={cn('flex-1 h-12 rounded-xl font-semibold text-white border-0', theme.accentBtn)}
-            onClick={() => navigate(`/investor/resales?resell=${inv.id}`)}
-          >
-            Resell
-          </Button>
-        )}
+        <Button
+          className={cn('flex-1 h-12 rounded-xl font-semibold text-white border-0', theme.accentBtn)}
+          disabled={!resale?.isEligible}
+          onClick={() => navigate(`/investor/resales?resell=${inv.id}`)}
+        >
+          {eligibleLoading ? 'Checking…' : 'Resell'}
+        </Button>
       </div>
       {hasBuyBack && (
         <div className="max-w-screen-sm mx-auto">
           <Button
             variant="outline"
-            disabled={!canResell}
+            disabled={!canAct}
             onClick={onBuyBack}
             className="w-full h-12 rounded-xl font-semibold border-accent text-accent bg-transparent hover:bg-accent/10 hover:text-accent"
           >
@@ -1080,8 +1099,21 @@ export default function InvestmentDetail() {
             </div>
           )}
 
-          {/* Progress timeline (land_banking / fractional), under Investment Information */}
-          {!isSaveToOwn && (inv.progressTimeline?.length ?? 0) > 0 && (
+          {/* Progress timeline, under Investment Information: land banking builds its own */}
+          {inv.type === 'land_banking' ? (
+            (() => {
+              const { steps, infoText } = landBankingProgress(inv);
+              return (
+                <ProgressSection
+                  steps={steps}
+                  infoText={inv.progressInfoText ?? infoText}
+                  onDocuments={() =>
+                    document.getElementById('investment-documents')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                />
+              );
+            })()
+          ) : !isSaveToOwn && (inv.progressTimeline?.length ?? 0) > 0 && (
             <ProgressSection
               steps={inv.progressTimeline!}
               infoText={inv.progressInfoText}

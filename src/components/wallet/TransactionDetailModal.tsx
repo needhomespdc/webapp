@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  RiDownloadLine,
+  RiEyeLine,
   RiShareLine,
   RiArrowRightLine,
   RiInformationLine,
@@ -16,7 +16,7 @@ import { toast } from '@/hooks/useToast';
 import { walletApi } from '@/api/wallet.api';
 import { queryKeys } from '@/lib/queryKeys';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, openFileInNewTab } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/fetchClient';
 import type { Transaction } from '@/types';
@@ -38,6 +38,16 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
   });
 
   const tx: Transaction | undefined = (envelope as { data?: Transaction })?.data ?? (envelope as Transaction | undefined);
+
+  // View opens the PDF in a new tab rather than downloading it
+  const viewReceipt = async () => {
+    if (!transactionId || !tx) return;
+    try {
+      await openFileInNewTab(() => walletApi.getTransactionReceipt(transactionId), `receipt-${tx.reference}.pdf`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Failed to open receipt');
+    }
+  };
 
   const downloadBlob = async (action: 'download' | 'share') => {
     if (!transactionId || !tx) return;
@@ -206,11 +216,10 @@ export function TransactionDetailModal({ transactionId, onClose }: TransactionDe
         <div className="px-5 py-4 border-t border-foreground/10 shrink-0 space-y-2">
           <Button
             className="w-full h-12 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl gap-2"
-            onClick={() => downloadBlob('download')}
-            disabled={isDownloading}
+            onClick={viewReceipt}
           >
-            <RiDownloadLine className="text-base" />
-            {isDownloading ? 'Preparing...' : 'Download Receipt'}
+            <RiEyeLine className="text-base" />
+            View Receipt
           </Button>
           <Button
             variant="outline"

@@ -246,7 +246,6 @@ export default function InvestorWallet() {
                     shortName={b.shortName}
                     accountNumber={b.accountNumber}
                     accountHolderName={b.accountHolderName}
-                    isPrimary={b.isPrimary}
                   />
                 ))}
               </div>
@@ -423,12 +422,10 @@ function BankAccountRow({
   shortName,
   accountNumber,
   accountHolderName,
-  isPrimary,
 }: {
   shortName: string;
   accountNumber: string;
   accountHolderName: string;
-  isPrimary: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -443,9 +440,6 @@ function BankAccountRow({
             <span className="truncate">{shortName}</span>
             <span className="shrink-0 hidden sm:inline">— {accountNumber}</span>
           </p>
-          {isPrimary && (
-            <span className="text-xs bg-emerald-700/10 p-1 rounded-xl text-emerald-700 font-medium shrink-0">Primary</span>
-          )}
         </span>
         <p className="text-foreground/40 text-xs">{accountHolderName}</p>
       </div>

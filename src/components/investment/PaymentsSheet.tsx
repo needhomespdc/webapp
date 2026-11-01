@@ -5,7 +5,7 @@ import { SheetContent } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useInvestmentPayments } from '@/hooks/useInvestment';
 import { investmentsApi } from '@/api/investments.api';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, cn, percentOwned, openFileInNewTab } from '@/lib/utils';
 import { toast } from '@/hooks/useToast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { Investment } from '@/types';
@@ -105,15 +105,9 @@ export function PaymentsSheet({ inv, isOpen, onClose, startPaying }: Props) {
 
   const downloadReceipt = async () => {
     try {
-      const blob = await investmentsApi.getReceipt(inv.id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${inv.reference}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await openFileInNewTab(() => investmentsApi.getReceipt(inv.id), `receipt-${inv.reference}.pdf`);
     } catch {
-      toast.error('Failed to download receipt');
+      toast.error('Failed to open receipt');
     }
   };
 
@@ -161,7 +155,7 @@ export function PaymentsSheet({ inv, isOpen, onClose, startPaying }: Props) {
   // Co-development and land banking designs (Oct 2026): instalment pills, receipts in the breakdown, pay button
   const instalmentStyle = isCoDev || isLandBanking || isSaveToOwn;
   const canPay = instalmentStyle && totalUnpaid > 0;
-  const ownershipPct = inv.ownershipLabel?.match(/[\d.]+\s*%/)?.[0] ?? `${Number(inv.progressPercent.toFixed(2))}%`;
+  const ownershipPct = `${percentOwned(inv)}%`;
 
   const aboutText =
     inv.type === 'save_to_own'
