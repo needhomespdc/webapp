@@ -94,9 +94,9 @@ const Secure = () => (
 
 const NOTES = [
   'Your request will be reviewed by the NeedHomes team, and you may be contacted if additional information is required.',
-  'The NeedHomes team will contact you via your registered email address or other official communication channels to discuss and agree on the buy-back price.',
-  'Once the final price is agreed upon, NeedHomes will update the agreed amount in the system and approve the buy-back request.',
-  'An applicable buy-back processing fee will be deducted from the agreed buy-back amount. Once the price and applicable fee are confirmed, NeedHomes will update and approve the request.',
+  'The NeedHomes team will contact you via your registered email address or other official communication channels to discuss and agree on the buy back price.',
+  'Once the final price is agreed upon, NeedHomes will update the agreed amount in the system and approve the buy back request.',
+  'An applicable buy back processing fee will be deducted from the agreed buy back amount. Once the price and applicable fee are confirmed, NeedHomes will update and approve the request.',
 ];
 
 interface Props {
@@ -146,7 +146,7 @@ export function BuyBackSheet({ inv, open, onClose, onViewStatus }: Props) {
           setSubmitted({ ...res, id: res?.id ?? '', status: res?.status ?? 'pending' });
           setStep('submitted');
         },
-        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to submit buy-back request'),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Failed to submit buy back request'),
       },
     );
   };
@@ -192,7 +192,7 @@ export function BuyBackSheet({ inv, open, onClose, onViewStatus }: Props) {
             <div>
               <p className="text-foreground font-bold text-base">Plots to Buy Back</p>
               <p className="text-foreground/50 text-sm mt-1 mb-3">
-                Select the number of plots you want to request for buy-back.
+                Select the number of plots you want to request for buy back.
               </p>
               <div className="bg-foreground/10 rounded-3xl flex items-center gap-3 p-3">
                 <button
@@ -218,7 +218,7 @@ export function BuyBackSheet({ inv, open, onClose, onViewStatus }: Props) {
               </div>
             </div>
             <label className="block">
-              <span className="text-foreground text-sm">Proposed Buy-Back Price</span>
+              <span className="text-foreground text-sm">Proposed Buy Back Price</span>
               <div className="mt-2 bg-foreground/5 border border-foreground/10 rounded-2xl flex items-center h-16 px-4 focus-within:border-accent">
                 <span className="text-foreground font-bold text-2xl">₦</span>
                 <input
@@ -250,15 +250,15 @@ export function BuyBackSheet({ inv, open, onClose, onViewStatus }: Props) {
         <>
           <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6 space-y-5">
             <div>
-              <h2 className="text-foreground font-bold text-2xl">Review Your Buy-Back Request</h2>
+              <h2 className="text-foreground font-bold text-2xl">Review Your Buy Back Request</h2>
               <p className="text-foreground/50 text-sm mt-1">Your request will be sent to our team for review</p>
             </div>
             <InvSummary inv={inv} />
             <div>
-              <p className="text-foreground font-bold text-base mb-1">Buy-Back Details</p>
+              <p className="text-foreground font-bold text-base mb-1">Buy Back Details</p>
               <DetailRow label="Quantity" value={plotsLabel(quantity)} />
               <DetailRow label="Investment Type" value={inv.typeLabel} />
-              <DetailRow label="Proposed Buy-Back Price" value={formatCurrency(price)} />
+              <DetailRow label="Proposed Buy Back Price" value={formatCurrency(price)} />
             </div>
             <div className="bg-foreground/10 rounded-3xl p-4">
               <p className="text-foreground font-bold text-base mb-3">Important to Note</p>
@@ -267,7 +267,7 @@ export function BuyBackSheet({ inv, open, onClose, onViewStatus }: Props) {
                   <p key={n}>{n}</p>
                 ))}
                 <p>
-                  Once approved, the agreed buy-back amount will be paid to you{' '}
+                  Once approved, the agreed buy back amount will be paid to you{' '}
                   <span className="font-bold">within 48 hours.</span>
                 </p>
               </div>
@@ -304,18 +304,18 @@ export function BuyBackSheet({ inv, open, onClose, onViewStatus }: Props) {
               </div>
               <p className="text-foreground text-sm leading-relaxed mt-2">
                 The NeedHomes team will contact you via your registered email address or other official communication
-                channels to discuss and agree on the buy-back price.
+                channels to discuss and agree on the buy back price.
               </p>
             </div>
             <div>
               {result.reference && <DetailRow label="Reference" value={result.reference} />}
               <DetailRow label="Investment type" value={result.investmentTypeLabel ?? inv.typeLabel} />
               <DetailRow label="Quantity" value={PlotsTitle(result.quantity ?? quantity)} />
-              <DetailRow label="Proposed Buy-Back Price" value={formatCurrency(result.proposedPrice ?? price)} />
+              <DetailRow label="Proposed Buy Back Price" value={formatCurrency(result.proposedPrice ?? price)} />
               <DetailRow
                 label={`Processing fee (${(buybackAmounts(result).feeRate * 100).toFixed(1)}%)`}
                 value={formatCurrency(buybackAmounts(result).fee)}
-                info="Deducted from the agreed buy-back amount."
+                info="Deducted from the agreed buy back amount."
               />
             </div>
           </div>

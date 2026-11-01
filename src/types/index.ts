@@ -479,11 +479,13 @@ export interface ExitRequest {
   id: string;
   reference: string;
   title: string;
+  propertyTitle?: string;
   location: string;
   propertyImageUrl: string | null;
   status: ExitStatus;
   statusLabel: string;
   dateLabel: string;
+  listedAt?: string;
   sharesLabel: string;
   amount: number;
   amountLabel: string;
@@ -569,6 +571,10 @@ export interface ResaleListing {
   minPricePerUnit: number;
   maxPricePerUnit: number;
   status: ResaleStatus;
+  statusLabel?: string;
+  propertyTitle?: string;
+  propertyImageUrl?: string | null;
+  listedAt?: string;
   rejectionReason?: string;
   createdAt: string;
 }

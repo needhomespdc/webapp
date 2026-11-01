@@ -24,9 +24,9 @@ import type { ResaleListing } from '@/types';
 // ─── Listing card (same layout as the Exits page) ─────────────────────────────
 
 function ResaleCard({ listing, onClick }: { listing: ResaleListing; onClick: () => void }) {
-  const title = listing.investment?.title ?? 'Investment';
+  const title = listing.propertyTitle || listing.investment?.title || 'Investment';
   const location = listing.investment?.location ?? '';
-  const imageUrl = listing.investment?.propertyImageUrl ?? null;
+  const imageUrl = listing.propertyImageUrl || listing.investment?.propertyImageUrl || null;
   const price =
     listing.minPricePerUnit === listing.maxPricePerUnit
       ? formatCurrency(listing.minPricePerUnit)
@@ -51,13 +51,13 @@ function ResaleCard({ listing, onClick }: { listing: ResaleListing; onClick: () 
           <p className="text-foreground font-bold text-sm line-clamp-1">{title}</p>
           <p className="text-foreground/50 text-xs mt-0.5">{location}</p>
         </div>
-        <StatusBadge status={listing.status} />
+        <StatusBadge status={listing.status} label={listing.statusLabel} />
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
           <p className="text-foreground/40">Date Listed</p>
-          <p className="text-foreground font-medium mt-0.5">{formatDate(listing.createdAt)}</p>
+          <p className="text-foreground font-medium mt-0.5">{formatDate(listing.listedAt || listing.createdAt)}</p>
         </div>
         <div>
           <p className="text-foreground/40">Quantity</p>
@@ -88,6 +88,24 @@ function ResaleCard({ listing, onClick }: { listing: ResaleListing; onClick: () 
 
 const TAB_LABELS: Record<string, string> = { all: 'All', pending: 'Pending', live: 'Live', sold: 'Sold' };
 
+const STATUS_ALIASES: Record<string, 'pending' | 'live' | 'sold'> = {
+  pending: 'pending',
+  pending_review: 'pending',
+  under_review: 'pending',
+  in_review: 'pending',
+  submitted: 'pending',
+  approved: 'live',
+  active: 'live',
+  live: 'live',
+  listed: 'live',
+  sold: 'sold',
+  completed: 'sold',
+};
+
+function resaleStatusKey(raw: string | undefined) {
+  return STATUS_ALIASES[(raw ?? '').toLowerCase().replace(/[\s-]+/g, '_')];
+}
+
 export default function Resales() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
@@ -105,15 +123,18 @@ export default function Resales() {
   const { eligible, isLoading: eligibleLoading } = useEligibleResales();
   const { resales, summary, isLoading } = useMyResales();
 
-  const totalListings = summary.liveCount + summary.pendingCount;
-  const pendingCount = summary.pendingCount;
+  // The API's summary often comes back empty and its statuses vary (PENDING, under_review, active…),
+  // so count from the listings themselves and only trust the summary when it reports more
+  const counted = { pending: 0, live: 0, sold: 0 };
+  resales.forEach((r) => {
+    const key = resaleStatusKey(r.status);
+    if (key) counted[key] += 1;
+  });
+  const pendingCount = Math.max(summary.pendingCount ?? 0, counted.pending);
+  const liveCount = Math.max(summary.liveCount ?? 0, counted.live);
+  const totalListings = pendingCount + liveCount;
 
-  const filtered = (() => {
-    if (tab === 'pending') return resales.filter((r) => r.status === 'pending');
-    if (tab === 'live') return resales.filter((r) => r.status === 'approved');
-    if (tab === 'sold') return resales.filter((r) => r.status === 'sold');
-    return resales;
-  })();
+  const filtered = tab === 'all' ? resales : resales.filter((r) => resaleStatusKey(r.status) === tab);
 
   return (
     <div className="space-y-5 sm:pb-24">
