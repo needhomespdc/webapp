@@ -13,6 +13,8 @@ export interface BuybackDetail {
   investmentId?: string;
   title?: string;
   propertyTitle?: string;
+  /** Named as on the resale list response, which shares this shape */
+  propertyLocation?: string | null;
   propertyImageUrl?: string | null;
   investmentType?: string;
   investmentTypeLabel?: string;

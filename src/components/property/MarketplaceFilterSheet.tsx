@@ -18,8 +18,7 @@ const PROPERTY_KINDS: { value: string; label: string }[] = [
 ];
 
 const RETURN_TYPES: { value: string; label: string }[] = [
-  { value: 'income_generating', label: 'Income generating' },
-  { value: 'capital_appreciation', label: 'Capital acquisition' },
+  { value: 'capital_appreciation', label: 'Capital appreciation' },
   { value: 'rental_yield', label: 'Rental yield' },
 ];
 

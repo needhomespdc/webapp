@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmModal } from '@/components/shared/ConfirmModal';
 import { ApiError } from '@/lib/fetchClient';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, cn, openFileInNewTab } from '@/lib/utils';
 import { toast } from '@/hooks/useToast';
 import { exitsApi } from '@/api/exits.api';
 import type { ExitDetail, ExitTimelineStep } from '@/types';
@@ -151,10 +151,8 @@ function ExitDetailBody({ exit, onClose }: { exit: ExitDetail; onClose: () => vo
 
   const viewReceipt = async () => {
     try {
-      const blob = await exitsApi.getReceipt(exit.id);
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      // Tab opens before the fetch so pop-up blockers allow it
+      await openFileInNewTab(() => exitsApi.getReceipt(exit.id), `exit-receipt-${exit.id}.pdf`);
     } catch {
       toast.error('Could not load receipt. Try again later.');
     }

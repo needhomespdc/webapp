@@ -5,8 +5,8 @@ import { DetailHeader } from '../DetailHeader';
 import { ProgressRing } from '../ProgressRing';
 
 // Fractional ownership investment detail (Figma, Oct 2026).
-// Most fields live in fractionalSummary or the frozen property snapshot, whose shapes
-// the API docs only partly pin down, so every read falls back gracefully.
+// Field paths checked against a live GET /api/investments/:id response (Nov 2026):
+// most live in fractionalSummary or the frozen property snapshot (snapshot.config).
 
 type Dict = Record<string, unknown>;
 const summaryOf = (inv: Investment) => (inv.fractionalSummary ?? {}) as Dict;
@@ -15,18 +15,25 @@ const str = (v: unknown) => (typeof v === 'string' && v ? v : undefined);
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
 
 const shortDate = (d?: string | null) => (d ? formatDate(d, { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
-const longDate = (d?: string | null) => (d ? formatDate(d, { day: 'numeric', month: 'long', year: 'numeric' }) : '—');
+// "August 4, 2026" as on the Investment Information design
+const longDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
+const configOf = (inv: Investment) => (snapshotOf(inv).config ?? {}) as Dict;
+/** "rental_yield" → "Rental yield" (raw enum; the API sends no label for it) */
+const humanize = (v: unknown) => {
+  const s = str(v)?.toLowerCase().replace(/_/g, ' ');
+  return s ? s[0].toUpperCase() + s.slice(1) : undefined;
+};
+/** "FULL_PAYMENT" → "Full Payment" */
+const titleCase = (v: unknown) => humanize(v)?.replace(/\b\w/g, (c) => c.toUpperCase());
 
-/** Slots owned: the detail response's quantity, else the number in "2 Slots" */
-const slotsOwned = (inv: Investment) => inv.quantity ?? (parseInt(inv.unitsOwnedLabel ?? '', 10) || 1);
+const slotsOwned = (inv: Investment) => inv.quantity ?? 1;
 const slotsLabel = (n: number) => `${n} Slot${n !== 1 ? 's' : ''}`;
 
-/** Ownership share in percent, from the API when sent, else the number in ownershipLabel */
+/** Ownership share in percent: slots owned over the property's total shares (the API sends no percent) */
 function ownershipPercent(inv: Investment): number | undefined {
-  const fromApi = num(summaryOf(inv).ownershipPercent) ?? num(snapshotOf(inv).ownershipPercent);
-  if (fromApi != null) return fromApi;
-  const m = inv.ownershipLabel?.match(/([\d.]+)\s*%/);
-  return m ? parseFloat(m[1]) : undefined;
+  const total = num(configOf(inv).totalShares) ?? inv.inventoryTotal;
+  return total ? Math.round((slotsOwned(inv) / total) * 1000) / 10 : undefined;
 }
 
 function monthsBetween(a?: string, b?: string | null): string | undefined {
@@ -44,7 +51,7 @@ export function FractionalHeader({ inv, statusChip }: { inv: Investment; statusC
   const propertyType = inv.propertyKindLabel;
   // Slots still left to buy on the property
   const slotsAvailable = inv.inventoryAvailable;
-  const slug = str(snap.slug) ?? str(snap.propertySlug);
+  const slug = str(snap.propertySlug);
   const start = str(fs.investmentWindowStart) ?? inv.startedAt;
   const end = str(fs.investmentDurationEnd) ?? inv.maturityDate;
 
@@ -56,7 +63,7 @@ export function FractionalHeader({ inv, statusChip }: { inv: Investment; statusC
       to: slotsAvailable && slug ? `/investor/marketplace/${slug}` : undefined,
     },
     { label: 'Investment Start Date', value: shortDate(start) },
-    { label: 'Investment Duration', value: inv.projectDurationLabel ?? monthsBetween(start, end) ?? '—' },
+    { label: 'Investment Duration', value: monthsBetween(start, end) ?? '—' },
     { label: 'Next Payout', value: shortDate(str(fs.nextPayoutDate)) },
   ];
 
@@ -81,12 +88,12 @@ export function FractionalInfo({ inv }: { inv: Investment }) {
   const returnPct = num(fs.expectedReturnPercent);
   const rows: [string, string][] = [
     ['Investment ID', inv.reference],
-    ['Investment Phase', str(fs.investmentPhaseLabel) ?? str(fs.lifecyclePhaseLabel) ?? inv.progressLabel ?? '—'],
-    ['Return Type', str(fs.returnTypeLabel) ?? str(snap.returnTypeLabel) ?? str(fs.returnType) ?? '—'],
+    ['Investment Phase', str(fs.investmentPhaseLabel) ?? '—'],
+    ['Return Type', humanize(snap.returnType) ?? '—'],
     ['Holding Period', longDate(str(fs.holdingPeriodEnd))],
     ['Payout Frequency', str(fs.payoutCycleLabel) ?? '—'],
     ['Next Payout', longDate(str(fs.nextPayoutDate))],
-    ['Payment Plan', inv.paymentPlan ?? 'Full Payment'],
+    ['Payment Plan', titleCase(configOf(inv).paymentOption) ?? '—'],
     ['Slots Purchased', slotsLabel(slotsOwned(inv))],
     ['Investment End', longDate(str(fs.investmentDurationEnd) ?? inv.maturityDate)],
     ['Returns', returnPct != null ? `${returnPct}%` : '—'],
@@ -175,14 +182,14 @@ export function FractionalSummaryCards({ inv }: { inv: Investment }) {
     <div className="space-y-4">
       <div className="bg-card border border-foreground/5 rounded-3xl p-4">
         <p className="text-foreground/50 text-sm">Total Invested</p>
-        <p className="text-foreground font-bold text-xl mt-1">{formatCurrency(inv.totalInvested)}</p>
-        <p className="text-foreground/50 text-xs mt-1 pb-3 border-b border-foreground/10">
+        <p className="text-foreground font-bold text-lg mt-1 truncate">{formatCurrency(inv.totalInvested)}</p>
+        <p className="text-foreground/50 text-sm mt-1 pb-3 border-b border-foreground/10">
           Avg. Price per slot: {formatCurrency(inv.totalInvested / Math.max(slots, 1))}
         </p>
-        <p className="text-foreground/50 text-xs mt-3">Est. Appreciation</p>
+        <p className="text-foreground/50 text-sm mt-3">Est. Appreciation</p>
         <p
           className={cn(
-            'text-sm font-medium mt-1',
+            'text-base mt-1',
             up ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
           )}
         >
@@ -193,15 +200,16 @@ export function FractionalSummaryCards({ inv }: { inv: Investment }) {
 
       <div className="bg-card border border-foreground/5 rounded-3xl p-4">
         <div className="flex items-center gap-2">
-          <p className="text-foreground font-bold text-sm">Your Ownership</p>
-          <RiInformationLine className="h-4 w-4 text-orange-500" aria-hidden />
+          <p className="text-foreground font-bold text-base">Your Ownership</p>
+          <RiInformationLine className="h-5 w-5 text-orange-500" aria-hidden />
         </div>
         <div className="flex items-center justify-between gap-3 mt-3">
           <div>
-            <p className="text-foreground font-bold text-base">{slotsLabel(slots)}</p>
+            <p className="text-foreground font-bold text-lg">{slotsLabel(slots)}</p>
             {pct != null && <p className="text-foreground/50 text-sm mt-2">{pct}% Ownership</p>}
           </div>
-          {pct != null && <ProgressRing percent={pct} />}
+          {/* Always shown (boss's call, Nov 2026); 0% until a share can be worked out */}
+          <ProgressRing percent={pct ?? 0} />
         </div>
       </div>
     </div>

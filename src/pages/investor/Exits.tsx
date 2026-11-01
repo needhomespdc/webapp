@@ -58,7 +58,7 @@ function ExitCard({ exit, onClick }: { exit: ExitRequest; onClick: () => void })
           <p className="text-foreground font-medium mt-0.5">{date}</p>
         </div>
         <div>
-          <p className="text-foreground/40">Shares</p>
+          <p className="text-foreground/40">Quantity</p>
           <p className="text-foreground font-medium mt-0.5">{exit.sharesLabel}</p>
         </div>
         <div>

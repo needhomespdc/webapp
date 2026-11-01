@@ -18,6 +18,7 @@ import { usePortfolioPerformance, useInvestmentListFeed } from '@/hooks/useInves
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { formatCurrency, cn } from '@/lib/utils';
+import { ownedLabel } from '@/components/investment/modelBadge';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -189,7 +190,7 @@ function InvestmentCard({ inv }: { inv: Investment }) {
           </div>
           <div className="flex items-center mt-2 pt-2 border-t border-foreground/8">
             <div className="flex-1 min-w-0">
-              <p className="text-foreground/40 text-[10px]">Units Owned</p>
+              <p className="text-foreground/40 text-[10px]">{ownedLabel(inv.type)}</p>
               <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
             </div>
             <div className="w-px h-6 bg-foreground/10 mx-2 shrink-0" />
@@ -225,7 +226,7 @@ function InvestmentCard({ inv }: { inv: Investment }) {
             <p className="text-foreground/40 text-[10px]">Status</p>
             <div className="mt-0.5">{statusPill}</div>
           </div>
-          <DataCol label="Units Owned" value={inv.unitsOwnedLabel} />
+          <DataCol label={ownedLabel(inv.type)} value={inv.unitsOwnedLabel} />
           <DataCol label="Invested Amount" value={formatCurrency(inv.totalInvested)} />
           <DataCol label="Current Value" value={formatCurrency(inv.currentValue)} valueClassName="text-accent" />
           {hasReturns && <DataCol label="Returns" value={returnsValue} valueClassName={returnsClass} />}

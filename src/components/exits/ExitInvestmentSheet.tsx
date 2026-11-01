@@ -9,7 +9,7 @@ import { useCreateExit, useEligibleExits } from '@/hooks/useExits';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { toast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/fetchClient';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, cn, percentOwned } from '@/lib/utils';
 import type { ExitRequest, Investment } from '@/types';
 import { ExitPropertyCard } from './ExitPropertyCard';
 import { SummaryRow } from './ExitDetailSheet';
@@ -54,9 +54,14 @@ export function ExitInvestmentSheet({ inv, open, onClose, onViewStatus }: Props)
   const fee = inv.currentValue * EXIT_FEE_RATE;
   const payout = Math.max(0, inv.currentValue - fee);
   const isSaveToOwn = inv.type === 'save_to_own';
-  const ownership =
-    inv.ownershipLabel?.match(/[\d.]+\s*%/)?.[0] ??
-    (isSaveToOwn ? `${Number(inv.progressPercent.toFixed(2))}%` : '—');
+  // Save-to-own: share paid off. Fractional: slots owned over the property's total shares
+  const totalShares =
+    ((inv.snapshot as { config?: { totalShares?: number } } | null | undefined)?.config?.totalShares) ?? inv.inventoryTotal;
+  const ownership = isSaveToOwn
+    ? `${percentOwned(inv)}%`
+    : totalShares
+      ? `${Math.round(((inv.quantity ?? 1) / totalShares) * 1000) / 10}%`
+      : '—';
   const slots = inv.unitsOwnedLabel;
   const outstanding = Math.max(0, (inv.totalCommitment ?? 0) - inv.totalInvested);
   const investedLabel = isSaveToOwn ? 'Amount Saved' : 'Amount Invested';

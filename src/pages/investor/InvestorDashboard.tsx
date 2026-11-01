@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePortfolioPerformance, useInvestmentList } from '@/hooks/useInvestment';
 import { useWallet, useWalletTransactions } from '@/hooks/useWallet';
 import { cn, formatCurrency, formatRelativeDate } from '@/lib/utils';
+import { ownedLabel } from '@/components/investment/modelBadge';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,8 +89,7 @@ export default function InvestorDashboard() {
             Your smooth journey to property ownership
           </h2>
           <p className="text-white/70 text-sm mt-2">
-            Choose the investment model that fits your goal. Be part of a smarter, reliable and
-            more inclusive real estate opportunity with as low as ₦100,000.
+            Co-develop, own a fraction, and grow wealth with trusted real estate investment.
           </p>
           <span className="inline-flex items-center gap-2 bg-accent text-white text-sm font-bold px-5 py-2.5 rounded-xl mt-4 w-fit hover:bg-[#d45a1e] transition-colors">
             <RiLineChartLine className="h-4 w-4" />
@@ -326,7 +326,7 @@ export default function InvestorDashboard() {
                     
                     <div className="flex items-center gap-0 mt-0.5 sm:mt-2 pt-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-foreground/40 text-[10px]">Units Owned</p>
+                        <p className="text-foreground/40 text-[10px]">{ownedLabel(inv.type)}</p>
                         <p className="text-foreground text-xs font-bold mt-0.5">{inv.unitsOwnedLabel}</p>
                       </div>
                       <div className="w-px h-6 bg-foreground/10 mx-2" />

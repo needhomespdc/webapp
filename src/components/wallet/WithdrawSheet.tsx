@@ -8,7 +8,7 @@ import {
   RiArrowLeftLine,
   RiLockPasswordLine,
   RiTimeLine,
-  RiDownload2Line,
+  RiEyeLine,
 } from 'react-icons/ri';
 import Lottie from '@/components/shared/LazyLottie';
 import successAnimation from '@/assets/lottie/success-confetti.json';
@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from '@/hooks/useToast';
 import { useWithdraw } from '@/hooks/useWallet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, openFileInNewTab } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/fetchClient';
 import type { Wallet, BankAccount, Transaction } from '@/types';
@@ -304,15 +304,12 @@ export function WithdrawSheet({
     const txId = withdrawalTx?.id;
     if (!txId) return;
     try {
-      const blob = await walletApi.getTransactionReceipt(txId);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${withdrawalTx?.reference ?? txId}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await openFileInNewTab(
+        () => walletApi.getTransactionReceipt(txId),
+        `receipt-${withdrawalTx?.reference ?? txId}.pdf`,
+      );
     } catch {
-      toast.error('Could not download receipt. Try again later.');
+      toast.error('Could not open receipt. Try again later.');
     }
   };
 
@@ -422,8 +419,8 @@ export function WithdrawSheet({
           onClick={handleDownloadReceipt}
           disabled={!withdrawalTx?.id}
         >
-          <RiDownload2Line className="h-4 w-4" />
-          Download Receipt
+          <RiEyeLine className="h-4 w-4" />
+          View Receipt
         </Button>
       </div>
     </div>

@@ -26,8 +26,7 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'co_development',
     title: 'Co-Development',
-    description:
-      'Become a co-development partner from conception to completion without funding the entire project?',
+    description: 'Co-fund verified real estate projects and grow returns together.',
     tags: ['Build Together', 'Own Together', 'Grow Together'],
     icon: <RiToolsLine className="h-6 w-6" />,
     iconBg: 'bg-green-500/15',
@@ -37,7 +36,7 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'fractional',
     title: 'Fractional Ownership',
-    description: 'Own a fraction of premium properties and earn proportional returns.',
+    description: 'Own a share of real estate and earn rental and capital appreciation.',
     tags: ['Low Entry', 'High Potential'],
     icon: <RiPieChart2Line className="h-6 w-6" />,
     iconBg: 'bg-purple-500/15',
@@ -48,7 +47,7 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'land_banking',
     title: 'Land Banking',
-    description: 'Secure land in prime locations and position yourself for long-term growth.',
+    description: 'Invest in land today and grow value over time.',
     tags: ['Secure', 'Appreciate', 'Grow'],
     icon: <RiMapPin2Line className="h-6 w-6" />,
     iconBg: 'bg-accent/15',
@@ -58,7 +57,7 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'save_to_own',
     title: 'Save-to-Own',
-    description: 'Save consistently and get closer to owning your dream property.',
+    description: 'Pay gradually towards a home and own it confidently.',
     tags: ['Save', 'Plan', 'Own'],
     icon: <RiSafe2Line className="h-6 w-6" />,
     iconBg: 'bg-blue-500/15',
@@ -68,7 +67,7 @@ const PATHS: InvestmentPath[] = [
   {
     type: 'outright',
     title: 'Outright Purchase',
-    description: 'Buy complete properties outright and enjoy full ownership benefits.',
+    description: 'Buy a verified property and own it fully.',
     tags: ['Full Ownership', 'Full Control'],
     icon: <RiBuilding2Line className="h-6 w-6" />,
     iconBg: 'bg-amber-500/15',

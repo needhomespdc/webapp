@@ -248,6 +248,7 @@ export interface Investment {
   totalReturns: number;
   totalInvested: number;
   totalCommitment: number;
+  /** A fraction from 0 to 1 despite the name (0.0811 = 8.11%); use percentOwned() for display */
   progressPercent: number;
   progressLabel: string;
   projectMilestoneLabel: string | null;
@@ -281,15 +282,12 @@ export interface Investment {
   plotSize?: string | null;
   plotSizeLabel?: string | null;
   numberOfPlots?: number | null;
-  projectProgressPercent?: number | null;
+  projectStartDate?: string | null;
   projectEndDate?: string | null;
   projectDurationLabel?: string | null;
   initialPropertyValue?: number | null;
   currentValueNote?: string | null;
   ownershipLabel?: string | null;
-  currentDevelopmentStageTitle?: string | null;
-  currentDevelopmentStageDate?: string | null;
-  lastUpdatedAt?: string | null;
   progressTimeline?: InvestmentProgressStep[];
   progressInfoText?: string | null;
   currentValueChangePercent?: number | null;
@@ -316,11 +314,16 @@ export interface InvestmentPayout {
   receiptUrl?: string | null;
 }
 
+// Shape confirmed from a live co-development /investments/:id response (Nov 2026)
 export interface InvestmentMilestone {
-  milestoneId: string;
+  id: string;
+  stepNumber: number;
   title: string;
+  subtitle?: string | null;
   status: 'pending' | 'in_progress' | 'completed';
-  completedAt?: string;
+  fundingShareLabel?: string | null;
+  targetDate: string;
+  isCurrentStage: boolean;
 }
 
 export interface HandoverDetails {
@@ -578,6 +581,8 @@ export interface ResaleListing {
   status: ResaleStatus;
   statusLabel?: string;
   propertyTitle?: string;
+  /** Sent by GET /resales/me (checked against a live response, Nov 2026) */
+  propertyLocation?: string | null;
   propertyImageUrl?: string | null;
   listedAt?: string;
   rejectionReason?: string;
